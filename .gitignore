@@ -42,6 +42,7 @@ Thumbs.db
 *.backup
 
 # ===========================================
-# Local tools (not project files)
+# Local tools and private docs
 # ===========================================
 web-ui/
+project-requirements.md
