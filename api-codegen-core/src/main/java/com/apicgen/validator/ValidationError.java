@@ -1,13 +1,11 @@
 package com.apicgen.validator;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
  * 校验错误
  */
 @Data
-@AllArgsConstructor
 public class ValidationError {
 
     /**
@@ -22,6 +20,11 @@ public class ValidationError {
 
     public ValidationError(String message) {
         this.field = "";
+        this.message = message;
+    }
+
+    public ValidationError(String field, String message) {
+        this.field = field;
         this.message = message;
     }
 }
