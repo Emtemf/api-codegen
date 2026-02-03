@@ -1,0 +1,103 @@
+apis:
+  # 边界情况 - 最小maxSize为1（DFX要求必须>0）
+  - name: createSingleItem
+    path: /api/items
+    method: POST
+    description: 创建单个项目
+    request:
+      className: CreateSingleItemReq
+      fields:
+        - name: items
+          type: List<String>
+          required: true
+          description: 项目列表
+          validation:
+            maxSize: 1
+    response:
+      className: CreateSingleItemRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 边界情况 - min等于0（DFX警告但不报错）
+  - name: setZeroMin
+    path: /api/zero
+    method: POST
+    description: 设置最小值为0
+    request:
+      className: SetZeroMinReq
+      fields:
+        - name: value
+          type: Integer
+          required: true
+          description: 数值
+          validation:
+            min: 0
+    response:
+      className: SetZeroMinRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 边界情况 - minLength等于maxLength
+  - name: fixedLength
+    path: /api/fixed
+    method: POST
+    description: 固定长度字段
+    request:
+      className: FixedLengthReq
+      fields:
+        - name: code
+          type: String
+          required: true
+          description: 验证码
+          validation:
+            minLength: 6
+            maxLength: 6
+    response:
+      className: FixedLengthRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 边界情况 - minSize等于maxSize
+  - name: fixedSizeList
+    path: /api/fixed-list
+    method: POST
+    description: 固定大小列表
+    request:
+      className: FixedSizeListReq
+      fields:
+        - name: codes
+          type: List<String>
+          required: true
+          description: 验证码列表
+          validation:
+            minSize: 3
+            maxSize: 3
+    response:
+      className: FixedSizeListRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 边界情况 - max等于min+1
+  - name: adjacentMinMax
+    path: /api/adjacent
+    method: POST
+    description: 相邻的min和max
+    request:
+      className: AdjacentMinMaxReq
+      fields:
+        - name: value
+          type: Integer
+          required: true
+          description: 数值
+          validation:
+            min: 10
+            max: 11
+    response:
+      className: AdjacentMinMaxRsp
+      fields:
+        - name: success
+          type: Boolean

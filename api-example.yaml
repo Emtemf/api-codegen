@@ -1,0 +1,106 @@
+# API 定义示例
+
+apis:
+  - name: createUser
+    path: /api/users
+    method: POST
+    description: 创建用户
+    request:
+      className: CreateUserReq
+      fields:
+        - name: username
+          type: String
+          required: true
+          description: 用户名
+          validation:
+            minLength: 4
+            maxLength: 20
+            pattern: "^[a-zA-Z0-9_]+$"
+        - name: age
+          type: Integer
+          required: true
+          description: 年龄
+          validation:
+            min: 18
+            max: 100
+        - name: email
+          type: String
+          required: false
+          description: 邮箱
+          validation:
+            email: true
+            maxLength: 50
+        - name: tags
+          type: List<String>
+          required: true
+          description: 标签列表
+          validation:
+            minSize: 1
+            maxSize: 10
+            elementValidation:
+              minLength: 2
+              maxLength: 10
+        - name: role
+          type: Enum
+          required: true
+          description: 角色
+          enumValues: [ADMIN, USER, GUEST]
+        - name: status
+          type: Enum
+          required: true
+          description: 状态
+          enumValues: [1, 2, 3]
+        - name: matrix
+          type: List<List<Integer>>
+          required: false
+          description: 二维数组
+          validation:
+            maxSize: 5
+            elementValidation:
+              maxSize: 3
+        - name: createTime
+          type: LocalDateTime
+          required: true
+          description: 创建时间
+          validation:
+            past: true
+        - name: profile
+          type: UserProfile
+          required: true
+          description: 用户资料
+          fields:
+            - name: nickname
+              type: String
+              required: true
+              description: 昵称
+              validation:
+                minLength: 2
+                maxLength: 20
+            - name: birthday
+              type: LocalDate
+              required: false
+              description: 生日
+              validation:
+                past: true
+            - name: hobbies
+              type: List<String>
+              required: false
+              description: 爱好列表
+              validation:
+                maxSize: 5
+                elementValidation:
+                  minLength: 2
+                  maxLength: 20
+
+    response:
+      className: CreateUserRsp
+      fields:
+        - name: userId
+          type: Long
+          description: 用户ID
+        - name: username
+          type: String
+          description: 用户名
+        - name: createTime
+          type: LocalDateTime
+          description: 创建时间

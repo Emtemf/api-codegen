@@ -1,0 +1,169 @@
+apis:
+  # 错误情况 - maxSize小于等于0（DFX错误）
+  - name: invalidMaxSizeZero
+    path: /api/invalid1
+    method: POST
+    description: maxSize为0（错误）
+    request:
+      className: InvalidMaxSizeZeroReq
+      fields:
+        - name: items
+          type: List<String>
+          required: true
+          description: 项目列表
+          validation:
+            maxSize: 0
+    response:
+      className: InvalidMaxSizeZeroRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - maxSize为负数（DFX错误）
+  - name: invalidMaxSizeNegative
+    path: /api/invalid2
+    method: POST
+    description: maxSize为负数（错误）
+    request:
+      className: InvalidMaxSizeNegativeReq
+      fields:
+        - name: items
+          type: List<String>
+          required: true
+          description: 项目列表
+          validation:
+            maxSize: -1
+    response:
+      className: InvalidMaxSizeNegativeRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - minLength大于maxLength（DFX错误）
+  - name: invalidLengthRange
+    path: /api/invalid3
+    method: POST
+    description: minLength大于maxLength（错误）
+    request:
+      className: InvalidLengthRangeReq
+      fields:
+        - name: value
+          type: String
+          required: true
+          description: 字符串
+          validation:
+            minLength: 10
+            maxLength: 5
+    response:
+      className: InvalidLengthRangeRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - minSize大于maxSize（DFX错误）
+  - name: invalidSizeRange
+    path: /api/invalid4
+    method: POST
+    description: minSize大于maxSize（错误）
+    request:
+      className: InvalidSizeRangeReq
+      fields:
+        - name: items
+          type: List<String>
+          required: true
+          description: 列表
+          validation:
+            minSize: 10
+            maxSize: 5
+    response:
+      className: InvalidSizeRangeRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - max小于min（DFX错误）
+  - name: invalidMinMax
+    path: /api/invalid5
+    method: POST
+    description: max小于min（错误）
+    request:
+      className: InvalidMinMaxReq
+      fields:
+        - name: value
+          type: Integer
+          required: true
+          description: 数值
+          validation:
+            min: 100
+            max: 50
+    response:
+      className: InvalidMinMaxRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - min小于0（DFX警告但不报错）
+  - name: negativeMin
+    path: /api/invalid6
+    method: POST
+    description: min为负数（警告）
+    request:
+      className: NegativeMinReq
+      fields:
+        - name: value
+          type: Integer
+          required: true
+          description: 数值
+          validation:
+            min: -10
+    response:
+      className: NegativeMinRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - 循环引用 A -> B -> A
+  - name: circularRefAB
+    path: /api/circular
+    method: POST
+    description: 循环引用A->B->A
+    request:
+      className: CircularRefAReq
+      fields:
+        - name: fieldB
+          type: TypeB
+          required: true
+          description: 引用B
+          fields:
+            - name: fieldA
+              type: TypeA
+              required: true
+              description: 引用A
+              fields:
+                - name: fieldB
+                  type: TypeB
+                  required: true
+                  description: 引用B
+    response:
+      className: CircularRefARsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - 枚举类型缺少enumValues
+  - name: enumWithoutValues
+    path: /api/enum-invalid
+    method: POST
+    description: 枚举类型缺少enumValues
+    request:
+      className: EnumWithoutValuesReq
+      fields:
+        - name: status
+          type: Enum
+          required: true
+          description: 状态
+    response:
+      className: EnumWithoutValuesRsp
+      fields:
+        - name: success
+          type: Boolean

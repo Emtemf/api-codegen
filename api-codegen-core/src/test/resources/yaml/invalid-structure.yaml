@@ -1,0 +1,133 @@
+apis:
+  # 错误情况 - 空API列表
+  # （测试时需要移除apis或设为空列表）
+
+  # 错误情况 - 缺少name
+  - name: missingName
+    path: /api/test
+    method: POST
+    description: 缺少name字段
+    request:
+      className: MissingNameReq
+      fields:
+        - name: value
+          type: String
+          required: true
+    response:
+      className: MissingNameRsp
+        - name: success
+          type: Boolean
+
+  # 错误情况 - 缺少path
+  - name: missingPath
+    description: 缺少path字段
+    method: POST
+    request:
+      className: MissingPathReq
+      fields:
+        - name: value
+          type: String
+          required: true
+    response:
+      className: MissingPathRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - path不以/开头
+  - name: invalidPath
+    path: api/test
+    method: POST
+    description: path不以/开头
+    request:
+      className: InvalidPathReq
+      fields:
+        - name: value
+          type: String
+          required: true
+    response:
+      className: InvalidPathRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - 缺少method
+  - name: missingMethod
+    path: /api/test
+    description: 缺少method字段
+    request:
+      className: MissingMethodReq
+      fields:
+        - name: value
+          type: String
+          required: true
+    response:
+      className: MissingMethodRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - 字段缺少name
+  - name: missingFieldName
+    path: /api/test
+    method: POST
+    description: 字段缺少name
+    request:
+      className: MissingFieldNameReq
+      fields:
+        - type: String
+          required: true
+    response:
+      className: MissingFieldNameRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - 字段缺少type
+  - name: missingFieldType
+    path: /api/test
+    method: POST
+    description: 字段缺少type
+    request:
+      className: MissingFieldTypeReq
+      fields:
+        - name: value
+          required: true
+    response:
+      className: MissingFieldTypeRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  # 错误情况 - 重复API（相同path和method）
+  - name: firstApi
+    path: /api/duplicate
+    method: POST
+    description: 第一个API
+    request:
+      className: FirstApiReq
+      fields:
+        - name: value
+          type: String
+          required: true
+    response:
+      className: FirstApiRsp
+      fields:
+        - name: success
+          type: Boolean
+
+  - name: secondApi
+    path: /api/duplicate
+    method: POST
+    description: 第二个API（重复）
+    request:
+      className: SecondApiReq
+      fields:
+        - name: value
+          type: String
+          required: true
+    response:
+      className: SecondApiRsp
+      fields:
+        - name: success
+          type: Boolean

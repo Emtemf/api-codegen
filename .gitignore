@@ -1,0 +1,47 @@
+# API Codegen - Git Ignore Rules
+
+# ===========================================
+# Build outputs (never commit)
+# ===========================================
+api-codegen-core/target/
+api-codegen-maven-plugin/target/
+target/
+*.jar
+*.class
+
+# ===========================================
+# Generated code (derived artifacts)
+# ===========================================
+generated/
+src/main/java/req/
+src/main/java/rsp/
+src/test/generated/
+
+# ===========================================
+# IDE files
+# ===========================================
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# ===========================================
+# OS files
+# ===========================================
+.DS_Store
+Thumbs.db
+~$*.docx
+~$*.xlsx
+
+# ===========================================
+# Logs and backups
+# ===========================================
+*.log
+*.bak
+*.backup
+
+# ===========================================
+# Local tools (not project files)
+# ===========================================
+web-ui/

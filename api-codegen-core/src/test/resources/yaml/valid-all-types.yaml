@@ -1,0 +1,206 @@
+apis:
+  # 正常API - 包含所有支持的字段类型
+  - name: createUser
+    path: /api/users
+    method: POST
+    description: 创建用户接口
+    request:
+      className: CreateUserReq
+      fields:
+        - name: username
+          type: String
+          required: true
+          description: 用户名
+          validation:
+            minLength: 4
+            maxLength: 20
+            pattern: "^[a-zA-Z0-9_]+$"
+        - name: password
+          type: String
+          required: true
+          description: 密码
+          validation:
+            minLength: 6
+            maxLength: 32
+        - name: email
+          type: String
+          required: true
+          description: 邮箱
+          validation:
+            email: true
+        - name: age
+          type: Integer
+          required: false
+          description: 年龄
+          validation:
+            min: 0
+            max: 150
+        - name: balance
+          type: Double
+          required: false
+          description: 账户余额
+          validation:
+            min: 0.0
+            max: 1000000.0
+        - name: isActive
+          type: Boolean
+          required: false
+          description: 是否激活
+        - name: birthDate
+          type: LocalDate
+          required: false
+          description: 生日
+          validation:
+            past: true
+        - name: expireDate
+          type: LocalDate
+          required: false
+          description: 过期日期
+          validation:
+            future: true
+        - name: createTime
+          type: LocalDateTime
+          required: false
+          description: 创建时间
+        - name: tags
+          type: List<String>
+          required: false
+          description: 用户标签
+          validation:
+            minSize: 1
+            maxSize: 10
+        - name: role
+          type: Enum
+          required: true
+          description: 用户角色
+          enumValues: [ADMIN, USER, GUEST]
+        - name: addresses
+          type: List<Address>
+          required: false
+          description: 地址列表
+          validation:
+            minSize: 1
+            maxSize: 5
+            elementValidation:
+              minLength: 5
+              maxLength: 100
+    response:
+      className: CreateUserRsp
+      fields:
+        - name: userId
+          type: Long
+          description: 用户ID
+        - name: username
+          type: String
+          description: 用户名
+        - name: resultCode
+          type: Integer
+          description: 结果码
+
+  # 正常API - GET请求
+  - name: getUser
+    path: /api/users/{userId}
+    method: GET
+    description: 获取用户信息
+    request:
+      className: GetUserReq
+      fields:
+        - name: userId
+          type: Long
+          required: true
+          description: 用户ID
+    response:
+      className: GetUserRsp
+      fields:
+        - name: userId
+          type: Long
+          description: 用户ID
+        - name: username
+          type: String
+          description: 用户名
+
+  # 正常API - 嵌套对象
+  - name: updateUserProfile
+    path: /api/users/{userId}/profile
+    method: PUT
+    description: 更新用户资料
+    request:
+      className: UpdateUserProfileReq
+      fields:
+        - name: userId
+          type: Long
+          required: true
+          description: 用户ID
+        - name: profile
+          type: UserProfile
+          required: true
+          description: 用户资料
+          fields:
+            - name: nickname
+              type: String
+              required: false
+              description: 昵称
+            - name: avatar
+              type: String
+              required: false
+              description: 头像URL
+            - name: bio
+              type: String
+              required: false
+              description: 个人简介
+              validation:
+                maxLength: 500
+    response:
+      className: UpdateUserProfileRsp
+      fields:
+        - name: success
+          type: Boolean
+          description: 是否成功
+
+  # 正常API - 嵌套列表
+  - name: batchCreateOrders
+    path: /api/orders/batch
+    method: POST
+    description: 批量创建订单
+    request:
+      className: BatchCreateOrdersReq
+      fields:
+        - name: orders
+          type: List<Order>
+          required: true
+          description: 订单列表
+          validation:
+            minSize: 1
+            maxSize: 100
+            elementValidation:
+              minLength: 1
+              maxLength: 50
+    response:
+      className: BatchCreateOrdersRsp
+      fields:
+        - name: orderIds
+          type: List<Long>
+          description: 创建的订单ID列表
+
+  # 正常API - 删除请求
+  - name: deleteUser
+    path: /api/users/{userId}
+    method: DELETE
+    description: 删除用户
+    request:
+      className: DeleteUserReq
+      fields:
+        - name: userId
+          type: Long
+          required: true
+          description: 用户ID
+        - name: reason
+          type: String
+          required: false
+          description: 删除原因
+    response:
+      className: DeleteUserRsp
+      fields:
+        - name: success
+          type: Boolean
+          description: 是否成功

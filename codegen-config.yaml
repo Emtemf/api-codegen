@@ -1,0 +1,22 @@
+# API 代码生成配置
+
+framework: CXF
+
+# 版权配置
+copyright:
+  company:                    # 公司名称（为空时省略版权声明）
+  startYear: 2024
+
+# OpenAPI 配置
+openApi:
+  enabled: false
+  version: "3.0"
+
+# 输出配置
+output:
+  controller:
+    path: generated/api/      # Controller 生成位置，手动复制
+  request:
+    path: src/main/java/req/ # Req 直接覆盖位置
+  response:
+    path: src/main/java/rsp/ # Rsp 直接覆盖位置
