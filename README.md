@@ -4,10 +4,18 @@
 
 ## 快速开始
 
-### 第一步：安装依赖
+### 环境要求
+
+- **JDK 21** 或更高版本
+- **Maven 3.8+**
+- **Windows / Linux / macOS**
 
 ```bash
-# 确保安装了 Java 21 和 Maven 3.6+
+# 设置 JDK 21 环境
+export JAVA_HOME="C:/Program Files/Java/jdk-21.0.10"
+export PATH="$JAVA_HOME/bin:$PATH"
+
+# 验证环境
 java -version
 mvn -version
 ```
@@ -17,6 +25,8 @@ mvn -version
 ```bash
 git clone https://github.com/Emtemf/api-codegen.git
 cd api-codegen
+
+# 构建项目（必须先用 JDK 21 构建）
 mvn clean install -DskipTests
 ```
 
@@ -82,11 +92,14 @@ apis:
 **3. 运行生成命令：**
 
 ```bash
-# 首次生成（或需要更新时）
-mvn api-codegen:generate
+# 首次生成（或需要更新时）- 使用完整 groupId
+mvn com.apicgen:api-codegen-maven-plugin:generate
 
 # 强制覆盖已有文件
-mvn api-codegen:generate -Dforce=true
+mvn com.apicgen:api-codegen-maven-plugin:generate -Dforce=true
+
+# 或者使用简短形式（需要先将插件安装到本地仓库）
+mvn api-codegen:generate
 ```
 
 ### 第四步：查看生成的文件
@@ -349,7 +362,7 @@ public class CreateUserRsp {
 ## 命令行参数
 
 ```bash
-mvn api-codegen:generate \
+mvn com.apicgen:api-codegen-maven-plugin:generate \
     -DyamlFile=src/main/resources/api.yaml \
     -DoutputDir=src/main/java \
     -DbasePackage=com.example.api \
@@ -409,7 +422,12 @@ mvn test
 ### 本地运行
 
 ```bash
-java -cp api-codegen-core/target/api-codegen-core-1.0.0.jar com.apicgen.Main api-example.yaml
+# 使用 Maven exec 插件运行（推荐，包含所有依赖）
+cd api-codegen-core
+mvn exec:java -Dexec.mainClass="com.apicgen.Main" -Dexec.args="api-example.yaml"
+
+# 直接运行 jar（需要手动添加依赖到 classpath）
+java -cp "target/api-codegen-core-1.0.0.jar;target/dependency/*" com.apicgen.Main api-example.yaml
 ```
 
 ---
