@@ -17,18 +17,33 @@ import java.util.Map;
 /**
  * Main entry point for standalone API code generation.
  *
- * Usage: java -cp api-codegen-core/target/api-codegen-core-1.0.0.jar com.apicgen.Main <yaml-file>
+ * Usage: java -jar api-codegen.jar <yaml-file> [options]
  *
- * Example:
- *   java -cp api-codegen-core/target/api-codegen-core-1.0.0.jar com.apicgen.Main api-example.yaml
+ * Options:
+ *   -output, --outputDir <directory>  Output base directory (default: ./generated)
+ *   -package, --basePackage <package>  Base package name (default: com.apicgen)
+ *   -company <company>                 Copyright company name
+ *   -framework <framework>              Framework type: cxf (default: cxf)
+ *   -force                             Force overwrite existing files
+ *   -help, --help                      Show this help message
+ *
+ * Examples:
+ *   java -jar api-codegen.jar api.yaml
+ *   java -jar api-codegen.jar api.yaml -output=src/main/java -package=com.example
+ *   java -jar api-codegen.jar api.yaml --help
  */
 public class Main {
 
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
-            System.err.println("Usage: java -cp <jar> com.apicgen.Main <yaml-file>");
-            System.err.println("Example: java -cp api-codegen-core-1.0.0.jar com.apicgen.Main api-example.yaml");
+            printHelp();
             System.exit(1);
+        }
+
+        // Check for help flag
+        if (args[0].equals("-help") || args[0].equals("--help")) {
+            printHelp();
+            System.exit(0);
         }
 
         String yamlFilePath = args[0];
@@ -37,6 +52,45 @@ public class Main {
         if (!yamlFile.exists()) {
             System.err.println("Error: YAML file not found: " + yamlFile.getAbsolutePath());
             System.exit(1);
+        }
+
+        // Parse command line options
+        String outputDir = "generated";
+        String basePackage = "com.apicgen";
+        String company = "";
+        String framework = "cxf";
+        boolean force = false;
+
+        for (int i = 1; i < args.length; i++) {
+            String arg = args[i];
+            // Support both "-output value" and "-output=value" formats
+            if (arg.startsWith("-output=")) {
+                outputDir = arg.substring(8);
+            } else if (arg.equals("-output") || arg.equals("--outputDir")) {
+                if (i + 1 < args.length) {
+                    outputDir = args[++i];
+                }
+            } else if (arg.startsWith("-package=") || arg.startsWith("--basePackage=")) {
+                basePackage = arg.substring(arg.indexOf('=') + 1);
+            } else if (arg.equals("-package") || arg.equals("--basePackage")) {
+                if (i + 1 < args.length) {
+                    basePackage = args[++i];
+                }
+            } else if (arg.startsWith("-company=")) {
+                company = arg.substring(9);
+            } else if (arg.equals("-company")) {
+                if (i + 1 < args.length) {
+                    company = args[++i];
+                }
+            } else if (arg.startsWith("-framework=")) {
+                framework = arg.substring(11);
+            } else if (arg.equals("-framework")) {
+                if (i + 1 < args.length) {
+                    framework = args[++i];
+                }
+            } else if (arg.equals("-force")) {
+                force = true;
+            }
         }
 
         System.out.println("========================================");
@@ -48,14 +102,23 @@ public class Main {
         ApiDefinition apiDefinition = YamlParser.parse(yamlFile);
         System.out.println("Parsed " + apiDefinition.getApis().size() + " API(s)\n");
 
-        // Create default config
+        // Create config
         CodegenConfig config = createDefaultConfig();
+        config.setBasePackage(basePackage);
+        config.getCopyright().setCompany(company);
+
+        try {
+            config.setFramework(CodegenConfig.FrameworkType.valueOf(framework.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            System.err.println("Warning: Unknown framework '" + framework + "', using default: CXF");
+            config.setFramework(CodegenConfig.FrameworkType.CXF);
+        }
 
         // Get code generator
         CodeGenerator generator = CodeGeneratorFactory.getGenerator(config);
 
         // Output directory
-        Path outputBase = Paths.get(".").toAbsolutePath().resolve("generated");
+        Path outputBase = Paths.get(outputDir).toAbsolutePath();
         System.out.println("Output directory: " + outputBase);
 
         // Generate code for all APIs
@@ -64,18 +127,18 @@ public class Main {
 
             // Generate Controller
             Map<String, String> controllerFiles = generator.generateController(api, config);
-            writeFiles(outputBase.resolve("controller").resolve(api.getName()), controllerFiles);
+            writeFiles(outputBase.resolve("controller").resolve(api.getName()), controllerFiles, force);
 
             // Generate Request
             if (api.getRequest() != null) {
                 Map<String, String> requestFiles = generator.generateRequest(api, config);
-                writeFiles(outputBase.resolve("request").resolve(api.getName()), requestFiles);
+                writeFiles(outputBase.resolve("request").resolve(api.getName()), requestFiles, force);
             }
 
             // Generate Response
             if (api.getResponse() != null) {
                 Map<String, String> responseFiles = generator.generateResponse(api, config);
-                writeFiles(outputBase.resolve("response").resolve(api.getName()), responseFiles);
+                writeFiles(outputBase.resolve("response").resolve(api.getName()), responseFiles, force);
             }
         }
 
@@ -83,6 +146,27 @@ public class Main {
         System.out.println("Code generation completed!");
         System.out.println("Output: " + outputBase);
         System.out.println("========================================");
+    }
+
+    private static void printHelp() {
+        System.out.println("""
+            API Code Generator - Standalone Mode
+
+            Usage: java -jar api-codegen.jar <yaml-file> [options]
+
+            Options:
+              -output, --outputDir <directory>  Output base directory (default: ./generated)
+              -package, --basePackage <package>  Base package name (default: com.apicgen)
+              -company <company>                 Copyright company name
+              -framework <framework>              Framework type: cxf (default: cxf)
+              -force                             Force overwrite existing files
+              -help, --help                      Show this help message
+
+            Examples:
+              java -jar api-codegen.jar api.yaml
+              java -jar api-codegen.jar api.yaml -output=src/main/java -package=com.example
+              java -jar api-codegen.jar api.yaml --help
+            """);
     }
 
     private static CodegenConfig createDefaultConfig() {
@@ -108,12 +192,16 @@ public class Main {
         return config;
     }
 
-    private static void writeFiles(Path dir, Map<String, String> files) throws IOException {
+    private static void writeFiles(Path dir, Map<String, String> files, boolean force) throws IOException {
         Files.createDirectories(dir);
         for (Map.Entry<String, String> entry : files.entrySet()) {
             Path filePath = dir.resolve(entry.getKey());
-            Files.writeString(filePath, entry.getValue());
-            System.out.println("  └── " + entry.getKey());
+            if (Files.exists(filePath) && !force) {
+                System.out.println("  └── " + entry.getKey() + " (skipped, exists)");
+            } else {
+                Files.writeString(filePath, entry.getValue());
+                System.out.println("  └── " + entry.getKey());
+            }
         }
     }
 }

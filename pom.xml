@@ -130,6 +130,15 @@
 
         <pluginManagement>
             <plugins>
+                <!-- API Codegen Maven Plugin -->
+                <plugin>
+                    <groupId>com.apicgen</groupId>
+                    <artifactId>api-codegen-maven-plugin</artifactId>
+                    <version>${project.version}</version>
+                    <configuration>
+                        <goalPrefix>api-codegen</goalPrefix>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
