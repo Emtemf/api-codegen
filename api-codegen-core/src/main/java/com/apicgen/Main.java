@@ -6,6 +6,8 @@ import com.apicgen.generator.CodeGeneratorFactory;
 import com.apicgen.model.Api;
 import com.apicgen.model.ApiDefinition;
 import com.apicgen.parser.YamlParser;
+import com.apicgen.validator.ApiValidator;
+import com.apicgen.validator.ValidationResult;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,8 +101,30 @@ public class Main {
         System.out.println("Input YAML: " + yamlFile.getAbsolutePath());
 
         // Parse YAML
-        ApiDefinition apiDefinition = YamlParser.parse(yamlFile);
+        ApiDefinition apiDefinition;
+        try {
+            apiDefinition = YamlParser.parse(yamlFile);
+        } catch (IOException e) {
+            System.err.println("========================================");
+            System.err.println("YAML Parse Error:");
+            System.err.println("========================================");
+            System.err.println(e.getMessage());
+            System.exit(1);
+            return;
+        }
         System.out.println("Parsed " + apiDefinition.getApis().size() + " API(s)\n");
+
+        // Validate YAML
+        ApiValidator validator = new ApiValidator();
+        ValidationResult validationResult = validator.validate(apiDefinition);
+        if (!validationResult.isValid()) {
+            System.err.println("========================================");
+            System.err.println("YAML Validation Failed:");
+            System.err.println("========================================");
+            System.err.println(validationResult.getErrorMessage());
+            System.exit(1);
+        }
+        System.out.println("YAML validation passed\n");
 
         // Create config
         CodegenConfig config = createDefaultConfig();

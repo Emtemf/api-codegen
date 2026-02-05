@@ -186,6 +186,57 @@ java -jar api-codegen.jar <yaml文件> [选项]
 | `Enum` | 枚举 |
 | `自定义对象` | 嵌套对象 |
 
+## 单元测试
+
+项目包含 **94 个单元测试**，使用 JUnit 5 + BDD 风格：
+
+```bash
+# 运行所有测试
+mvn test
+
+# 运行特定测试类
+mvn test -Dtest=ApiValidatorTest
+
+# 运行测试并查看详细报告
+mvn test -Dsurefire.useFile=false
+```
+
+### 测试覆盖
+
+| 模块 | 测试类 | 用例数 | 说明 |
+|------|--------|--------|------|
+| 校验器 | `ApiValidatorTest` | 70+ | DFX 规则、边界值、错误检测 |
+| 解析器 | `YamlParserTest` | 10+ | YAML 解析、错误处理 |
+| 代码生成 | `CodeGeneratorTest` | 5+ | Controller、Req、Rsp 生成 |
+| Maven 插件 | `ApiCodegenMojoTest` | 2 | 插件集成 |
+| 工具类 | `CodeGenUtilTest` | 5+ | 工具方法 |
+| Main | `MainTest` | 2 | 独立运行入口 |
+
+### 测试风格（BDD）
+
+```java
+/**
+ * 测试场景：minLength大于maxLength
+ * 预期结果：minLength不能大于maxLength，校验失败
+ * 实际结果：ValidationResult.isValid()返回false
+ */
+@Test
+@DisplayName("should_fail_when_minLength_greater_than_maxLength")
+void shouldFailWhenMinLengthGreaterThanMaxLength() {
+    // Given
+    String yamlContent = "...";
+    ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+    // When
+    ValidationResult result = validator.validate(apiDefinition);
+
+    // Then
+    assertFalse(result.isValid());
+}
+```
+
+---
+
 ## License
 
 Apache-2.0
