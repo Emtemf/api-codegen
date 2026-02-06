@@ -10,9 +10,14 @@ import com.apicgen.model.ApiDefinition;
 import com.apicgen.parser.YamlParser;
 import com.apicgen.util.CodeGenUtil;
 import com.apicgen.validator.ApiValidator;
+import com.apicgen.validator.ValidationAnalyzer;
+import com.apicgen.validator.ValidationAnalyzer.AnalysisItem;
+import com.apicgen.validator.ValidationAnalyzer.AnalysisSummary;
+import com.apicgen.validator.ValidationFixer;
 import com.apicgen.validator.ValidationResult;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -24,7 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Year;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -89,17 +96,29 @@ public class ApiCodegenMojo extends AbstractMojo {
     @Parameter(property = "configFile", defaultValue = "${basedir}/codegen-config.yaml")
     private String configFile;
 
+    /**
+     * 是否分析缺失的校验规则
+     */
+    @Parameter(property = "analyze", defaultValue = "false")
+    private boolean analyze;
+
+    /**
+     * 是否自动修复缺失的校验规则
+     */
+    @Parameter(property = "autoFix", defaultValue = "false")
+    private boolean autoFix;
+
     @Override
     public void execute() throws MojoExecutionException {
-        LOG.info("========================================");
-        LOG.info("API 代码生成器 v1.0.0");
-        LOG.info("========================================");
+        logInfo("========================================");
+        logInfo("API 代码生成器 v1.0.0");
+        logInfo("========================================");
 
         try {
             // 1. 加载配置
             CodegenConfig config = loadConfig();
-            LOG.info("框架类型: " + config.getFramework());
-            LOG.info("OpenAPI 注解: " + config.getOpenApi().isEnabled());
+            logInfo("框架类型: " + config.getFramework());
+            logInfo("OpenAPI 注解: " + config.getOpenApi().isEnabled());
 
             // 2. 解析 YAML
             File yamlFileObj = new File(yamlFile);
@@ -107,29 +126,119 @@ public class ApiCodegenMojo extends AbstractMojo {
                 throw new MojoExecutionException("YAML 文件不存在: " + yamlFile);
             }
             ApiDefinition apiDefinition = YamlParser.parse(yamlFileObj);
-            LOG.info("解析到 " + apiDefinition.getApis().size() + " 个 API");
+            logInfo("解析到 " + apiDefinition.getApis().size() + " 个 API");
 
-            // 3. 校验 API 定义
+            // 3. 分析校验规则
+            if (analyze || autoFix) {
+                runValidationAnalysis(apiDefinition, autoFix, yamlFileObj);
+                if (autoFix) {
+                    logInfo("自动修复完成，退出");
+                    return;
+                }
+                if (analyze) {
+                    return;
+                }
+            }
+
+            // 4. 校验 API 定义
             ApiValidator validator = new ApiValidator();
             ValidationResult validationResult = validator.validate(apiDefinition);
             if (!validationResult.isValid()) {
-                LOG.severe("YAML 校验失败:\n" + validationResult.getErrorMessage());
+                logSevere("YAML 校验失败:\n" + validationResult.getErrorMessage());
                 throw new MojoExecutionException("YAML 校验失败");
             }
-            LOG.info("YAML 校验通过");
+            logInfo("YAML 校验通过");
 
-            // 4. 生成代码
+            // 5. 生成代码
             generateCode(apiDefinition, config);
 
-            LOG.info("========================================");
-            LOG.info("代码生成完成！");
-            LOG.info("========================================");
+            logInfo("========================================");
+            logInfo("代码生成完成！");
+            logInfo("========================================");
 
         } catch (MojoExecutionException e) {
             throw e;
         } catch (Exception e) {
-            LOG.log(java.util.logging.Level.SEVERE, "代码生成失败", e);
+            logSevere("代码生成失败: " + e.getMessage());
             throw new MojoExecutionException("代码生成失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 运行校验规则分析
+     */
+    private void runValidationAnalysis(ApiDefinition apiDefinition, boolean autoFix, File yamlFile) {
+        logInfo("========================================");
+        logInfo("校验规则分析");
+        logInfo("========================================");
+
+        ValidationAnalyzer analyzer = new ValidationAnalyzer();
+        AnalysisSummary summary = analyzer.summarize(apiDefinition);
+
+        if (!summary.hasIssues()) {
+            logInfo("未发现校验问题，做得很好！");
+            return;
+        }
+
+        // 打印摘要
+        logInfo("摘要:");
+        logInfo("  错误:   " + summary.getErrorCount());
+        logInfo("  警告:   " + summary.getWarningCount());
+        logInfo("  信息:   " + summary.getInfoCount());
+        logInfo("  总计:   " + summary.getTotalCount());
+        logInfo("");
+
+        // 获取详细分析结果
+        List<AnalysisItem> issues = analyzer.analyze(apiDefinition);
+
+        // 按严重程度打印问题
+        logInfo("问题列表:");
+        printIssuesBySeverity(issues, AnalysisItem.Severity.ERROR);
+        printIssuesBySeverity(issues, AnalysisItem.Severity.WARNING);
+        printIssuesBySeverity(issues, AnalysisItem.Severity.INFO);
+
+        // 自动修复
+        if (autoFix) {
+            logInfo("");
+            logInfo("========================================");
+            logInfo("自动修复模式");
+            logInfo("========================================");
+
+            ValidationFixer fixer = new ValidationFixer();
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            try {
+                Files.writeString(yamlFile.toPath(), fixedYaml);
+                logInfo("自动修复完成！已更新文件: " + yamlFile.getAbsolutePath());
+                logInfo("已修复 " + summary.getTotalCount() + " 个问题");
+            } catch (IOException e) {
+                logSevere("写入修复文件失败: " + e.getMessage());
+                // 尝试写入到固定文件
+                String backupPath = yamlFile.getAbsolutePath().replace(".yaml", "-fixed.yaml");
+                try {
+                    Files.writeString(Paths.get(backupPath), fixedYaml);
+                    logInfo("已将修复版本写入: " + backupPath);
+                } catch (IOException ex) {
+                    logSevere("写入备份文件失败: " + ex.getMessage());
+                }
+            }
+        } else {
+            logInfo("");
+            logInfo("========================================");
+            logInfo("自动修复命令:");
+            logInfo("  mvn api-codegen:generate -DautoFix=true");
+            logInfo("========================================");
+        }
+    }
+
+    /**
+     * 按严重程度打印问题
+     */
+    private void printIssuesBySeverity(List<AnalysisItem> issues, AnalysisItem.Severity severity) {
+        for (AnalysisItem issue : issues) {
+            if (issue.getSeverity() == severity) {
+                logInfo("  " + issue.toString());
+            }
         }
     }
 
@@ -141,7 +250,7 @@ public class ApiCodegenMojo extends AbstractMojo {
             // 从配置文件加载
             ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
             config = yamlMapper.readValue(configFileObj, CodegenConfig.class);
-            LOG.info("加载配置文件: " + configFile);
+            logInfo("加载配置文件: " + configFile);
         }
 
         // 命令行参数覆盖配置文件
@@ -167,7 +276,7 @@ public class ApiCodegenMojo extends AbstractMojo {
             try {
                 config.getCopyright().setStartYear(Integer.parseInt(startYear));
             } catch (NumberFormatException e) {
-                LOG.warning("startYear 解析失败: " + startYear + ", 使用当前年份");
+                logWarning("startYear 解析失败: " + startYear + ", 使用当前年份");
                 config.getCopyright().setStartYear(Year.now().getValue());
             }
         }
@@ -188,10 +297,10 @@ public class ApiCodegenMojo extends AbstractMojo {
             config.setOutput(new CodegenConfig.OutputConfig());
         }
 
-        LOG.info("基础包名: " + config.getBasePackage());
-        LOG.info("Controller 输出: " + config.getOutput().getController().getPath());
-        LOG.info("Request 输出: " + config.getOutput().getRequest().getPath());
-        LOG.info("Response 输出: " + config.getOutput().getResponse().getPath());
+        logInfo("基础包名: " + config.getBasePackage());
+        logInfo("Controller 输出: " + config.getOutput().getController().getPath());
+        logInfo("Request 输出: " + config.getOutput().getRequest().getPath());
+        logInfo("Response 输出: " + config.getOutput().getResponse().getPath());
 
         return config;
     }
@@ -204,7 +313,7 @@ public class ApiCodegenMojo extends AbstractMojo {
         createDirectories(basePath);
 
         for (Api api : apiDefinition.getApis()) {
-            LOG.info("生成 API: " + api.getName());
+            logInfo("生成 API: " + api.getName());
 
             // 生成 Controller（可能包含多个文件）
             Map<String, String> controllerFiles = generator.generateController(api, config);
@@ -254,24 +363,6 @@ public class ApiCodegenMojo extends AbstractMojo {
         return Paths.get(outputDir, config.getOutput().getResponse().getPath(), packagePath, fileName);
     }
 
-    private Path getControllerPath(Api api, CodegenConfig config) {
-        String packagePath = getBasePackagePath(config) + "/api";
-        String className = CodeGenUtil.capitalize(api.getName()) + "Controller.java";
-        return Paths.get(outputDir, config.getOutput().getController().getPath(), packagePath, className);
-    }
-
-    private Path getRequestPath(Api api, CodegenConfig config) {
-        String packagePath = getRequestPackagePath(config);
-        String className = api.getRequest().getClassName() + ".java";
-        return Paths.get(outputDir, config.getOutput().getRequest().getPath(), packagePath, className);
-    }
-
-    private Path getResponsePath(Api api, CodegenConfig config) {
-        String packagePath = getResponsePackagePath(config);
-        String className = api.getResponse().getClassName() + ".java";
-        return Paths.get(outputDir, config.getOutput().getResponse().getPath(), packagePath, className);
-    }
-
     private String getBasePackagePath(CodegenConfig config) {
         String basePkg = config.getBasePackage();
         return basePkg != null ? basePkg.replace('.', '/') : "com/apicgen";
@@ -301,8 +392,8 @@ public class ApiCodegenMojo extends AbstractMojo {
 
         // 检查文件是否存在
         if (Files.exists(filePath) && !force) {
-            LOG.warning("文件已存在，跳过: " + filePath);
-            LOG.warning("使用 --force 强制覆盖");
+            logWarning("文件已存在，跳过: " + filePath);
+            logWarning("使用 -Dforce=true 强制覆盖");
             return;
         }
 
@@ -310,17 +401,42 @@ public class ApiCodegenMojo extends AbstractMojo {
         if (Files.exists(filePath) && force) {
             Path backupPath = Paths.get(filePath.toString() + ".bak");
             Files.copy(filePath, backupPath);
-            LOG.info("备份文件: " + backupPath);
+            logInfo("备份文件: " + backupPath);
         }
 
         // 写入文件
         try (FileWriter writer = new FileWriter(filePath.toFile())) {
             writer.write(code);
         }
-        LOG.info("生成文件: " + filePath);
+        logInfo("生成文件: " + filePath);
     }
 
     private void createDirectories(Path path) throws IOException {
         Files.createDirectories(path);
+    }
+
+    // 适配 Maven 日志
+    private void logInfo(String message) {
+        LOG.info(message);
+        Log log = getLog();
+        if (log != null) {
+            log.info(message);
+        }
+    }
+
+    private void logWarning(String message) {
+        LOG.warning(message);
+        Log log = getLog();
+        if (log != null) {
+            log.warn(message);
+        }
+    }
+
+    private void logSevere(String message) {
+        LOG.log(Level.SEVERE, message);
+        Log log = getLog();
+        if (log != null) {
+            log.error(message);
+        }
     }
 }

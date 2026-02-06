@@ -68,10 +68,23 @@ cd api-codegen
 **2. 运行生成：**
 
 ```bash
+# 基本生成
 mvn com.apicgen:api-codegen-maven-plugin:generate
 
 # 或使用短命令（首次需要完整 groupId）
 mvn api-codegen:generate
+
+# 强制覆盖已有文件
+mvn api-codegen:generate -Dforce=true
+
+# 分析校验规则
+mvn api-codegen:generate -Danalyze=true
+
+# 自动修复校验规则
+mvn api-codegen:generate -DautoFix=true
+
+# 带自定义参数
+mvn api-codegen:generate -DyamlFile=src/main/resources/api.yaml -DbasePackage=com.example.api
 ```
 
 ---
@@ -108,11 +121,15 @@ mvn api-codegen:generate
 
 ## 验证结果
 
-| 方式 | 命令 | 状态 | 环境 |
-|------|------|------|------|
-| Java jar | `java -jar api-codegen.jar api.yaml` | ✅ 通过 | Windows + JDK 21 |
-| Maven Wrapper | `.\mvnw.cmd api-codegen:generate` | ✅ 通过 | Windows + JDK 21 |
-| Maven 插件 | `mvn api-codegen:generate` | ✅ 通过 | Windows + JDK 21 + Maven |
+| 方式 | 命令 | 状态 | 环境 | 备注 |
+|------|------|------|------|------|
+| Java jar | `java -jar api-codegen.jar api.yaml` | ✅ 通过 | Windows + JDK 21 | 生成 16 个文件 |
+| Maven Wrapper | `.\mvnw.cmd api-codegen:generate` | ✅ 通过 | Windows + JDK 21 | 生成 16 个文件 |
+| Maven 插件 | `mvn api-codegen:generate` | ✅ 通过 | Windows + JDK 21 + Maven | 生成 16 个文件 |
+| analyze 校验分析 | `java -jar api-codegen.jar api.yaml --analyze` | ✅ 通过 | Windows + JDK 21 | 检测 23 个问题 |
+| auto-fix 自动修复 | `java -jar api-codegen.jar api.yaml --auto-fix` | ✅ 通过 | Windows + JDK 21 | 修复 23 个问题 |
+| Maven analyze | `mvn api-codegen:generate -Danalyze=true` | ✅ 通过 | Windows + JDK 21 | 检测 23 个问题 |
+| Maven auto-fix | `mvn api-codegen:generate -DautoFix=true` | ✅ 通过 | Windows + JDK 21 | 修复 23 个问题 |
 
 ---
 
@@ -217,11 +234,78 @@ src/main/java/rsp/      # Response - 自动覆盖
 java -jar api-codegen.jar <yaml文件> [选项]
 
 选项:
-  -output <目录>              输出目录 (默认: ./generated)
-  -package <包名>             基础包名 (默认: com.apicgen)
-  -company <公司名>            版权公司名
-  -framework <框架>           框架类型: cxf (默认: cxf)
-  -force                      强制覆盖已有文件
+  -output, --outputDir <目录>     输出目录 (默认: ./generated)
+  -package, --basePackage <包名>  基础包名 (默认: com.apicgen)
+  -company <公司名>               版权公司名
+  -framework <框架>              框架类型: cxf (默认: cxf)
+  -force                         强制覆盖已有文件
+  -analyze, --analyze            分析缺失的校验规则
+  -auto-fix, --auto-fix          自动补全缺失的校验规则
+  -help, --help                  显示帮助信息
+```
+
+## 校验分析功能
+
+### 分析缺失的校验规则
+
+自动检测 YAML 中字段是否缺少校验规则：
+
+```bash
+# 分析 YAML 文件中的校验问题
+java -jar api-codegen.jar api.yaml --analyze
+```
+
+**输出示例：**
+```
+========================================
+Validation Analysis
+========================================
+
+Summary:
+  Errors:   2
+  Warnings: 6
+  Info:     0
+  Total:    8
+
+Issues:
+  [ERROR] CreateUserReq.username (String): 必填字段缺少 @NotNull/@NotBlank 校验
+  [ERROR] CreateUserReq.email (String): 必填字段缺少 @NotNull/@NotBlank 校验
+  [WARN] CreateUserReq.username (String): String 字段缺少长度校验
+  [WARN] CreateUserReq.email (String): String 字段缺少长度校验
+  [WARN] CreateUserReq.age (Integer): 数值字段缺少范围校验
+  ...
+```
+
+### 自动修复校验规则
+
+根据分析结果自动补全校验规则：
+
+```bash
+# 自动修复 YAML 文件
+java -jar api-codegen.jar api.yaml --auto-fix
+```
+
+**自动修复规则：**
+
+| 类型 | 默认规则 |
+|------|----------|
+| String | `minLength: 1`, `maxLength: 255` |
+| Integer/Long | `min: 0`, `max: 2147483647` |
+| Double | `min: 0`, `max: 9999999999` |
+| List | `minSize: 1`, `maxSize: 100` |
+| 邮箱字段 | 自动添加 `email: true` |
+| 电话字段 | 自动添加正则 `^1[3-9]\\d{9}$` |
+| 生日字段 | 自动添加 `past: true` |
+| 预约字段 | 自动添加 `future: true` |
+
+### Maven 插件中使用
+
+```bash
+# 分析校验规则
+mvn api-codegen:generate -Danalyze=true
+
+# 自动修复校验规则
+mvn api-codegen:generate -DautoFix=true
 ```
 
 ## 支持的数据类型

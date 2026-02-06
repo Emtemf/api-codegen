@@ -1,5 +1,6 @@
 package com.apicgen.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -57,8 +58,14 @@ public class FieldDefinition {
     /**
      * 是否是基本类型
      */
+    @JsonIgnore
     public boolean isPrimitiveType() {
-        switch (type) {
+        if (type == null) {
+            return false;
+        }
+        // 处理带引号的类型，如 "String"
+        String cleanType = type.replace("\"", "").trim();
+        switch (cleanType) {
             case "String":
             case "Integer":
             case "Long":
@@ -76,6 +83,7 @@ public class FieldDefinition {
     /**
      * 是否是枚举类型
      */
+    @JsonIgnore
     public boolean isEnumType() {
         return "Enum".equals(type) || enumValues != null && !enumValues.isEmpty();
     }
@@ -83,13 +91,20 @@ public class FieldDefinition {
     /**
      * 是否是列表类型
      */
+    @JsonIgnore
     public boolean isListType() {
-        return type != null && type.startsWith("List<");
+        if (type == null) {
+            return false;
+        }
+        // 处理带引号的类型，如 "List<String>"
+        String cleanType = type.replace("\"", "").trim();
+        return cleanType.startsWith("List<");
     }
 
     /**
      * 是否是嵌套列表（如 List<List<T>>）
      */
+    @JsonIgnore
     public boolean isNestedListType() {
         if (!isListType()) {
             return false;
@@ -101,6 +116,7 @@ public class FieldDefinition {
     /**
      * 获取泛型类型
      */
+    @JsonIgnore
     public String getGenericType() {
         if (type == null || !type.contains("<")) {
             return null;
@@ -116,6 +132,7 @@ public class FieldDefinition {
     /**
      * 是否是对象类型（非基本类型、非枚举、非列表）
      */
+    @JsonIgnore
     public boolean isObjectType() {
         return !isPrimitiveType() && !isEnumType() && !isListType();
     }

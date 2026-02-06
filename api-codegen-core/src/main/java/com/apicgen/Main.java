@@ -7,6 +7,10 @@ import com.apicgen.model.Api;
 import com.apicgen.model.ApiDefinition;
 import com.apicgen.parser.YamlParser;
 import com.apicgen.validator.ApiValidator;
+import com.apicgen.validator.ValidationAnalyzer;
+import com.apicgen.validator.ValidationAnalyzer.AnalysisItem;
+import com.apicgen.validator.ValidationAnalyzer.AnalysisSummary;
+import com.apicgen.validator.ValidationFixer;
 import com.apicgen.validator.ValidationResult;
 
 import java.io.File;
@@ -14,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -27,11 +32,15 @@ import java.util.Map;
  *   -company <company>                 Copyright company name
  *   -framework <framework>              Framework type: cxf (default: cxf)
  *   -force                             Force overwrite existing files
+ *   -analyze                           Analyze missing validation rules
+ *   -auto-fix                          Auto-fix missing validations
  *   -help, --help                      Show this help message
  *
  * Examples:
  *   java -jar api-codegen.jar api.yaml
  *   java -jar api-codegen.jar api.yaml -output=src/main/java -package=com.example
+ *   java -jar api-codegen.jar api.yaml --analyze
+ *   java -jar api-codegen.jar api.yaml --auto-fix
  *   java -jar api-codegen.jar api.yaml --help
  */
 public class Main {
@@ -62,6 +71,8 @@ public class Main {
         String company = "";
         String framework = "cxf";
         boolean force = false;
+        boolean analyze = false;
+        boolean autoFix = false;
 
         for (int i = 1; i < args.length; i++) {
             String arg = args[i];
@@ -92,6 +103,10 @@ public class Main {
                 }
             } else if (arg.equals("-force")) {
                 force = true;
+            } else if (arg.equals("-analyze") || arg.equals("--analyze")) {
+                analyze = true;
+            } else if (arg.equals("-auto-fix") || arg.equals("--auto-fix")) {
+                autoFix = true;
             }
         }
 
@@ -113,6 +128,17 @@ public class Main {
             return;
         }
         System.out.println("Parsed " + apiDefinition.getApis().size() + " API(s)\n");
+
+        // Handle analyze mode
+        if (analyze || autoFix) {
+            runValidationAnalysis(apiDefinition, autoFix, yamlFile);
+            if (autoFix) {
+                return; // Auto-fix already wrote the file and exited
+            }
+            if (analyze) {
+                return; // Just analysis, exit here
+            }
+        }
 
         // Validate YAML
         ApiValidator validator = new ApiValidator();
@@ -172,6 +198,84 @@ public class Main {
         System.out.println("========================================");
     }
 
+    /**
+     * Run validation analysis
+     */
+    private static void runValidationAnalysis(ApiDefinition apiDefinition, boolean autoFix, File yamlFile) {
+        ValidationAnalyzer analyzer = new ValidationAnalyzer();
+        AnalysisSummary summary = analyzer.summarize(apiDefinition);
+
+        System.out.println("========================================");
+        System.out.println("Validation Analysis");
+        System.out.println("========================================\n");
+
+        if (!summary.hasIssues()) {
+            System.out.println("No validation issues found. Great job!\n");
+            return;
+        }
+
+        // Print summary
+        System.out.println("Summary:");
+        System.out.println("  Errors:   " + summary.getErrorCount());
+        System.out.println("  Warnings: " + summary.getWarningCount());
+        System.out.println("  Info:     " + summary.getInfoCount());
+        System.out.println("  Total:    " + summary.getTotalCount());
+        System.out.println();
+
+        // Get detailed analysis
+        List<AnalysisItem> issues = analyzer.analyze(apiDefinition);
+
+        // Print issues by severity
+        System.out.println("Issues:");
+        printIssuesBySeverity(issues, AnalysisItem.Severity.ERROR);
+        printIssuesBySeverity(issues, AnalysisItem.Severity.WARNING);
+        printIssuesBySeverity(issues, AnalysisItem.Severity.INFO);
+
+        // Auto-fix
+        if (autoFix) {
+            System.out.println("\n========================================");
+            System.out.println("Auto-Fix Mode");
+            System.out.println("========================================\n");
+
+            ValidationFixer fixer = new ValidationFixer();
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            // Write to file
+            String fixedFilePath = yamlFile.getAbsolutePath();
+            try {
+                Files.writeString(yamlFile.toPath(), fixedYaml);
+                System.out.println("Auto-fixed! Updated: " + fixedFilePath);
+                System.out.println("\nFixed " + summary.getTotalCount() + " issue(s)");
+            } catch (IOException e) {
+                System.err.println("Failed to write fixed YAML: " + e.getMessage());
+                // Try writing to fixed file
+                String backupPath = yamlFile.getAbsolutePath().replace(".yaml", "-fixed.yaml");
+                try {
+                    Files.writeString(Paths.get(backupPath), fixedYaml);
+                    System.out.println("Wrote fixed version to: " + backupPath);
+                } catch (IOException ex) {
+                    System.err.println("Failed to write backup file: " + ex.getMessage());
+                }
+            }
+        } else {
+            System.out.println("\n========================================");
+            System.out.println("To auto-fix these issues, run:");
+            System.out.println("  java -jar api-codegen.jar " + yamlFile.getName() + " --auto-fix");
+            System.out.println("========================================");
+        }
+    }
+
+    /**
+     * Print issues by severity
+     */
+    private static void printIssuesBySeverity(List<AnalysisItem> issues, AnalysisItem.Severity severity) {
+        for (AnalysisItem issue : issues) {
+            if (issue.getSeverity() == severity) {
+                System.out.println("  " + issue);
+            }
+        }
+    }
+
     private static void printHelp() {
         System.out.println("""
             API Code Generator - Standalone Mode
@@ -184,11 +288,15 @@ public class Main {
               -company <company>                 Copyright company name
               -framework <framework>              Framework type: cxf (default: cxf)
               -force                             Force overwrite existing files
+              -analyze, --analyze                Analyze missing validation rules
+              -auto-fix, --auto-fix              Auto-fix missing validations
               -help, --help                      Show this help message
 
             Examples:
               java -jar api-codegen.jar api.yaml
               java -jar api-codegen.jar api.yaml -output=src/main/java -package=com.example
+              java -jar api-codegen.jar api.yaml --analyze
+              java -jar api-codegen.jar api.yaml --auto-fix
               java -jar api-codegen.jar api.yaml --help
             """);
     }
