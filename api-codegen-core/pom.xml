@@ -62,6 +62,17 @@
 
     <build>
         <plugins>
+            <!-- Exclude generated test files from compilation -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>generated/**</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
             <!-- Create executable fat-jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

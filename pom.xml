@@ -48,6 +48,7 @@
     <modules>
         <module>api-codegen-core</module>
         <module>api-codegen-maven-plugin</module>
+        <module>api-codegen-intellij</module>
     </modules>
 
     <dependencyManagement>

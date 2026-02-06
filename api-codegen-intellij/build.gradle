@@ -1,0 +1,53 @@
+plugins {
+    id "java"
+    id "org.jetbrains.intellij" version "1.17.4"
+}
+
+group = "com.apicgen"
+version = "1.0.0"
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
+repositories {
+    mavenCentral()
+}
+
+intellij {
+    version.set("2024.1.4")
+    type.set("IC") // IntelliJ IDEA Community
+
+    // Dependencies that are automatically included
+    plugins.set(["java", "java-i18n"])
+
+    // Plugin dependencies
+    pluginDependencies.set([
+    ])
+}
+
+// Include the core module classes
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', '../api-codegen-core/src/main/java']
+        }
+        resources {
+            srcDirs = ['src/main/resources']
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+// Make sure core dependencies are included
+dependencies {
+    implementation project(":api-codegen-core")
+}

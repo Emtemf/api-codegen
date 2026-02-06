@@ -557,6 +557,59 @@ void shouldFailWhenMinLengthGreaterThanMaxLength() {
 
 ---
 
+## IntelliJ IDEA 插件
+
+API Codegen 还提供 IntelliJ IDEA 插件版本，提供图形化界面操作。
+
+### 插件功能
+
+- **侧边栏工具窗口**：图形化界面管理 YAML 文件
+- **一键分析**：检测缺少的校验规则
+- **自动修复**：一键添加校验规则
+- **代码生成**：生成 Controller、Request、Response
+
+### 快速开始
+
+插件位于 `api-codegen-intellij/` 目录：
+
+1. **在 IntelliJ IDEA 中打开插件项目：**
+   ```
+   File > Open > 选择 api-codegen-intellij/
+   ```
+
+2. **配置 SDK：**
+   - `File > Project Structure > Project Settings > Project`
+   - SDK 选择 `IntelliJ IDEA Community Edition IC-241.0`
+
+3. **运行插件：**
+   - 找到 `ApiCodegenPlugin.java`
+   - 右键选择 `Run Plugin`
+
+### 插件结构
+
+```
+api-codegen-intellij/
+├── src/main/java/com/apicgen/intellij/
+│   ├── ApiCodegenPlugin.java          # 插件入口
+│   ├── ui/
+│   │   └── ApiCodegenToolWindowPanel.java  # 主界面
+│   ├── toolwindow/
+│   │   └── ApiCodegenToolWindowFactory.java # 工具窗口
+│   ├── actions/
+│   │   ├── AnalyzeAction.java        # 分析动作
+│   │   ├── AutoFixAction.java        # 自动修复动作
+│   │   ├── GenerateCodeAction.java   # 代码生成动作
+│   │   └── RefreshAction.java        # 刷新动作
+│   ├── dialog/
+│   │   ├── AutoFixConfirmDialog.java # 修复确认对话框
+│   │   └── GenerateConfirmDialog.java # 生成确认对话框
+│   └── service/
+│       └── ApiCodegenProjectService.java # 项目服务
+└── build.gradle                       # Gradle 构建配置
+```
+
+---
+
 ## License
 
 Apache-2.0
