@@ -13,7 +13,7 @@ A powerful IntelliJ IDEA plugin for YAML-based API code generation with validati
 
 ### Prerequisites
 
-- IntelliJ IDEA 2024.1 or later (Ultimate or Community Edition)
+- **IntelliJ IDEA 2024.1 or later** (Ultimate or Community Edition)
 - JDK 17 or later
 
 ### Opening the Plugin Project
@@ -26,10 +26,12 @@ The plugin is designed to be developed **inside IntelliJ IDEA**:
 
 2. **Configure SDK:**
    - Go to `File > Project Structure > Project Settings > Project`
-   - Set SDK to `IntelliJ IDEA Community Edition IC-241.0` or newer
+   - SDK 选择 `IntelliJ IDEA IU-241.0` (Ultimate) 或 `IC-241.0` (Community)
    - Set Language level to `17`
 
 3. **The IntelliJ Platform SDK will be automatically available** when opened as an IDEA project
+
+> **Note:** Ultimate 版本功能更完整，推荐使用
 
 ### Running the Plugin
 

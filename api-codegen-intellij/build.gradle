@@ -16,13 +16,14 @@ repositories {
 }
 
 intellij {
+    // 支持 IntelliJ IDEA Ultimate (IU) 和 Community (IC)
     version.set("2024.1.4")
-    type.set("IC") // IntelliJ IDEA Community
+    type.set("IU") // 使用 Ultimate 版本，也可以改为 "IC" 使用社区版
 
     // Dependencies that are automatically included
     plugins.set(["java", "java-i18n"])
 
-    // Plugin dependencies
+    // Plugin dependencies - 无需额外依赖，基础 API 已足够
     pluginDependencies.set([
     ])
 }
