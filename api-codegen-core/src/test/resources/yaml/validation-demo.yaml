@@ -1,0 +1,185 @@
+apis:
+  # === 完整校验的 API（无问题） ===
+  - name: createUserComplete
+    path: /api/users/complete
+    method: POST
+    description: 创建用户（完整校验示例）
+    request:
+      className: CreateUserCompleteReq
+      fields:
+        - name: username
+          type: String
+          required: true
+          description: 用户名
+          validation:
+            minLength: 4
+            maxLength: 20
+            pattern: "^[a-zA-Z0-9_]+$"
+        - name: email
+          type: String
+          required: true
+          description: 用户邮箱
+          validation:
+            email: true
+            minLength: 5
+            maxLength: 50
+        - name: phoneNumber
+          type: String
+          required: false
+          description: 联系电话
+          validation:
+            pattern: "^1[3-9]\\d{9}$"
+            minLength: 11
+            maxLength: 11
+        - name: age
+          type: Integer
+          required: false
+          description: 年龄
+          validation:
+            min: 0
+            max: 150
+        - name: balance
+          type: Double
+          required: false
+          description: 账户余额
+          validation:
+            min: 0.0
+            max: 1000000.0
+        - name: tags
+          type: List<String>
+          required: false
+          description: 用户标签
+          validation:
+            minSize: 1
+            maxSize: 10
+        - name: orderIds
+          type: List<Long>
+          required: false
+          description: 订单ID列表
+          validation:
+            minSize: 0
+            maxSize: 100
+        - name: birthDate
+          type: LocalDate
+          required: false
+          description: 生日
+          validation:
+            past: true
+        - name: appointmentDate
+          type: LocalDateTime
+          required: false
+          description: 预约时间
+          validation:
+            future: true
+    response:
+      className: CreateUserCompleteRsp
+      fields:
+        - name: userId
+          type: Long
+          required: true
+          description: 创建的用户ID
+          validation:
+            min: 1
+            max: 2147483647
+
+  # === 缺少校验的 API（有问题） ===
+  - name: createUserSimple
+    path: /api/users
+    method: POST
+    description: 创建用户（缺少校验示例）
+    request:
+      className: CreateUserSimpleReq
+      fields:
+        - name: username
+          type: String
+          required: true
+          description: 用户名
+        - name: email
+          type: String
+          required: true
+          description: 用户邮箱
+        - name: userPhone
+          type: String
+          required: false
+          description: 电话
+        - name: age
+          type: Integer
+          required: false
+          description: 年龄
+        - name: balance
+          type: Double
+          required: false
+          description: 余额
+        - name: items
+          type: List<String>
+          required: false
+          description: 商品列表
+        - name: orderIds
+          type: List<Long>
+          required: false
+          description: 订单ID
+        - name: dob
+          type: LocalDate
+          required: false
+          description: 生日
+        - name: scheduleDate
+          type: LocalDateTime
+          required: false
+          description: 预约日期
+    response:
+      className: CreateUserSimpleRsp
+      fields:
+        - name: userId
+          type: Long
+          description: 用户ID
+        - name: resultCode
+          type: Integer
+          description: 结果码
+        - name: message
+          type: String
+          description: 消息
+
+  # === 混合场景 API ===
+  - name: updateUser
+    path: /api/users/{userId}
+    method: PUT
+    description: 更新用户信息
+    request:
+      className: UpdateUserReq
+      fields:
+        - name: userId
+          type: Long
+          required: true
+          description: 用户ID
+        - name: profile
+          type: UserProfile
+          required: false
+          description: 用户资料
+          fields:
+            - name: nickname
+              type: String
+              required: false
+              description: 昵称
+              validation:
+                minLength: 1
+                maxLength: 50
+            - name: avatar
+              type: String
+              required: false
+              description: 头像URL
+            - name: bio
+              type: String
+              required: false
+              description: 个人简介
+              validation:
+                maxLength: 500
+    response:
+      className: UpdateUserRsp
+      fields:
+        - name: success
+          type: Boolean
+          description: 是否成功
+        - name: updatedFields
+          type: List<String>
+          required: false
+          description: 更新的字段列表

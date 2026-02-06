@@ -246,6 +246,8 @@ java -jar api-codegen.jar <yaml文件> [选项]
 
 ## 校验分析功能
 
+校验分析功能可以自动检测 YAML 文件中的 API 定义，识别缺少校验规则的字段，并提供详细的分析报告。
+
 ### 分析缺失的校验规则
 
 自动检测 YAML 中字段是否缺少校验规则：
@@ -255,25 +257,206 @@ java -jar api-codegen.jar <yaml文件> [选项]
 java -jar api-codegen.jar api.yaml --analyze
 ```
 
-**输出示例：**
+**使用 Maven 插件：**
+```bash
+mvn api-codegen:generate -Danalyze=true
 ```
-========================================
-Validation Analysis
-========================================
 
-Summary:
-  Errors:   2
-  Warnings: 6
-  Info:     0
-  Total:    8
+### 校验报告示例
 
-Issues:
-  [ERROR] CreateUserReq.username (String): 必填字段缺少 @NotNull/@NotBlank 校验
-  [ERROR] CreateUserReq.email (String): 必填字段缺少 @NotNull/@NotBlank 校验
-  [WARN] CreateUserReq.username (String): String 字段缺少长度校验
-  [WARN] CreateUserReq.email (String): String 字段缺少长度校验
-  [WARN] CreateUserReq.age (Integer): 数值字段缺少范围校验
-  ...
+运行分析命令后，会生成详细的校验报告：
+
+```
+================================================================================
+                        API Validation Analysis Report
+================================================================================
+File: validation-demo.yaml
+Date: 2024-XX-XX XX:XX:XX
+--------------------------------------------------------------------------------
+
+SUMMARY
+================================================================================
+Total APIs:          3
+Total Fields:        25
+  - With Validation:  9 (36%)
+  - Missing:         16 (64%)
+
+ISSUES BY SEVERITY
+================================================================================
+  [ERROR]   7  (Critical - required fields missing @NotNull/@NotBlank)
+  [WARN]   15  (Warning  - recommended validations missing)
+  [INFO]    0
+
+TOTAL ISSUES: 22
+
+================================================================================
+                           DETAILED ISSUES
+================================================================================
+
+[ISSUE #1] CreateUserSimpleReq.username (String, required)
+--------------------------------------------------------------------------------
+  Severity: ERROR
+  Problem:  必填字段缺少 @NotNull/@NotBlank 校验
+  Fix:      Add validation:
+              - notNull: true
+
+[ISSUE #2] CreateUserSimpleReq.email (String, required)
+--------------------------------------------------------------------------------
+  Severity: ERROR
+  Problem:  必填字段缺少 @NotNull/@NotBlank 校验
+  Fix:      Add validation:
+              - notNull: true
+
+[ISSUE #3] CreateUserSimpleReq.email (String)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  邮箱字段建议添加邮箱格式校验
+  Fix:      Add validation:
+              - email: true
+
+[ISSUE #4] CreateUserSimpleReq.userPhone (String)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  电话字段建议添加手机号正则校验
+  Fix:      Add validation:
+              - pattern: "^1[3-9]\\d{9}$"
+
+[ISSUE #5] CreateUserSimpleReq.username (String)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  String 字段缺少长度校验
+  Fix:      Add validation:
+              - minLength: 1
+              - maxLength: 255
+
+[ISSUE #6] CreateUserSimpleReq.age (Integer)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  数值字段缺少范围校验
+  Fix:      Add validation:
+              - min: 0
+              - max: 2147483647
+
+[ISSUE #7] CreateUserSimpleReq.balance (Double)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  数值字段缺少范围校验
+  Fix:      Add validation:
+              - min: 0.0
+              - max: 9999999999.0
+
+[ISSUE #8] CreateUserSimpleReq.items (List<String>)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  List 字段缺少大小范围校验
+  Fix:      Add validation:
+              - minSize: 1
+              - maxSize: 100
+
+[ISSUE #9] CreateUserSimpleReq.orderIds (List<Long>)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  List 字段缺少大小范围校验
+  Fix:      Add validation:
+              - minSize: 0
+              - maxSize: 100
+
+[ISSUE #10] CreateUserSimpleReq.dob (LocalDate)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  生日/日期字段建议添加过去日期校验
+  Fix:      Add validation:
+              - past: true
+
+[ISSUE #11] CreateUserSimpleReq.scheduleDate (LocalDateTime)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  预约/未来日期字段建议添加未来日期校验
+  Fix:      Add validation:
+              - future: true
+
+[ISSUE #12] UpdateUserReq.profile.avatar (String)
+--------------------------------------------------------------------------------
+  Severity: WARN
+  Problem:  String 字段缺少长度校验
+  Fix:      Add validation:
+              - minLength: 1
+              - maxLength: 255
+
+--------------------------------------------------------------------------------
+
+SUGGESTED FIX
+================================================================================
+Run with --auto-fix to automatically apply these fixes:
+  java -jar api-codegen.jar validation-demo.yaml --auto-fix
+
+================================================================================
+```
+
+### 报告说明
+
+| 字段 | 说明 |
+|------|------|
+| **Total APIs** | YAML 文件中的 API 数量 |
+| **Total Fields** | 所有 API 的字段总数（包含嵌套对象字段） |
+| **With Validation** | 已有校验规则的字段数 |
+| **Missing** | 缺少校验规则的字段数 |
+| **ERROR** | 严重问题（必填字段缺少 @NotNull 校验） |
+| **WARN** | 警告（建议添加的校验规则） |
+| **INFO** | 信息性提示 |
+
+### 问题等级说明
+
+#### ERROR（错误）- 必须修复
+
+| 场景 | 说明 |
+|------|------|
+| 必填字段缺少校验 | `required: true` 的字段没有 `validation.notNull: true` |
+
+#### WARN（警告）- 建议修复
+
+| 字段类型 | 建议校验规则 |
+|----------|-------------|
+| `String` | `minLength: 1`, `maxLength: 255` |
+| `Integer/Long` | `min: 0`, `max: 2147483647` |
+| `Double` | `min: 0.0`, `max: 9999999999.0` |
+| `List<T>` | `minSize: 1`, `maxSize: 100` |
+| 邮箱字段 | `email: true` |
+| 电话字段 | `pattern: "^1[3-9]\\d{9}$"` |
+| 生日字段 | `past: true` |
+| 预约字段 | `future: true` |
+
+### 智能字段识别
+
+系统会自动识别以下字段类型并推荐相应校验规则：
+
+| 识别规则 | 字段名包含 | 自动添加校验 |
+|---------|-----------|-------------|
+| 邮箱字段 | `email`, `mail` | `email: true` |
+| 电话字段 | `phone`, `tel`, `mobile` | `pattern: "^1[3-9]\\d{9}$"` |
+| 生日字段 | `birth`, `dob`, `birthday` | `past: true` |
+| 预约字段 | `appointment`, `schedule`, `future` | `future: true` |
+| 年龄字段 | `age` | `min: 0`, `max: 150` |
+| 余额字段 | `balance`, `amount`, `price` | `min: 0.0` |
+
+### 演示文件
+
+项目提供了完整的校验分析演示文件，位于：
+
+```
+api-codegen-core/src/test/resources/yaml/validation-demo.yaml
+```
+
+该文件包含三种典型场景：
+
+1. **createUserComplete** - 完整校验的 API（无问题）
+2. **createUserSimple** - 缺少校验的 API（有 22 个问题）
+3. **updateUser** - 混合场景（部分字段有校验，部分缺失）
+
+运行分析命令查看效果：
+
+```bash
+java -jar api-codegen-core/target/api-codegen.jar api-codegen-core/src/test/resources/yaml/validation-demo.yaml --analyze
 ```
 
 ### 自动修复校验规则
