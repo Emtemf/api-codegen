@@ -1,0 +1,137 @@
+swagger: '2.0'
+info:
+  version: v1
+  title: ApplicationTitle
+  description: GroupDesc
+schemes:
+  - https
+host: localhost.com
+basePath: /
+paths:
+  /api/users:
+    get:
+      summary: 获取用户列表
+      description: 获取所有用户信息
+      operationId: getUserList
+      responses:
+        200:
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      summary: 创建用户
+      description: 创建新用户
+      operationId: createUser
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateUserRequest'
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/CreateUserResponse'
+  /api/users/{id}:
+    get:
+      summary: 获取单个用户
+      description: 根据ID获取用户信息
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/User'
+    put:
+      summary: 更新用户
+      description: 更新用户信息
+      operationId: updateUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateUserRequest'
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/UpdateUserResponse'
+    delete:
+      summary: 删除用户
+      description: 根据ID删除用户
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: 成功
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: 用户ID
+      username:
+        type: string
+        description: 用户名
+      email:
+        type: string
+        description: 邮箱
+  CreateUserRequest:
+    type: object
+    properties:
+      username:
+        type: string
+        description: 用户名
+        minLength: 4
+        maxLength: 20
+      email:
+        type: string
+        description: 邮箱
+        format: email
+      age:
+        type: integer
+        description: 年龄
+        minimum: 0
+        maximum: 150
+  CreateUserResponse:
+    type: object
+    properties:
+      userId:
+        type: integer
+        description: 创建的用户ID
+      success:
+        type: boolean
+        description: 操作是否成功
+  UpdateUserRequest:
+    type: object
+    properties:
+      username:
+        type: string
+        description: 用户名
+      email:
+        type: string
+        description: 邮箱
+  UpdateUserResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        description: 操作是否成功

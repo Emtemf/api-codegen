@@ -78,22 +78,38 @@ public class CxfCodeGenerator implements CodeGenerator {
         // 导入
         sb.append("import javax.ws.rs.*;\n");
         sb.append("import javax.validation.Valid;\n");
-        sb.append("import ").append(getResponsePackage(config)).append(".").append(api.getResponse().getClassName()).append(";\n");
-        sb.append("import ").append(getRequestPackage(config)).append(".").append(api.getRequest().getClassName()).append(";\n\n");
+
+        // 导入 Response（如果存在）
+        if (api.getResponse() != null) {
+            sb.append("import ").append(getResponsePackage(config)).append(".").append(api.getResponse().getClassName()).append(";\n");
+        }
+
+        // 导入 Request（如果存在）
+        if (api.getRequest() != null) {
+            sb.append("import ").append(getRequestPackage(config)).append(".").append(api.getRequest().getClassName()).append(";\n");
+        }
+        sb.append("\n");
 
         // 类定义
-        sb.append("/**\n * ").append(api.getDescription()).append(" */\n");
+        sb.append("/**\n * ").append(api.getDescription() != null ? api.getDescription() : api.getName()).append(" */\n");
         sb.append("@Path(\"").append(api.getPath()).append("\")\n");
         sb.append("public class ").append(getControllerClassName(api.getName())).append(" {\n\n");
 
         // 方法
         String httpMethodAnnotation = getHttpMethodAnnotation(api.getMethod());
-        sb.append("    /**\n     * ").append(api.getDescription()).append(" */\n");
+        sb.append("    /**\n * ").append(api.getDescription() != null ? api.getDescription() : api.getName()).append(" */\n");
         sb.append("    @").append(httpMethodAnnotation).append("\n");
         sb.append("    @Consumes(MediaType.APPLICATION_JSON)\n");
         sb.append("    @Produces(MediaType.APPLICATION_JSON)\n");
-        sb.append("    public ").append(api.getResponse().getClassName()).append(" ")
-          .append(getMethodName(api)).append("(@Valid ").append(api.getRequest().getClassName()).append(" req) {\n");
+
+        String responseType = api.getResponse() != null ? api.getResponse().getClassName() : "Void";
+        String requestType = api.getRequest() != null ? api.getRequest().getClassName() : "Void";
+
+        if ("Void".equals(requestType)) {
+            sb.append("    public ").append(responseType).append(" ").append(getMethodName(api)).append("() {\n");
+        } else {
+            sb.append("    public ").append(responseType).append(" ").append(getMethodName(api)).append("(@Valid ").append(requestType).append(" req) {\n");
+        }
         sb.append("        // TODO: 实现业务逻辑\n");
         sb.append("        return null;\n");
         sb.append("    }\n");

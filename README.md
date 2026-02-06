@@ -118,7 +118,9 @@ mvn api-codegen:generate
 
 ## API 定义示例
 
-创建 `api.yaml` 文件：
+创建 `api.yaml` 文件，支持两种格式：
+
+### 格式一：自定义格式（推荐）
 
 ```yaml
 apis:
@@ -149,6 +151,57 @@ apis:
           type: Long
           description: 用户ID
 ```
+
+### 格式二：Swagger 2.0 / OpenAPI 3.0（自动转换）
+
+直接导入 Swagger 或 OpenAPI 格式的 YAML：
+
+```yaml
+swagger: '2.0'
+info:
+  version: v1
+  title: 用户管理 API
+  description: 用户相关的 API 接口
+schemes:
+  - https
+basePath: /api
+paths:
+  /users:
+    get:
+      summary: 获取用户列表
+      operationId: getUserList
+      responses:
+        200:
+          description: 成功
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      summary: 创建用户
+      operationId: createUser
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateUserRequest'
+      responses:
+        200:
+          description: 成功
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: 用户ID
+      username:
+        type: string
+        description: 用户名
+```
+
+**提示：** 系统会自动检测 YAML 格式，无需手动指定。
 
 ## 输出文件
 
