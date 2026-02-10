@@ -2,6 +2,7 @@ package com.apicgen.config;
 
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,6 +35,11 @@ public class CodegenConfig {
      * 输出配置
      */
     private OutputConfig output;
+
+    /**
+     * 自定义注解配置
+     */
+    private CustomAnnotationsConfig customAnnotations;
 
     /**
      * 项目配置（多项目）
@@ -99,6 +105,22 @@ public class CodegenConfig {
          * Response 输出配置
          */
         private PathConfig response = new PathConfig("src/main/java/rsp/");
+    }
+
+    /**
+     * 自定义注解配置
+     */
+    @Data
+    public static class CustomAnnotationsConfig {
+        /**
+         * 类级别注解（应用于 Controller 类）
+         */
+        private List<String> classAnnotations;
+
+        /**
+         * 方法级别注解（应用于每个方法）
+         */
+        private List<String> methodAnnotations;
     }
 
     /**

@@ -374,6 +374,14 @@ public class CxfCodeGenerator implements CodeGenerator {
         sb.append(" * 此文件由 api-codegen 自动生成，请勿手动修改\n");
         sb.append(" */\n");
         sb.append("@Path(\"/api\")\n");
+
+        // 添加类级别自定义注解
+        if (config.getCustomAnnotations() != null && config.getCustomAnnotations().getClassAnnotations() != null) {
+            for (String annotation : config.getCustomAnnotations().getClassAnnotations()) {
+                sb.append(annotation).append("\n");
+            }
+        }
+
         sb.append("public class ").append(className).append(" {\n\n");
 
         // 遍历所有 API，生成方法
@@ -396,6 +404,13 @@ public class CxfCodeGenerator implements CodeGenerator {
         sb.append("    /**\n");
         sb.append("     * ").append(api.getDescription() != null ? api.getDescription() : api.getName()).append("\n");
         sb.append("     */\n");
+
+        // 添加方法级别自定义注解
+        if (config.getCustomAnnotations() != null && config.getCustomAnnotations().getMethodAnnotations() != null) {
+            for (String annotation : config.getCustomAnnotations().getMethodAnnotations()) {
+                sb.append("    ").append(annotation).append("\n");
+            }
+        }
 
         // HTTP 方法注解
         String httpMethod = getHttpMethodAnnotation(api.getMethod());

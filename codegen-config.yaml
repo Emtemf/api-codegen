@@ -12,6 +12,16 @@ openApi:
   enabled: false
   version: "3.0"
 
+# 自定义注解配置
+customAnnotations:
+  # 类级别注解（应用于 Controller 类）
+  classAnnotations:
+    - "@SomeCustomAnnotation"
+
+  # 方法级别注解（应用于每个方法）
+  methodAnnotations:
+    - "@Permission(\"default\")"
+
 # 输出配置
 output:
   controller:
