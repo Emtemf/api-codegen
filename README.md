@@ -561,6 +561,14 @@ void shouldFailWhenMinLengthGreaterThanMaxLength() {
 
 API Codegen 还提供 IntelliJ IDEA 插件版本，提供图形化界面操作。
 
+### 重要说明
+
+**插件项目已迁移到独立仓库！**
+
+由于 IntelliJ Platform SDK 要求 Java 17，而主项目使用 Java 21，插件已迁移到独立目录：
+
+📁 **插件位置**: [api-codegen-intellij-standalone](../api-codegen-intellij-standalone/)
+
 ### 插件功能
 
 - **侧边栏工具窗口**：图形化界面管理 YAML 文件
@@ -570,25 +578,29 @@ API Codegen 还提供 IntelliJ IDEA 插件版本，提供图形化界面操作�
 
 ### 快速开始
 
-插件位于 `api-codegen-intellij/` 目录：
-
-1. **在 IntelliJ IDEA 中打开插件项目：**
+1. **克隆插件仓库或进入插件目录：**
    ```
-   File > Open > 选择 api-codegen-intellij/
+   cd api-codegen-intellij-standalone
    ```
 
-2. **配置 SDK：**
+2. **在 IntelliJ IDEA 中打开插件项目：**
+   ```
+   File > Open > 选择 api-codegen-intellij-standalone/
+   ```
+
+3. **配置 SDK：**
    - `File > Project Structure > Project Settings > Project`
-   - SDK 选择 `IntelliJ IDEA Community Edition IC-241.0`
+   - SDK 选择 `IntelliJ IDEA Community Edition IC-241.0` 或更高版本
+   - Language level: Java 17
 
-3. **运行插件：**
+4. **运行插件：**
    - 找到 `ApiCodegenPlugin.java`
    - 右键选择 `Run Plugin`
 
 ### 插件结构
 
 ```
-api-codegen-intellij/
+api-codegen-intellij-standalone/
 ├── src/main/java/com/apicgen/intellij/
 │   ├── ApiCodegenPlugin.java          # 插件入口
 │   ├── ui/
@@ -599,13 +611,23 @@ api-codegen-intellij/
 │   │   ├── AnalyzeAction.java        # 分析动作
 │   │   ├── AutoFixAction.java        # 自动修复动作
 │   │   ├── GenerateCodeAction.java   # 代码生成动作
-│   │   └── RefreshAction.java        # 刷新动作
-│   ├── dialog/
-│   │   ├── AutoFixConfirmDialog.java # 修复确认对话框
-│   │   └── GenerateConfirmDialog.java # 生成确认对话框
+│   │   ├── RefreshAction.java        # 刷新动作
+│   │   └── ShowToolWindowAction.java # 显示工具窗口动作
 │   └── service/
-│       └── ApiCodegenProjectService.java # 项目服务
+│       ├── ApiCodegenProjectService.java       # 服务接口
+│       └── ApiCodegenProjectServiceImpl.java   # 服务实现
+├── src/main/resources/
+│   └── META-INF/plugin.xml           # 插件配置
 └── build.gradle                       # Gradle 构建配置
+```
+
+### 依赖说明
+
+插件依赖 `api-codegen-core:1.0.0`，需要先在主项目中安装：
+
+```bash
+cd api-codegen
+mvn install -DskipTests -pl api-codegen-core
 ```
 
 ---

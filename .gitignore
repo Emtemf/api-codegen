@@ -48,3 +48,8 @@ web-ui/
 project-requirements.md
 .claude/
 CLAUDE.md
+
+# ===========================================
+# IntelliJ Plugin (separate Gradle project)
+# ===========================================
+api-codegen-intellij-standalone/
