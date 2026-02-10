@@ -23,6 +23,30 @@ public class CxfCodeGenerator implements CodeGenerator {
         return files;
     }
 
+    /**
+     * 生成统一的 Controller（包含所有 API 方法）
+     * @param apiDefinition 包含所有 API 的定义
+     * @param config 配置
+     * @return Map<文件名, 内容>
+     */
+    public Map<String, String> generateControllers(ApiDefinition apiDefinition, CodegenConfig config) {
+        Map<String, String> files = new LinkedHashMap<>();
+
+        // 根据 basePackage 生成统一的类名
+        String basePackage = config.getBasePackage() != null ? config.getBasePackage() : "com.apicgen";
+        // 从 basePackage 提取模块名作为类名（如 com.example.api -> Api）
+        String moduleName = basePackage;
+        if (basePackage.contains(".")) {
+            moduleName = basePackage.substring(basePackage.lastIndexOf(".") + 1);
+        }
+        // 首字母大写作为类名
+        String className = capitalize(moduleName) + "Api";
+
+        String content = generateUnifiedControllerContent(apiDefinition, config, className);
+        files.put(className + ".java", content);
+        return files;
+    }
+
     @Override
     public Map<String, String> generateRequest(Api api, CodegenConfig config) {
         Map<String, String> files = new LinkedHashMap<>();
@@ -303,5 +327,111 @@ public class CxfCodeGenerator implements CodeGenerator {
     private String capitalize(String str) {
         if (str == null || str.isEmpty()) return str;
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    /**
+     * 生成统一的 Controller（包含所有 API 方法）
+     */
+    private String generateUnifiedControllerContent(ApiDefinition apiDefinition, CodegenConfig config, String className) {
+        StringBuilder sb = new StringBuilder();
+
+        // 文件头
+        sb.append(getFileHeader(config));
+
+        // 包声明
+        String controllerPackage = getControllerPackage(config);
+        sb.append("package ").append(controllerPackage).append(";\n\n");
+
+        // 收集所有需要导入的类
+        Set<String> importedRequestClasses = new HashSet<>();
+        Set<String> importedResponseClasses = new HashSet<>();
+
+        // 导入
+        sb.append("import javax.ws.rs.*;\n");
+        sb.append("import javax.validation.Valid;\n");
+
+        for (Api api : apiDefinition.getApis()) {
+            if (api.getResponse() != null) {
+                importedResponseClasses.add(api.getResponse().getClassName());
+            }
+            if (api.getRequest() != null) {
+                importedRequestClasses.add(api.getRequest().getClassName());
+            }
+        }
+
+        // 输出导入
+        for (String cls : importedResponseClasses) {
+            sb.append("import ").append(getResponsePackage(config)).append(".").append(cls).append(";\n");
+        }
+        for (String cls : importedRequestClasses) {
+            sb.append("import ").append(getRequestPackage(config)).append(".").append(cls).append(";\n");
+        }
+        sb.append("\n");
+
+        // 类定义
+        sb.append("/**\n");
+        sb.append(" * 统一的 API 控制器\n");
+        sb.append(" * 此文件由 api-codegen 自动生成，请勿手动修改\n");
+        sb.append(" */\n");
+        sb.append("@Path(\"/api\")\n");
+        sb.append("public class ").append(className).append(" {\n\n");
+
+        // 遍历所有 API，生成方法
+        for (Api api : apiDefinition.getApis()) {
+            sb.append(generateApiMethod(api, config));
+            sb.append("\n");
+        }
+
+        sb.append("}\n");
+
+        return sb.toString();
+    }
+
+    /**
+     * 生成单个 API 方法
+     */
+    private String generateApiMethod(Api api, CodegenConfig config) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("    /**\n");
+        sb.append("     * ").append(api.getDescription() != null ? api.getDescription() : api.getName()).append("\n");
+        sb.append("     */\n");
+
+        // HTTP 方法注解
+        String httpMethod = getHttpMethodAnnotation(api.getMethod());
+        sb.append("    @").append(httpMethod).append("\n");
+        sb.append("    @Path(\"").append(getRelativePath(api.getPath())).append("\")\n");
+        sb.append("    @Consumes(MediaType.APPLICATION_JSON)\n");
+        sb.append("    @Produces(MediaType.APPLICATION_JSON)\n");
+
+        String responseType = api.getResponse() != null ? api.getResponse().getClassName() : "Void";
+        String requestType = api.getRequest() != null ? api.getRequest().getClassName() : "Void";
+
+        String methodName = getMethodName(api);
+        if ("Void".equals(requestType)) {
+            sb.append("    public ").append(responseType).append(" ").append(methodName).append("() {\n");
+        } else {
+            sb.append("    public ").append(responseType).append(" ").append(methodName).append("(@Valid ").append(requestType).append(" req) {\n");
+        }
+        sb.append("        // TODO: 实现业务逻辑\n");
+        sb.append("        return null;\n");
+        sb.append("    }");
+
+        return sb.toString();
+    }
+
+    /**
+     * 获取相对路径（去掉公共前缀）
+     */
+    private String getRelativePath(String fullPath) {
+        if (fullPath == null) return "";
+        // 去掉 /api 前缀，如果有的话
+        if (fullPath.startsWith("/api")) {
+            return fullPath.substring(4);
+        }
+        if (fullPath.startsWith("/")) {
+            return fullPath;
+        }
+        return "/" + fullPath;
     }
 }

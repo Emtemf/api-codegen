@@ -37,4 +37,14 @@ public class ElementValidationConfig {
      * 最大值（Integer/Long/Double）
      */
     private Double max;
+
+    /**
+     * 最小大小（List）
+     */
+    private Integer minSize;
+
+    /**
+     * 最大大小（List）
+     */
+    private Integer maxSize;
 }

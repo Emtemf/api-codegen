@@ -29,6 +29,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Year;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -312,17 +313,32 @@ public class ApiCodegenMojo extends AbstractMojo {
         Path basePath = Paths.get(outputDir);
         createDirectories(basePath);
 
+        // 生成统一的 Controller（包含所有 API 方法）
+        logInfo("生成统一的 API 控制器...");
+        Map<String, String> controllerFiles;
+        if (generator instanceof com.apicgen.generator.cxf.CxfCodeGenerator) {
+            // CXF 生成器：生成统一 Controller
+            controllerFiles = ((com.apicgen.generator.cxf.CxfCodeGenerator) generator)
+                    .generateControllers(apiDefinition, config);
+        } else {
+            // 其他生成器：回退到原来的方式（每个 API 一个 Controller）
+            controllerFiles = new LinkedHashMap<>();
+            for (Api api : apiDefinition.getApis()) {
+                controllerFiles.putAll(generator.generateController(api, config));
+            }
+        }
+
+        // 写入 Controller 文件
+        for (Map.Entry<String, String> entry : controllerFiles.entrySet()) {
+            String fileName = entry.getKey();
+            String content = entry.getValue();
+            Path filePath = getUnifiedControllerFilePath(config, fileName);
+            writeCode(filePath, content, fileName.replace(".java", ""));
+        }
+
+        // 生成 Request 和 Response（每个 API 独立）
         for (Api api : apiDefinition.getApis()) {
             logInfo("生成 API: " + api.getName());
-
-            // 生成 Controller（可能包含多个文件）
-            Map<String, String> controllerFiles = generator.generateController(api, config);
-            for (Map.Entry<String, String> entry : controllerFiles.entrySet()) {
-                String fileName = entry.getKey();
-                String content = entry.getValue();
-                Path filePath = getControllerFilePath(api, config, fileName);
-                writeCode(filePath, content, fileName.replace(".java", ""));
-            }
 
             // 生成 Request（可能包含主类和嵌套类）
             if (api.getRequest() != null) {
@@ -346,6 +362,12 @@ public class ApiCodegenMojo extends AbstractMojo {
                 }
             }
         }
+    }
+
+    private Path getUnifiedControllerFilePath(CodegenConfig config, String fileName) {
+        String packagePath = getBasePackagePath(config) + "/api";
+        String basePath = outputDir + "/" + config.getOutput().getController().getPath() + "/" + packagePath;
+        return Paths.get(normalizePath(basePath), fileName);
     }
 
     private Path getControllerFilePath(Api api, CodegenConfig config, String fileName) {
