@@ -220,12 +220,107 @@ definitions:
 
 **提示：** 系统会自动检测 YAML 格式，无需手动指定。
 
+## 统一 API 控制器
+
+从 v1.1.0 开始，系统生成**统一的 API 控制器**，一个 YAML 文件对应一个 Controller 类：
+
+```java
+// 根据 basePackage 生成类名，如 com.example.api -> ExampleApi
+@Path("/api")
+public class ExampleApi {
+
+    @POST
+    @Path("/users")  // /api/users
+    public CreateUserRsp create(@Valid CreateUserReq req) {
+        // TODO: 实现业务逻辑
+        return null;
+    }
+
+    @GET
+    @Path("/users/{id}")  // /api/users/{id}
+    public GetUserRsp query(@PathParam("id") Long id) {
+        // TODO: 实现业务逻辑
+        return null;
+    }
+}
+```
+
+## 自定义注解配置
+
+支持在 `codegen-config.yaml` 中配置自定义注解（适用于框架定制化需求）：
+
+```yaml
+# 自定义注解配置
+customAnnotations:
+  # 类级别注解（应用于 Controller 类）
+  classAnnotations:
+    - "@Secured"
+    - "@AuditLog"
+
+  # 方法级别注解（应用于每个方法）
+  methodAnnotations:
+    - "@Permission(\"default\")"
+```
+
+**生成效果：**
+
+```java
+@Path("/api")
+@Secured
+@AuditLog
+public class ExampleApi {
+
+    @Permission("default")
+    @POST
+    @Path("/users")
+    public CreateUserRsp create(@Valid CreateUserReq req) {
+        // ...
+    }
+}
+```
+
 ## 输出文件
 
 ```
-generated/api/          # Controller - 复制到项目，手动编写业务逻辑
+generated/api/          # Controller - 统一 API 控制器
 src/main/java/req/      # Request - 自动覆盖
 src/main/java/rsp/      # Response - 自动覆盖
+```
+
+## 配置文件 (`codegen-config.yaml`)
+
+```yaml
+# 框架类型: cxf
+framework: CXF
+
+# 版权配置
+copyright:
+  company: ""            # 公司名称（为空时省略版权声明）
+  startYear: 2024
+
+# OpenAPI 配置
+openApi:
+  enabled: false
+  version: "3.0"
+
+# 自定义注解配置（适用于框架定制化）
+customAnnotations:
+  # 类级别注解（应用于 Controller 类）
+  classAnnotations:
+    - "@Secured"
+
+  # 方法级别注解（应用于每个方法）
+  methodAnnotations:
+    - "@Permission(\"default\")"
+
+# 输出配置
+output:
+  controller:
+    path: generated/api/    # Controller 生成位置（手动复制）
+  request:
+    path: src/main/java/req/  # Request 自动覆盖位置
+  response:
+    path: src/main/java/rsp/  # Response 自动覆盖位置
 ```
 
 ## 命令行参数（方式一）
