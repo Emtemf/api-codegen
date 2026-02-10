@@ -1,0 +1,38 @@
+<idea-plugin>
+  <version>1.0.0</version>
+  <idea-version since-build="232.8660" until-build="232.*" />
+  <id>com.apicgen.api-codegen-intellij</id>
+  <vendor email="support@apicgen.com" name="ApiCodegen" url="https://github.com/Emtemf/api-codegen" />
+  <resource-bundle>messages.ApiCodegenBundle</resource-bundle>
+  <actions>
+    <!-- Tool Window Action -->
+    <action id="ApiCodegen.ShowToolWindow" class="com.apicgen.intellij.actions.ShowToolWindowAction" text="API CodeGen" description="Open API CodeGen tool window">
+      <add-to-group group-id="ToolsMenu" anchor="last" />
+      <keyboard-shortcut keymap="$default" first-keystroke="control alt A" />
+    </action>
+    <!-- Analyze Action -->
+    <action id="ApiCodegen.Analyze" class="com.apicgen.intellij.actions.AnalyzeAction" text="Analyze YAML" description="Analyze YAML for missing validations">
+      <add-to-group group-id="ApiCodegenToolbar" anchor="first" />
+    </action>
+    <!-- Auto Fix Action -->
+    <action id="ApiCodegen.AutoFix" class="com.apicgen.intellij.actions.AutoFixAction" text="Auto Fix" description="Automatically fix missing validations">
+      <add-to-group group-id="ApiCodegenToolbar" anchor="last" />
+    </action>
+    <!-- Generate Code Action -->
+    <action id="ApiCodegen.Generate" class="com.apicgen.intellij.actions.GenerateCodeAction" text="Generate Code" description="Generate code from YAML">
+      <add-to-group group-id="ApiCodegenToolbar" anchor="last" />
+    </action>
+    <!-- Refresh Action -->
+    <action id="ApiCodegen.Refresh" class="com.apicgen.intellij.actions.RefreshAction" text="Refresh" description="Refresh YAML file list">
+      <add-to-group group-id="ApiCodegenToolbar" anchor="last" />
+    </action>
+  </actions>
+  <extensions defaultExtensionNs="com.intellij">
+    <!-- Tool Window -->
+    <toolWindow id="API CodeGen" anchor="right" factoryClass="com.apicgen.intellij.toolwindow.ApiCodegenToolWindowFactory" icon="AllIcons.Toolwindows.ToolWindowInspection" />
+    <!-- Project Service -->
+    <projectService serviceImplementation="com.apicgen.intellij.service.ApiCodegenProjectService" />
+    <!-- Startup Activity -->
+    <projectActivity implementation="com.apicgen.intellij.activity.ProjectStartupActivity" />
+  </extensions>
+</idea-plugin>

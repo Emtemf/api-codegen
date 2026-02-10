@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "org.jetbrains.intellij" version "1.17.4"
+    id "org.jetbrains.intellij" version "1.17.6"
 }
 
 group = "com.apicgen"
@@ -16,28 +16,27 @@ repositories {
 }
 
 intellij {
-    // 支持 IntelliJ IDEA Ultimate (IU) 和 Community (IC)
-    version.set("2024.1.4")
-    type.set("IU") // 使用 Ultimate 版本，也可以改为 "IC" 使用社区版
-
-    // Dependencies that are automatically included
-    plugins.set(["java", "java-i18n"])
-
-    // Plugin dependencies - 无需额外依赖，基础 API 已足够
-    pluginDependencies.set([
-    ])
+    version.set("2023.2.5")
+    type.set("IC")
+    plugins.set(["java"])
 }
 
-// Include the core module classes
 sourceSets {
     main {
-        java {
-            srcDirs = ['src/main/java', '../api-codegen-core/src/main/java']
-        }
-        resources {
-            srcDirs = ['src/main/resources']
-        }
+        java.srcDirs = ['src/main/java']
     }
+    test {
+        java.srcDirs = ['src/test/java']
+    }
+}
+
+dependencies {
+    // Core module dependency (must be installed to local Maven first)
+    implementation 'com.apicgen:api-codegen-core:1.0.0'
+
+    // JUnit 5 for testing
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -48,7 +47,7 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-// Make sure core dependencies are included
-dependencies {
-    implementation project(":api-codegen-core")
+// Configure test task
+test {
+    useJUnitPlatform()
 }

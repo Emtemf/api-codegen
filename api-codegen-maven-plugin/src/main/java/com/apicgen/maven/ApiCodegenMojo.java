@@ -350,17 +350,27 @@ public class ApiCodegenMojo extends AbstractMojo {
 
     private Path getControllerFilePath(Api api, CodegenConfig config, String fileName) {
         String packagePath = getBasePackagePath(config) + "/api";
-        return Paths.get(outputDir, config.getOutput().getController().getPath(), packagePath, fileName);
+        String basePath = outputDir + "/" + config.getOutput().getController().getPath() + "/" + packagePath;
+        return Paths.get(normalizePath(basePath), fileName);
     }
 
     private Path getRequestFilePath(Api api, CodegenConfig config, String fileName) {
         String packagePath = getRequestPackagePath(config);
-        return Paths.get(outputDir, config.getOutput().getRequest().getPath(), packagePath, fileName);
+        String basePath = outputDir + "/" + config.getOutput().getRequest().getPath() + "/" + packagePath;
+        return Paths.get(normalizePath(basePath), fileName);
     }
 
     private Path getResponseFilePath(Api api, CodegenConfig config, String fileName) {
         String packagePath = getResponsePackagePath(config);
-        return Paths.get(outputDir, config.getOutput().getResponse().getPath(), packagePath, fileName);
+        String basePath = outputDir + "/" + config.getOutput().getResponse().getPath() + "/" + packagePath;
+        return Paths.get(normalizePath(basePath), fileName);
+    }
+
+    /**
+     * 规范化路径，去除重复的斜杠
+     */
+    private String normalizePath(String path) {
+        return path.replaceAll("/+", "/");
     }
 
     private String getBasePackagePath(CodegenConfig config) {

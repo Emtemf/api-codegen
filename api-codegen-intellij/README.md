@@ -9,29 +9,50 @@ A powerful IntelliJ IDEA plugin for YAML-based API code generation with validati
 - **Code Generation**: Generate Controller, Request, and Response classes
 - **Side Tool Window**: Easy-to-use UI integrated into IntelliJ IDEA
 
+## Dependency on Core Module
+
+This plugin depends on **api-codegen-core** JAR. Before building, ensure the core module is published to local Maven:
+
+```bash
+# In the main api-codegen project:
+cd api-codegen
+mvn install -DskipTests -pl api-codegen-core
+```
+
 ## Development Setup
 
 ### Prerequisites
 
 - **IntelliJ IDEA 2024.1 or later** (Ultimate or Community Edition)
 - JDK 17 or later
+- **api-codegen-core:1.0.0** must be installed in local Maven (`~/.m2/repository/`)
 
 ### Opening the Plugin Project
 
 The plugin is designed to be developed **inside IntelliJ IDEA**:
 
 1. **Open this project in IntelliJ IDEA:**
-   - `File > Open` > Select `api-codegen-intellij/` folder
+   - `File > Open` > Select `api-codegen-intellij-standalone/` folder
    - Or use: `File > New > Project from Existing Sources`
 
 2. **Configure SDK:**
-   - Go to `File > Project Structure > Project Settings > Project`
+   - Go to `File > Project Structure > Project Settings > Project
    - SDK 选择 `IntelliJ IDEA IU-241.0` (Ultimate) 或 `IC-241.0` (Community)
    - Set Language level to `17`
 
 3. **The IntelliJ Platform SDK will be automatically available** when opened as an IDEA project
 
 > **Note:** Ultimate 版本功能更完整，推荐使用
+
+### Before First Build
+
+1. Ensure core module is installed to local Maven:
+   ```bash
+   cd /path/to/api-codegen
+   mvn install -DskipTests -pl api-codegen-core
+   ```
+
+2. Refresh Gradle project in IntelliJ
 
 ### Running the Plugin
 
