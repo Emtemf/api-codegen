@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Codegen - Web UI</title>
+    <link rel="stylesheet" href="lib/codemirror.min.css">
+    <link rel="stylesheet" href="lib/dracula.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app { display: flex; flex-direction: column; height: 100vh; }
+        .header {
+            background: #16213e;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #0f3460;
+            flex-shrink: 0;
+        }
+        .logo { font-size: 18px; font-weight: bold; color: #e94560; }
+        .nav { display: flex; gap: 8px; }
+        .nav-btn {
+            padding: 8px 16px;
+            background: #0f3460;
+            border: none;
+            border-radius: 4px;
+            color: #eee;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover, .nav-btn.active { background: #e94560; }
+        .actions { display: flex; gap: 8px; }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #e94560; color: white; }
+        .btn-secondary { background: #0f3460; color: #eee; }
+        .btn-success { background: #27ae60; color: white; }
+
+        .main {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #0f3460;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .panel:last-child { border-right: none; }
+
+        .panel-header {
+            background: #16213e;
+            padding: 10px 16px;
+            font-size: 13px;
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #0f3460;
+            flex-shrink: 0;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            min-height: 0;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 13px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        /* Analysis Panel */
+        .analysis {
+            width: 380px;
+            background: #16213e;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #0f3460;
+            flex-shrink: 0;
+        }
+        .analysis-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .issue-count {
+            background: #0f3460;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+        .issue-count.error { background: #e74c3c; }
+        .issue-count.warn { background: #f39c12; }
+        .issue-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        .issue {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid;
+        }
+        .issue.error { background: rgba(231, 76, 60, 0.15); border-color: #e74c3c; }
+        .issue.warn { background: rgba(243, 156, 18, 0.15); border-color: #f39c12; }
+        .issue-title { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .issue-icon { width: 8px; height: 8px; border-radius: 50%; }
+        .issue.error .issue-icon { background: #e74c3c; }
+        .issue.warn .issue-icon { background: #f39c12; }
+        .issue-type { font-size: 11px; text-transform: uppercase; font-weight: 600; }
+        .issue.error .issue-type { color: #e74c3c; }
+        .issue.warn .issue-type { color: #f39c12; }
+        .issue-message { font-size: 13px; color: #ccc; line-height: 1.4; }
+        .issue-api { font-size: 11px; color: #666; margin-top: 4px; font-family: monospace; }
+
+        .tab-content { display: none; flex: 1; overflow: hidden; }
+        .tab-content.active { display: flex; }
+
+        .empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #666;
+        }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-text { font-size: 14px; }
+
+        .statusbar {
+            background: #16213e;
+            padding: 6px 16px;
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            gap: 16px;
+            border-top: 1px solid #0f3460;
+            flex-shrink: 0;
+        }
+
+        textarea { display: none; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="logo">API Codegen</div>
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="editor">编辑器</button>
+                <button class="nav-btn" data-tab="config">配置</button>
+            </nav>
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
+                <button class="btn btn-secondary" onclick="loadFile()">打开文件</button>
+                <button class="btn btn-secondary" onclick="saveFile()">保存</button>
+                <button class="btn btn-primary" onclick="analyze()">分析</button>
+                <button class="btn btn-success" onclick="autoFix()">自动修复</button>
+            </div>
+        </header>
+
+        <main class="main">
+            <!-- YAML Editor -->
+            <div class="panel tab-content active" data-panel="editor">
+                <div class="panel-header">
+                    <span>API 定义 (api.yaml)</span>
+                    <span id="yaml-info">-</span>
+                </div>
+                <div class="editor-wrapper">
+                    <textarea id="yaml-editor"></textarea>
+                </div>
+            </div>
+
+            <!-- Config Editor -->
+            <div class="panel tab-content" data-panel="config">
+                <div class="panel-header">
+                    <span>codegen-config.yaml</span>
+                </div>
+                <div class="editor-wrapper">
+                    <textarea id="config-editor"></textarea>
+                </div>
+            </div>
+
+            <!-- Analysis Panel -->
+            <aside class="analysis">
+                <div class="analysis-header">
+                    <span>分析结果</span>
+                    <span class="issue-count" id="issue-count">0</span>
+                </div>
+                <div class="issue-list" id="issue-list">
+                    <div class="empty">
+                        <div class="empty-icon">&#128221;</div>
+                        <div class="empty-text">点击"分析"检查 YAML</div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <footer class="statusbar">
+            <span id="status-position">行: 1, 列: 1</span>
+            <span>|</span>
+            <span id="status-api">API: 0</span>
+            <span>|</span>
+            <span id="status-field">字段: 0</span>
+            <span>|</span>
+            <span id="status-message">就绪</span>
+        </footer>
+    </div>
+
+    <script src="lib/js-yaml.min.js"></script>
+    <script src="lib/codemirror.min.js"></script>
+    <script src="lib/yaml.min.js"></script>
+    <script src="js/analyzer.js"></script>
+    <script>
+        var yamlEditor, configEditor;
+
+        // Default YAML content
+        var defaultYaml = 'apis:\n  - name: createUser\n    path: /api/users\n    method: POST\n    description: 创建用户\n    request:\n      className: CreateUserReq\n      fields:\n        - name: username\n          type: String\n          required: true\n          description: 用户名\n          validation:\n            notNull: true\n            minLength: 4\n            maxLength: 20\n        - name: email\n          type: String\n          required: true\n          description: 邮箱\n          validation:\n            notNull: true\n            email: true\n    response:\n      className: CreateUserRsp\n      fields:\n        - name: userId\n          type: Long\n          description: 用户ID';
+
+        var defaultConfig = 'framework: CXF\n\ncopyright:\n  company: ""\n  startYear: 2024\n\noutput:\n  controller:\n    path: generated/api/\n  request:\n    path: src/main/java/req/\n  response:\n    path: src/main/java/rsp/';
+
+        function init() {
+            // Initialize YAML editor
+            yamlEditor = CodeMirror.fromTextArea(document.getElementById('yaml-editor'), {
+                mode: 'yaml',
+                theme: 'dracula',
+                lineNumbers: true,
+                lineWrapping: true,
+                indentUnit: 2,
+                tabSize: 2
+            });
+
+            // Initialize config editor
+            configEditor = CodeMirror.fromTextArea(document.getElementById('config-editor'), {
+                mode: 'yaml',
+                theme: 'dracula',
+                lineNumbers: true,
+                lineWrapping: true,
+                indentUnit: 2,
+                tabSize: 2
+            });
+
+            // Set default content
+            yamlEditor.setValue(defaultYaml);
+            configEditor.setValue(defaultConfig);
+
+            // Events
+            yamlEditor.on('cursorActivity', updateStatus);
+            yamlEditor.on('change', function() {
+                updateStatus();
+                document.getElementById('yaml-info').textContent = '已修改';
+            });
+
+            updateStatus();
+        }
+
+        function updateStatus() {
+            var cursor = yamlEditor.getDoc().getCursor();
+            document.getElementById('status-position').textContent = '行: ' + (cursor.line + 1) + ', 列: ' + (cursor.ch + 1);
+
+            try {
+                var content = yamlEditor.getValue();
+                var parsed = jsyaml.load(content);
+
+                if (!parsed || !parsed.apis) {
+                    document.getElementById('status-api').textContent = 'API: 0';
+                    document.getElementById('status-field').textContent = '字段: 0';
+                    return;
+                }
+
+                var apiCount = parsed.apis.length;
+                var fieldCount = 0;
+
+                parsed.apis.forEach(function(api) {
+                    if (api.request && api.request.fields) fieldCount += api.request.fields.length;
+                    if (api.response && api.response.fields) fieldCount += api.response.fields.length;
+                });
+
+                document.getElementById('status-api').textContent = 'API: ' + apiCount;
+                document.getElementById('status-field').textContent = '字段: ' + fieldCount;
+            } catch (e) {
+                document.getElementById('status-api').textContent = 'API: -';
+                document.getElementById('status-field').textContent = '字段: -';
+            }
+        }
+
+        // Tab switching
+        document.querySelectorAll('.nav-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var tab = this.dataset.tab;
+                document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(function(p) { p.classList.remove('active'); });
+                document.querySelector('[data-panel="' + tab + '"]').classList.add('active');
+            });
+        });
+
+        function loadExample() {
+            yamlEditor.setValue(defaultYaml);
+            configEditor.setValue(defaultConfig);
+            updateStatus();
+            document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
+            document.getElementById('issue-count').textContent = '0';
+            document.getElementById('issue-count').className = 'issue-count';
+            document.getElementById('yaml-info').textContent = '示例已加载';
+            setMessage('已加载示例');
+        }
+
+        function loadFile() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.yaml,.yml';
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    yamlEditor.setValue(e.target.result);
+                    yamlEditor.refresh();
+                    updateStatus();
+                    setMessage('已加载: ' + file.name);
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        function saveFile() {
+            var content = yamlEditor.getValue();
+            var blob = new Blob([content], { type: 'text/yaml' });
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'api.yaml';
+            a.click();
+            URL.revokeObjectURL(url);
+            setMessage('已保存');
+        }
+
+        function analyze() {
+            var content = yamlEditor.getValue();
+            var analyzer = new ApiYamlAnalyzer();
+            var issues = analyzer.analyze(content);
+
+            document.getElementById('issue-count').textContent = issues.length;
+            renderIssues(issues);
+
+            var errorCount = issues.filter(function(i) { return i.severity === 'error'; }).length;
+            var warnCount = issues.filter(function(i) { return i.severity === 'warn'; }).length;
+
+            var countEl = document.getElementById('issue-count');
+            countEl.className = 'issue-count';
+            if (errorCount > 0) countEl.classList.add('error');
+            else if (warnCount > 0) countEl.classList.add('warn');
+
+            setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告');
+        }
+
+        function renderIssues(issues) {
+            var container = document.getElementById('issue-list');
+
+            if (issues.length === 0) {
+                container.innerHTML = '<div class="empty"><div class="empty-icon">&#10004;</div><div class="empty-text">没有发现问题！</div></div>';
+                return;
+            }
+
+            var html = issues.map(function(issue, index) {
+                return '<div class="issue ' + issue.severity + '">' +
+                    '<div class="issue-title">' +
+                    '<span class="issue-icon"></span>' +
+                    '<span class="issue-type">' + (issue.severity === 'error' ? '错误' : '警告') + '</span>' +
+                    '</div>' +
+                    '<div class="issue-message">' + issue.message + '</div>' +
+                    (issue.api !== undefined ? '<div class="issue-api">API: ' + issue.api + '</div>' : '') +
+                    '</div>';
+            }).join('');
+
+            container.innerHTML = html;
+            window.currentIssues = issues;
+        }
+
+        function autoFix() {
+            var content = yamlEditor.getValue();
+            var analyzer = new ApiYamlAnalyzer();
+            var fixed = analyzer.fix(content);
+            yamlEditor.setValue(fixed);
+            analyze();
+            setMessage('自动修复完成');
+        }
+
+        function setMessage(msg) {
+            document.getElementById('status-message').textContent = msg;
+        }
+
+        // Initialize
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

@@ -44,7 +44,12 @@ Thumbs.db
 # ===========================================
 # Local tools and private docs
 # ===========================================
-web-ui/
+web-ui/*
+!web-ui/lib/
+!web-ui/js/
+!web-ui/test/
+!web-ui/index.html
+!web-ui/package.json
 project-requirements.md
 .claude/
 CLAUDE.md

@@ -6,9 +6,22 @@
 
 - **JDK 21** 或更高版本
 
-## 三种使用方式
+## 四种使用方式
 
-### 方式一：Java 直接运行（推荐，无需 Maven）
+### 方式一：Web UI 可视化界面（推荐新手）
+
+**适合：** 不想记命令，想可视化编辑 YAML、实时预览、自动修复
+
+```bash
+# 启动本地服务
+cd web-ui
+python -m http.server 8080
+# 然后浏览器打开 http://localhost:8080
+```
+
+或直接用浏览器打开 `web-ui/index.html`
+
+### 方式二：Java 直接运行（推荐，无需 Maven）
 
 **适合：** 没有 Maven 环境，或内网无法下载依赖
 
@@ -27,7 +40,7 @@ java -jar api-codegen-core/target/api-codegen.jar api.yaml
 java -jar api-codegen-core/target/api-codegen.jar api.yaml -output=src/main/java -package=com.example
 ```
 
-### 方式二：Maven Wrapper（推荐，无需安装 Maven）
+### 方式三：Maven Wrapper（推荐，无需安装 Maven）
 
 **适合：** 有 JDK 21，但不想安装 Maven
 
@@ -43,7 +56,7 @@ cd api-codegen
 .\mvnw.cmd api-codegen:generate -DyamlFile=api.yaml
 ```
 
-### 方式三：Maven 插件（适合项目集成）
+### 方式四：Maven 插件（适合项目集成）
 
 **适合：** 在现有 Maven 项目中集成使用
 
@@ -648,6 +661,151 @@ void shouldFailWhenMinLengthGreaterThanMaxLength() {
     // Then
     assertFalse(result.isValid());
 }
+```
+
+---
+
+## Web UI（可视化界面）
+
+API Codegen 提供 Web 界面，可视化编辑 API 定义、校验分析、自动修复、代码预览。
+
+### 快速开始
+
+```bash
+# 方式一：直接用浏览器打开
+# 在浏览器中打开 web-ui/index.html 文件即可
+
+# 方式二：本地 HTTP 服务（推荐，支持热更新）
+cd web-ui
+# 使用 Python
+python -m http.server 8080
+# 或使用 Node.js
+npx http-server -p 8080
+```
+
+然后访问 http://localhost:8080
+
+### Web UI 功能
+
+| 功能 | 说明 |
+|------|------|
+| **YAML 编辑器** | 语法高亮、自动补全、实时校验 |
+| **配置编辑器** | 编辑 codegen-config.yaml |
+| **校验分析** | 自动检测缺失的校验规则 |
+| **自动修复** | 一键补全校验规则 |
+| **代码预览** | 预览生成的 Controller、Req、Rsp 代码 |
+| **文件操作** | 加载示例、打开本地文件、保存 |
+
+### 界面预览
+
+![Web UI 主界面](docs/images/web-ui-main.png)
+
+*Web UI 主界面 - YAML 编辑器与校验分析面板*
+
+![Web UI 代码预览](docs/images/web-ui-preview.png)
+
+*代码预览 - 查看生成的 Controller、Req、Rsp 代码*
+
+### 运行测试
+
+```bash
+cd web-ui
+npm install
+npm test  # 运行 analyzer 测试
+```
+
+### 测试用例展示
+
+测试套件包含 **31 个测试用例**，分为 4 大类：
+
+#### 测试输出示例
+
+```
+======================================================================
+   API YAML Analyzer - 测试套件
+======================================================================
+
+┌─ 分类 1: 错误检测 (YAML 结构)
+│
+[PASS] #1 空内容应被检测为错误
+[PASS] #2 缺少 apis 字段应报错
+[PASS] #3 缺少 API 名称应报错
+...
+
+┌─ 分类 2: 校验规则 (字段校验)
+│
+[PASS] #11 必填字段缺少 @NotNull 应报错
+[PASS] #12 String 字段无任何校验应警告
+...
+
+┌─ 分类 3: 自动修复 (修复前后对比)
+│
+[PASS] #19 必填字段 → 添加 notNull: true
+      修复前: validation: "(无)"
+      修复后: validation: {"notNull":true,"minLength":1,"maxLength":255}
+
+[PASS] #20 String 字段 → 添加 minLength/maxLength
+      修复前: validation: "(无)"
+      修复后: validation: {"minLength":1,"maxLength":255}
+
+[PASS] #21 邮箱字段 → 添加 email: true
+      修复前: validation: "(无)"
+      修复后: validation: {"minLength":1,"maxLength":255,"email":true}
+
+[PASS] #22 电话字段 → 添加手机号正则
+      修复前: validation: "(无)"
+      修复后: validation: {"minLength":1,"maxLength":255,"pattern":"^1[3-9]\\d{9}$"}
+...
+
+======================================================================
+   测试报告
+======================================================================
+
+总计: 31 个测试
+通过: 31
+失败: 0
+
+分类汇总:
+
+  ✓ 错误检测: 10/10 通过
+  ✓ 校验规则: 8/8 通过
+  ✓ 自动修复: 9/9 通过
+  ✓ 边界情况: 4/4 通过
+```
+
+#### 测试覆盖
+
+| 分类 | 用例数 | 说明 |
+|------|--------|------|
+| **错误检测** | 10 | YAML 结构错误、范围冲突检测 |
+| **校验规则** | 8 | @NotNull、长度、范围、格式校验建议 |
+| **自动修复** | 9 | 修复前后对比展示 |
+| **边界情况** | 4 | 多API、嵌套对象、解析错误 |
+
+### 开发调试
+
+```bash
+# 启动开发服务器
+cd web-ui
+npm run serve
+
+# 运行测试
+npm test
+```
+
+### 离线使用
+
+Web UI 已内置所有依赖，支持离线使用：
+
+```
+web-ui/
+├── index.html          # 主页面
+├── js/
+│   └── analyzer.js     # YAML 分析器
+└── lib/                # 本地依赖（已下载）
+    ├── codemirror.min.js
+    ├── yaml.min.js
+    └── dracula.min.js
 ```
 
 ---

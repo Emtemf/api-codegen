@@ -1,0 +1,21 @@
+{
+  "name": "web-ui",
+  "version": "1.0.0",
+  "description": "API Codegen Web UI - YAML Editor and Analyzer",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node test/analyzer-test.js",
+    "serve": "echo \"Open index.html in browser or run: python -m http.server 8080\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "js-yaml": "^4.1.1"
+  }
+}
