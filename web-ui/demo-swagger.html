@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo: Swagger/OpenAPI 自动转换</title>
+    <title>Demo: Swagger 格式直接分析和修复</title>
     <link rel="stylesheet" href="lib/codemirror.min.css">
     <link rel="stylesheet" href="lib/dracula.css">
     <style>
@@ -42,18 +42,7 @@
             border-bottom: 1px solid #0f3460;
             font-size: 14px;
             color: #36c9c9;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
         }
-        .format-badge {
-            background: #e94560;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-        }
-        .format-badge.swagger { background: #4ade80; color: #16213e; }
         .editor-panel { flex: 1; display: flex; flex-direction: column; }
         .editor-panel:first-child { border-right: 1px dashed #0f3460; }
         .CodeMirror { height: 100%; font-size: 13px; }
@@ -70,35 +59,45 @@
         }
         .issue {
             background: #0f3460;
-            border-left: 4px solid #4ade80;
+            border-left: 4px solid #e94560;
             padding: 12px;
             margin-bottom: 10px;
             border-radius: 4px;
+        }
+        .issue-info {
+            border-left-color: #4ade80;
         }
         .issue-header {
             display: flex;
             align-items: center;
             margin-bottom: 8px;
         }
-        .severity-info { color: #4ade80; font-weight: bold; font-size: 12px; }
+        .severity-error { color: #f87171; font-weight: bold; }
+        .severity-warn { color: #fbbf24; font-weight: bold; }
+        .severity-info { color: #4ade80; font-weight: bold; }
         .issue-message { color: #eee; font-size: 13px; }
-        .conversion-details {
-            margin-top: 10px;
-            padding: 10px;
+        .feature-info {
+            margin-top: 15px;
+            padding: 12px;
             background: #1a1a2e;
             border-radius: 4px;
-            font-size: 11px;
+            font-size: 12px;
         }
-        .conversion-details h5 {
+        .feature-info h5 {
             color: #36c9c9;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
-        .conversion-details ul {
+        .feature-info ul {
             padding-left: 15px;
             color: #9ca3af;
+            line-height: 1.6;
         }
-        .conversion-details li {
+        .feature-info li {
             margin: 3px 0;
+        }
+        .check-mark {
+            color: #4ade80;
+            margin-right: 5px;
         }
     </style>
 </head>
@@ -107,123 +106,102 @@
         <div class="header">
             <div>
                 <span class="logo">API Codegen - Web UI</span>
-                <span class="demo-badge">演示：Swagger/OpenAPI 自动转换</span>
+                <span class="demo-badge">演示：Swagger 格式直接分析和修复</span>
             </div>
         </div>
         <div class="container">
             <div class="editor-section">
-                <div class="panel-header">
-                    <span>原始 YAML</span>
-                    <span class="format-badge swagger">Swagger 2.0</span>
-                </div>
+                <div class="panel-header">原始 Swagger YAML</div>
                 <div class="editor-panel">
                     <textarea id="before" style="display:none;">swagger: '2.0'
 info:
   title: 用户管理 API
   version: v1
-  description: 用户相关的 API 接口
-schemes:
-  - https
 basePath: /api/v1
 paths:
   /users:
     get:
       summary: 获取用户列表
-      operationId: getUserList
       responses:
         '200':
           schema:
             type: array
-            items:
-              $ref: '#/definitions/User'
     post:
       summary: 创建用户
-      operationId: createUser
-      parameters:
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/CreateUserRequest'
       responses:
         '200':
           schema:
-            $ref: '#/definitions/User'
-definitions:
-  User:
-    type: object
-    properties:
-      id:
-        type: integer
-        description: 用户ID
-      username:
-        type: string
-        description: 用户名
-      email:
-        type: string
-        format: email
-        description: 邮箱</textarea>
+            type: object
+  /users//profile:
+    get:
+      summary: 获取用户资料</textarea>
                     <div id="beforeEditor"></div>
                 </div>
             </div>
             <div class="editor-section">
-                <div class="panel-header">
-                    <span>自动转换后</span>
-                    <span class="format-badge">自定义格式</span>
-                </div>
+                <div class="panel-header">自动修复后（保持 Swagger 格式）</div>
                 <div class="editor-panel">
-                    <textarea id="after" style="display:none;">apis:
-  - name: getUserList
-    path: /api/v1/users
-    method: GET
-    description: 获取用户列表
-    response:
-      className: GetUserListRsp
-      fields:
-        - name: data
-          type: List<User>
-          description: Response data
-  - name: createUser
-    path: /api/v1/users
-    method: POST
-    description: 创建用户
-    request:
-      className: CreateUserReq
-      fields:
-        - name: body
-          type: CreateUserRequest
-          required: true
-          description: Request body
-    response:
-      className: CreateUserRsp
-      fields:
-        - name: data
-          type: User
-          description: Response data</textarea>
+                    <textarea id="after" style="display:none;">swagger: '2.0'
+info:
+  title: 用户管理 API
+  version: v1
+basePath: /api/v1
+paths:
+  /users:
+    get:
+      summary: 获取用户列表
+      description: 获取用户列表
+      operationId: apixxxxx
+      responses:
+        '200':
+          schema:
+            type: array
+    post:
+      summary: 创建用户
+      description: 创建用户
+      operationId: apixxxxx
+      responses:
+        '200':
+          schema:
+            type: array
+  /users/profile:
+    get:
+      summary: 获取用户资料
+      description: 获取用户资料
+      operationId: apixxxxx</textarea>
                     <div id="afterEditor"></div>
                 </div>
             </div>
             <div class="issues-panel">
-                <div class="panel-header">转换信息</div>
+                <div class="panel-header">检测到的问题</div>
                 <div class="issue-list">
                     <div class="issue">
                         <div class="issue-header">
-                            <span class="severity-info">INFO</span>
+                            <span class="severity-error">ERROR</span>
                         </div>
-                        <div class="issue-message">✨ 检测到 Swagger/OpenAPI 格式，已自动转换为自定义格式</div>
-                        <div class="conversion-details">
-                            <h5>转换规则：</h5>
-                            <ul>
-                                <li>operationId → API 方法名</li>
-                                <li>basePath + path → 完整路径</li>
-                                <li>method → HTTP 方法（大写）</li>
-                                <li>parameters → Request 字段</li>
-                                <li>responses → Response 字段</li>
-                                <li>$ref definitions → 自定义对象类型</li>
-                                <li>type: integer + format: int64 → Long</li>
-                                <li>type: string + format: email → String</li>
-                            </ul>
+                        <div class="issue-message">路径不能包含 //: /api/v1/users//profile</div>
+                    </div>
+                    <div class="issue">
+                        <div class="issue-header">
+                            <span class="severity-warn">WARN</span>
                         </div>
+                        <div class="issue-message">API GET /users 缺少 operationId</div>
+                    </div>
+                    <div class="issue">
+                        <div class="issue-header">
+                            <span class="severity-warn">WARN</span>
+                        </div>
+                        <div class="issue-message">API POST /users 缺少 operationId</div>
+                    </div>
+                    <div class="feature-info">
+                        <h5>✨ Swagger 格式支持</h5>
+                        <ul>
+                            <li><span class="check-mark">✓</span>直接分析，不转换格式</li>
+                            <li><span class="check-mark">✓</span>修复保持原始 Swagger 格式</li>
+                            <li><span class="check-mark">✓</span>路径 // 自动修复为 /</li>
+                            <li><span class="check-mark">✓</span>自动生成 operationId</li>
+                            <li><span class="check-mark">✓</span>自动补充 description</li>
+                        </ul>
                     </div>
                 </div>
             </div>
