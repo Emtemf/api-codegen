@@ -166,6 +166,235 @@
         }
 
         textarea { display: none; }
+
+        /* Diff Preview Modal */
+        .diff-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .diff-modal.active { display: flex; }
+        .diff-container {
+            background: #1e1e1e;
+            border-radius: 12px;
+            width: 92%;
+            max-width: 1400px;
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #3a3a3a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+        }
+        .diff-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #3a3a3a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, #252525 0%, #1e1e1e 100%);
+        }
+        .diff-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .diff-title-icon {
+            font-size: 20px;
+        }
+        .diff-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .diff-stat {
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .diff-stat-add {
+            background: rgba(46, 160, 67, 0.2);
+            color: #57ab38;
+            border: 1px solid rgba(46, 160, 67, 0.4);
+        }
+        .diff-stat-remove {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.4);
+        }
+        .diff-body {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            min-height: 0;
+            background: #0d0d0d;
+        }
+        .diff-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .diff-panel-left {
+            border-right: 1px solid #3a3a3a;
+        }
+        .diff-panel-header {
+            padding: 12px 18px;
+            background: linear-gradient(180deg, #1e1e1e 0%, #181818 100%);
+            font-size: 12px;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #3a3a3a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .diff-panel-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .diff-panel-badge.before {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+        .diff-panel-badge.after {
+            background: rgba(46, 160, 67, 0.2);
+            color: #57ab38;
+        }
+        .diff-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0;
+            font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 22px;
+            scrollbar-width: thin;
+            scrollbar-color: #4a4a4a #1e1e1e;
+        }
+        .diff-content::-webkit-scrollbar {
+            width: 10px;
+        }
+        .diff-content::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .diff-content::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 5px;
+        }
+        .diff-line {
+            display: flex;
+            align-items: stretch;
+            min-height: 22px;
+            position: relative;
+        }
+        .diff-line-num {
+            width: 55px;
+            flex-shrink: 0;
+            padding: 0 12px;
+            color: #6e7681;
+            text-align: right;
+            user-select: none;
+            background: #0d0d0d;
+            border-right: 1px solid #21262d;
+            font-size: 12px;
+            line-height: 22px;
+        }
+        .diff-line-content {
+            flex: 1;
+            padding: 0 14px;
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 22px;
+            position: relative;
+        }
+        .diff-line.add {
+            background: rgba(46, 160, 67, 0.1);
+        }
+        .diff-line.add:hover {
+            background: rgba(46, 160, 67, 0.15);
+        }
+        .diff-line.add .diff-line-content { color: #3fb950; }
+        .diff-line.add .diff-line-num {
+            background: rgba(46, 160, 67, 0.08);
+            color: #57ab38;
+        }
+        .diff-line.remove {
+            background: rgba(248, 81, 73, 0.1);
+        }
+        .diff-line.remove:hover {
+            background: rgba(248, 81, 73, 0.15);
+        }
+        .diff-line.remove .diff-line-content { color: #f85149; }
+        .diff-line.remove .diff-line-num {
+            background: rgba(248, 81, 73, 0.08);
+            color: #f85149;
+        }
+        /* Empty line for alignment */
+        .diff-line-empty {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .diff-line-empty .diff-line-content {
+            color: #484f58;
+        }
+        .diff-line-empty .diff-line-num {
+            color: #3a3a3a;
+        }
+        .diff-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #3a3a3a;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(180deg, #181818 0%, #1e1e1e 100%);
+        }
+        .diff-hint {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #8b949e;
+            margin-right: auto;
+        }
+        .diff-hint-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .diff-hint-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .diff-hint-dot.add {
+            background: #3fb950;
+            box-shadow: 0 0 6px rgba(63, 185, 80, 0.5);
+        }
+        .diff-hint-dot.remove {
+            background: #f85149;
+            box-shadow: 0 0 6px rgba(248, 81, 73, 0.5);
+        }
     </style>
 </head>
 <body>
@@ -231,6 +460,59 @@
             <span>|</span>
             <span id="status-message">就绪</span>
         </footer>
+    </div>
+
+    <!-- Diff Preview Modal -->
+    <div class="diff-modal" id="diff-modal">
+        <div class="diff-container">
+            <div class="diff-header">
+                <div class="diff-title">
+                    <span class="diff-title-icon">&#128293;</span>
+                    <span>修复预览</span>
+                </div>
+                <div class="diff-stats">
+                    <div class="diff-stat diff-stat-remove">
+                        <span>&minus;</span>
+                        <span id="diff-removes">0 处删除</span>
+                    </div>
+                    <div class="diff-stat diff-stat-add">
+                        <span>&plus;</span>
+                        <span id="diff-adds">0 处添加</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="closeDiffModal()">关闭</button>
+            </div>
+            <div class="diff-body">
+                <div class="diff-panel diff-panel-left">
+                    <div class="diff-panel-header">
+                        <span class="diff-panel-badge before">修复前</span>
+                        <span>原始 YAML</span>
+                    </div>
+                    <div class="diff-content" id="diff-before"></div>
+                </div>
+                <div class="diff-panel">
+                    <div class="diff-panel-header">
+                        <span class="diff-panel-badge after">修复后</span>
+                        <span>修复后的 YAML</span>
+                    </div>
+                    <div class="diff-content" id="diff-after"></div>
+                </div>
+            </div>
+            <div class="diff-footer">
+                <div class="diff-hint">
+                    <span class="diff-hint-item">
+                        <span class="diff-hint-dot add"></span>
+                        <span>添加的行</span>
+                    </span>
+                    <span class="diff-hint-item">
+                        <span class="diff-hint-dot remove"></span>
+                        <span>删除的行</span>
+                    </span>
+                </div>
+                <button class="btn btn-secondary" onclick="closeDiffModal()">取消</button>
+                <button class="btn btn-success" onclick="applyFix()">应用修复</button>
+            </div>
+        </div>
     </div>
 
     <script src="lib/js-yaml.min.js"></script>
@@ -408,9 +690,248 @@
             var content = yamlEditor.getValue();
             var analyzer = new ApiYamlAnalyzer();
             var fixed = analyzer.fix(content);
-            yamlEditor.setValue(fixed);
-            analyze();
-            setMessage('自动修复完成');
+
+            // Show diff preview
+            showDiffPreview(content, fixed);
+            setMessage('点击"应用修复"确认更改');
+        }
+
+        /**
+         * Show diff preview modal
+         */
+        function showDiffPreview(before, after) {
+            var diff = computeDiff(before, after);
+
+            document.getElementById('diff-before').innerHTML = renderDiffContent(before, diff, 'before');
+            document.getElementById('diff-after').innerHTML = renderDiffContent(after, diff, 'after');
+
+            // Update stats
+            var addCount = diff.filter(function(d) { return d.type === 'add'; }).length;
+            var removeCount = diff.filter(function(d) { return d.type === 'remove'; }).length;
+            document.getElementById('diff-adds').textContent = addCount + ' 处添加';
+            document.getElementById('diff-removes').textContent = removeCount + ' 处删除';
+
+            // Store fixed content for apply
+            window.pendingFixedContent = after;
+
+            // Sync scroll between left and right panels
+            setupScrollSync();
+
+            // Show modal
+            document.getElementById('diff-modal').classList.add('active');
+        }
+
+        /**
+         * Setup synchronized scrolling for diff panels
+         */
+        function setupScrollSync() {
+            var beforePanel = document.getElementById('diff-before');
+            var afterPanel = document.getElementById('diff-after');
+            var isSyncing = false;
+
+            function syncScroll(source, target) {
+                if (isSyncing) return;
+                isSyncing = true;
+                target.scrollTop = source.scrollTop;
+                target.scrollLeft = source.scrollLeft;
+                setTimeout(function() { isSyncing = false; }, 10);
+            }
+
+            beforePanel.addEventListener('scroll', function() {
+                syncScroll(beforePanel, afterPanel);
+            });
+
+            afterPanel.addEventListener('scroll', function() {
+                syncScroll(afterPanel, beforePanel);
+            });
+        }
+
+        /**
+         * Close diff modal
+         */
+        function closeDiffModal() {
+            document.getElementById('diff-modal').classList.remove('active');
+            window.pendingFixedContent = null;
+        }
+
+        /**
+         * Apply the fixed content
+         */
+        function applyFix() {
+            if (window.pendingFixedContent) {
+                yamlEditor.setValue(window.pendingFixedContent);
+                analyze();
+                closeDiffModal();
+                setMessage('已应用修复');
+            }
+        }
+
+        /**
+         * Compute line-by-line diff using improved LCS
+         */
+        function computeDiff(before, after) {
+            var beforeLines = before.split('\n');
+            var afterLines = after.split('\n');
+
+            // Build LCS matrix
+            var lcs = buildLcsMatrix(beforeLines, afterLines);
+            var diff = [];
+
+            // Backtrack to build diff with line numbers
+            var i = beforeLines.length;
+            var j = afterLines.length;
+
+            while (i > 0 || j > 0) {
+                if (i > 0 && j > 0 && beforeLines[i - 1] === afterLines[j - 1]) {
+                    // Unchanged line
+                    diff.unshift({
+                        type: 'unchanged',
+                        beforeLine: i - 1,
+                        afterLine: j - 1,
+                        beforeNum: i,
+                        afterNum: j
+                    });
+                    i--;
+                    j--;
+                } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
+                    // Added line
+                    diff.unshift({
+                        type: 'add',
+                        afterLine: j - 1,
+                        afterNum: j
+                    });
+                    j--;
+                } else if (i > 0) {
+                    // Removed line
+                    diff.unshift({
+                        type: 'remove',
+                        beforeLine: i - 1,
+                        beforeNum: i
+                    });
+                    i--;
+                }
+            }
+
+            return diff;
+        }
+
+        /**
+         * Build LCS matrix for diff
+         */
+        function buildLcsMatrix(arr1, arr2) {
+            var m = arr1.length;
+            var n = arr2.length;
+            var dp = [];
+
+            for (var i = 0; i <= m; i++) {
+                dp[i] = [];
+                for (var j = 0; j <= n; j++) {
+                    dp[i][j] = 0;
+                }
+            }
+
+            for (var i = 1; i <= m; i++) {
+                for (var j = 1; j <= n; j++) {
+                    if (arr1[i - 1] === arr2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                    }
+                }
+            }
+
+            return dp;
+        }
+
+        /**
+         * Render diff content for one panel (aligned)
+         */
+        function renderDiffContent(content, diff, side) {
+            var lines = content.split('\n');
+            var html = '';
+            var lineNum = 1;  // Sequential line numbers
+
+            // Build a map of changes for quick lookup
+            var changeMap = {};
+            diff.forEach(function(change) {
+                if (change.type === 'add') {
+                    changeMap[change.afterLine] = change;
+                } else if (change.type === 'remove') {
+                    changeMap[-change.beforeLine - 1000] = change;  // Use negative to distinguish
+                } else {
+                    changeMap[side === 'before' ? change.beforeLine : change.afterLine] = change;
+                }
+            });
+
+            for (var i = 0; i < lines.length; i++) {
+                var key = side === 'before' ? i : i;
+                var change = changeMap[i];
+
+                if (!change) {
+                    // Unchanged line
+                    html += renderDiffLine(lines[i], lineNum++, 'unchanged');
+                } else if (change.type === 'unchanged') {
+                    html += renderDiffLine(lines[i], lineNum++, 'unchanged');
+                } else if (change.type === 'remove') {
+                    if (side === 'before') {
+                        html += renderDiffLine(lines[i], lineNum++, 'remove');
+                    } else {
+                        html += renderDiffLine('', lineNum++, 'empty');
+                    }
+                } else if (change.type === 'add') {
+                    if (side === 'after') {
+                        html += renderDiffLine(lines[i], lineNum++, 'add');
+                    } else {
+                        html += renderDiffLine('', lineNum++, 'empty');
+                    }
+                }
+            }
+
+            // Add empty lines for changes that don't exist in this side
+            var maxLines = side === 'before' ?
+                Math.max(...diff.filter(c => c.type === 'remove').map(c => c.beforeLine + 1 || 0)) :
+                Math.max(...diff.filter(c => c.type === 'add').map(c => c.afterLine + 1 || 0));
+
+            while (lineNum <= maxLines && lineNum <= lines.length) {
+                html += renderDiffLine('', lineNum++, 'empty');
+            }
+
+            return html;
+        }
+
+        /**
+         * Render a single diff line
+         */
+        function renderDiffLine(content, lineNum, type) {
+            var lineClass = '';
+            var showNum = true;
+
+            if (type === 'add') {
+                lineClass = 'add';
+            } else if (type === 'remove') {
+                lineClass = 'remove';
+            } else if (type === 'empty') {
+                lineClass = 'diff-line-empty';
+                showNum = false;
+            }
+
+            var numHtml = showNum ?
+                '<div class="diff-line-num">' + lineNum + '</div>' :
+                '<div class="diff-line-num"></div>';
+
+            return '<div class="diff-line ' + lineClass + '">' +
+                numHtml +
+                '<div class="diff-line-content">' + escapeHtml(content || '') + '</div>' +
+                '</div>';
+        }
+
+        /**
+         * Escape HTML
+         */
+        function escapeHtml(text) {
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         function setMessage(msg) {
