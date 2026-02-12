@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Demo: Swagger 格式检测 (Issue #4)</title>
+    <title>Demo: Swagger/OpenAPI 自动转换</title>
     <link rel="stylesheet" href="lib/codemirror.min.css">
     <link rel="stylesheet" href="lib/dracula.css">
     <style>
@@ -35,17 +35,30 @@
             margin-left: 10px;
         }
         .container { display: flex; flex: 1; overflow: hidden; }
-        .editor-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #0f3460; }
+        .editor-section { flex: 1; display: flex; flex-direction: column; }
         .panel-header {
             background: #16213e;
             padding: 10px 15px;
             border-bottom: 1px solid #0f3460;
             font-size: 14px;
             color: #36c9c9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .CodeMirror { height: 100%; font-size: 14px; }
+        .format-badge {
+            background: #e94560;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        .format-badge.swagger { background: #4ade80; color: #16213e; }
+        .editor-panel { flex: 1; display: flex; flex-direction: column; }
+        .editor-panel:first-child { border-right: 1px dashed #0f3460; }
+        .CodeMirror { height: 100%; font-size: 13px; }
         .issues-panel {
-            width: 400px;
+            width: 350px;
             display: flex;
             flex-direction: column;
             background: #16213e;
@@ -57,7 +70,7 @@
         }
         .issue {
             background: #0f3460;
-            border-left: 4px solid #fbbf24;
+            border-left: 4px solid #4ade80;
             padding: 12px;
             margin-bottom: 10px;
             border-radius: 4px;
@@ -67,33 +80,25 @@
             align-items: center;
             margin-bottom: 8px;
         }
-        .severity-warn { color: #fbbf24; font-weight: bold; }
-        .issue-message { color: #eee; font-size: 14px; }
-        .issue-hint {
+        .severity-info { color: #4ade80; font-weight: bold; font-size: 12px; }
+        .issue-message { color: #eee; font-size: 13px; }
+        .conversion-details {
             margin-top: 10px;
-            padding: 8px;
+            padding: 10px;
             background: #1a1a2e;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
+        }
+        .conversion-details h5 {
+            color: #36c9c9;
+            margin-bottom: 5px;
+        }
+        .conversion-details ul {
+            padding-left: 15px;
             color: #9ca3af;
         }
-        .conversion-info {
-            background: #0f3460;
-            padding: 15px;
-            border-radius: 4px;
-            margin: 10px;
-            border-left: 4px solid #4ade80;
-        }
-        .conversion-info h4 {
-            color: #4ade80;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-        .conversion-info p {
-            font-size: 12px;
-            color: #9ca3af;
-            line-height: 1.5;
-            margin: 5px 0;
+        .conversion-details li {
+            margin: 3px 0;
         }
     </style>
 </head>
@@ -102,13 +107,17 @@
         <div class="header">
             <div>
                 <span class="logo">API Codegen - Web UI</span>
-                <span class="demo-badge">演示：Swagger/OpenAPI 格式检测</span>
+                <span class="demo-badge">演示：Swagger/OpenAPI 自动转换</span>
             </div>
         </div>
         <div class="container">
-            <div class="editor-panel">
-                <div class="panel-header">YAML 编辑器</div>
-                <textarea id="editor" style="display:none;">swagger: '2.0'
+            <div class="editor-section">
+                <div class="panel-header">
+                    <span>原始 YAML</span>
+                    <span class="format-badge swagger">Swagger 2.0</span>
+                </div>
+                <div class="editor-panel">
+                    <textarea id="before" style="display:none;">swagger: '2.0'
 info:
   title: 用户管理 API
   version: v1
@@ -130,6 +139,12 @@ paths:
     post:
       summary: 创建用户
       operationId: createUser
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateUserRequest'
       responses:
         '200':
           schema:
@@ -140,26 +155,75 @@ definitions:
     properties:
       id:
         type: integer
+        description: 用户ID
       username:
-        type: string</textarea>
-            <div id="codeMirror"></div>
-        </div>
+        type: string
+        description: 用户名
+      email:
+        type: string
+        format: email
+        description: 邮箱</textarea>
+                    <div id="beforeEditor"></div>
+                </div>
+            </div>
+            <div class="editor-section">
+                <div class="panel-header">
+                    <span>自动转换后</span>
+                    <span class="format-badge">自定义格式</span>
+                </div>
+                <div class="editor-panel">
+                    <textarea id="after" style="display:none;">apis:
+  - name: getUserList
+    path: /api/v1/users
+    method: GET
+    description: 获取用户列表
+    response:
+      className: GetUserListRsp
+      fields:
+        - name: data
+          type: List<User>
+          description: Response data
+  - name: createUser
+    path: /api/v1/users
+    method: POST
+    description: 创建用户
+    request:
+      className: CreateUserReq
+      fields:
+        - name: body
+          type: CreateUserRequest
+          required: true
+          description: Request body
+    response:
+      className: CreateUserRsp
+      fields:
+        - name: data
+          type: User
+          description: Response data</textarea>
+                    <div id="afterEditor"></div>
+                </div>
+            </div>
             <div class="issues-panel">
-                <div class="panel-header">校验分析结果</div>
+                <div class="panel-header">转换信息</div>
                 <div class="issue-list">
-                    <div class="conversion-info">
-                        <h4>✨ 检测到 Swagger/OpenAPI 格式</h4>
-                        <p>• Java 端会自动转换为自定义格式</p>
-                        <p>• 支持 Swagger 2.0 和 OpenAPI 3.0</p>
-                        <p>• operationId → API 方法名</p>
-                        <p>• definitions/components.schemas → 自定义对象</p>
-                    </div>
                     <div class="issue">
                         <div class="issue-header">
-                            <span class="severity-warn">INFO</span>
+                            <span class="severity-info">INFO</span>
                         </div>
-                        <div class="issue-message">检测到 Swagger/OpenAPI 格式。Java 端会自动转换，Web UI 暂不支持预览。</div>
-                        <div class="issue-hint">💡 使用 Java 运行时会自动转换并生成代码</div>
+                        <div class="issue-message">✨ 检测到 Swagger/OpenAPI 格式，已自动转换为自定义格式</div>
+                        <div class="conversion-details">
+                            <h5>转换规则：</h5>
+                            <ul>
+                                <li>operationId → API 方法名</li>
+                                <li>basePath + path → 完整路径</li>
+                                <li>method → HTTP 方法（大写）</li>
+                                <li>parameters → Request 字段</li>
+                                <li>responses → Response 字段</li>
+                                <li>$ref definitions → 自定义对象类型</li>
+                                <li>type: integer + format: int64 → Long</li>
+                                <li>type: string + format: email → String</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -168,13 +232,21 @@ definitions:
     <script src="lib/codemirror.min.js"></script>
     <script src="lib/yaml.min.js"></script>
     <script>
-        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+        const beforeEditor = CodeMirror.fromTextArea(document.getElementById('before'), {
             mode: 'yaml',
             theme: 'dracula',
             lineNumbers: true,
             readOnly: true
         });
-        editor.setSize(null, '100%');
+        beforeEditor.setSize(null, '100%');
+
+        const afterEditor = CodeMirror.fromTextArea(document.getElementById('after'), {
+            mode: 'yaml',
+            theme: 'dracula',
+            lineNumbers: true,
+            readOnly: true
+        });
+        afterEditor.setSize(null, '100%');
     </script>
 </body>
 </html>

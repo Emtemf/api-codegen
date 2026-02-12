@@ -197,7 +197,7 @@ test('错误检测', '路径包含 // 应报错 (Issue #2)',
     { errorCount: 1, hasMessage: '//' }
 );
 
-test('错误检测', 'Swagger 格式应警告并提示转换 (Issue #4)',
+test('错误检测', 'Swagger 格式应自动转换并继续分析 (Issue #4)',
     `swagger: '2.0'
 info:
   version: v1
@@ -205,19 +205,21 @@ info:
 paths:
   /users:
     get:
-      summary: 获取用户列表`,
-    { warnCount: 1, hasMessage: 'Swagger' }
+      summary: 获取用户列表
+      operationId: getUserList`,
+    { hasMessage: '自动转换', errorCount: 0 }
 );
 
-test('错误检测', 'OpenAPI 格式应警告并提示转换 (Issue #4)',
+test('错误检测', 'OpenAPI 格式应自动转换并继续分析 (Issue #4)',
     `openapi: '3.0'
 info:
   title: 示例 API
 paths:
   /users:
     get:
-      summary: 获取用户`,
-    { warnCount: 1, hasMessage: 'OpenAPI' }
+      summary: 获取用户
+      operationId: getUser`,
+    { hasMessage: '自动转换', errorCount: 0 }
 );
 
 test('错误检测', '缺少 HTTP 方法应报错',
