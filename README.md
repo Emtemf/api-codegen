@@ -845,6 +845,32 @@ npx http-server -p 8080
 
 *代码预览 - 查看生成的 Controller、Req、Rsp 代码*
 
+### 功能演示
+
+以下截图展示了 Web UI 的核心功能：
+
+#### 1. 主界面
+
+![主界面](docs/images/demo/01-main.png)
+
+#### 2. 错误检测 - path // 校验 (Issue #2)
+
+![path // 错误检测](docs/images/demo/02-path-error.png)
+
+*路径包含 `//` 会被检测为错误*
+
+#### 3. Swagger/OpenAPI 格式检测 (Issue #4)
+
+![Swagger 格式检测](docs/images/demo/03-swagger-detection.png)
+
+*自动识别 Swagger/OpenAPI 格式，提示由 Java 端自动转换*
+
+#### 4. 自动修复功能
+
+![自动修复对比](docs/images/demo/04-autofix-comparison.png)
+
+*左侧：修复前（7 个警告） | 右侧：修复后（0 个警告）*
+
 ### 运行测试
 
 ```bash

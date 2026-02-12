@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo: 自动修复功能</title>
+    <link rel="stylesheet" href="lib/codemirror.min.css">
+    <link rel="stylesheet" href="lib/dracula.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app { display: flex; flex-direction: column; height: 100vh; }
+        .header {
+            background: #16213e;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #0f3460;
+            flex-shrink: 0;
+        }
+        .logo { font-size: 18px; font-weight: bold; color: #e94560; }
+        .demo-badge {
+            background: #4ade80;
+            color: #16213e;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .container { display: flex; flex: 1; overflow: hidden; }
+        .editor-section { flex: 1; display: flex; flex-direction: column; }
+        .panel-header {
+            background: #16213e;
+            padding: 10px 15px;
+            border-bottom: 1px solid #0f3460;
+            font-size: 14px;
+            color: #36c9c9;
+        }
+        .editor-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #0f3460; }
+        .editor-panel:first-child { border-right: 1px dashed #0f3460; }
+        .CodeMirror { height: 100%; font-size: 13px; }
+        .fix-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4ade80;
+            color: #16213e;
+            padding: 20px 30px;
+            border-radius: 8px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 100;
+        }
+        .diff-container { display: flex; position: relative; }
+        .before-label, .after-label {
+            position: absolute;
+            top: 10px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 50;
+        }
+        .before-label {
+            left: 10px;
+            background: #6b7280;
+            color: white;
+        }
+        .after-label {
+            right: 10px;
+            background: #4ade80;
+            color: #16213e;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <div>
+                <span class="logo">API Codegen - Web UI</span>
+                <span class="demo-badge">演示：自动修复功能</span>
+            </div>
+        </div>
+        <div class="container diff-container">
+            <span class="before-label">修复前 (7 个警告)</span>
+            <span class="after-label">修复后 (0 个警告)</span>
+            <div class="editor-section">
+                <div class="panel-header">修复前 - YAML 编辑器</div>
+                <div class="editor-panel">
+                    <textarea id="before" style="display:none;">apis:
+  - name: createUser
+    path: /api/users
+    method: POST
+    request:
+      className: CreateUserReq
+      fields:
+        - name: username
+          type: String
+          required: true
+        - name: email
+          type: String
+        - name: age
+          type: Integer
+        - name: mobilePhone
+          type: String
+        - name: birthday
+          type: LocalDate
+        - name: tags
+          type: List&lt;String&gt;</textarea>
+                    <div id="beforeEditor"></div>
+                </div>
+            </div>
+            <div class="editor-section">
+                <div class="panel-header">修复后 - YAML 编辑器</div>
+                <div class="editor-panel">
+                    <textarea id="after" style="display:none;">apis:
+  - name: createUser
+    path: /api/users
+    method: POST
+    request:
+      className: CreateUserReq
+      fields:
+        - name: username
+          type: String
+          required: true
+          validation:
+            notNull: true
+            minLength: 1
+            maxLength: 255
+        - name: email
+          type: String
+          validation:
+            minLength: 1
+            maxLength: 255
+            email: true
+        - name: age
+          type: Integer
+          validation:
+            min: 0
+            max: 2147483647
+        - name: mobilePhone
+          type: String
+          validation:
+            minLength: 1
+            maxLength: 255
+            pattern: ^1[3-9]\d{9}$
+        - name: birthday
+          type: LocalDate
+          validation:
+            past: true
+        - name: tags
+          type: List&lt;String&gt;
+          validation:
+            minSize: 1
+            maxSize: 100</textarea>
+                    <div id="afterEditor"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="lib/codemirror.min.js"></script>
+    <script src="lib/yaml.min.js"></script>
+    <script>
+        const beforeEditor = CodeMirror.fromTextArea(document.getElementById('before'), {
+            mode: 'yaml',
+            theme: 'dracula',
+            lineNumbers: true,
+            readOnly: true
+        });
+        beforeEditor.setSize(null, '100%');
+
+        const afterEditor = CodeMirror.fromTextArea(document.getElementById('after'), {
+            mode: 'yaml',
+            theme: 'dracula',
+            lineNumbers: true,
+            readOnly: true
+        });
+        afterEditor.setSize(null, '100%');
+    </script>
+</body>
+</html>

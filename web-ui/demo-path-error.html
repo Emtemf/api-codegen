@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo: path // 错误检测 (Issue #2)</title>
+    <link rel="stylesheet" href="lib/codemirror.min.css">
+    <link rel="stylesheet" href="lib/dracula.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .app { display: flex; flex-direction: column; height: 100vh; }
+        .header {
+            background: #16213e;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #0f3460;
+            flex-shrink: 0;
+        }
+        .logo { font-size: 18px; font-weight: bold; color: #e94560; }
+        .demo-badge {
+            background: #e94560;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .container { display: flex; flex: 1; overflow: hidden; }
+        .editor-panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #0f3460; }
+        .panel-header {
+            background: #16213e;
+            padding: 10px 15px;
+            border-bottom: 1px solid #0f3460;
+            font-size: 14px;
+            color: #36c9c9;
+        }
+        .CodeMirror { height: 100%; font-size: 14px; }
+        .issues-panel {
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            background: #16213e;
+        }
+        .issue-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .issue {
+            background: #0f3460;
+            border-left: 4px solid #e94560;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .issue-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .severity-error { color: #f87171; font-weight: bold; }
+        .severity-warn { color: #fbbf24; font-weight: bold; }
+        .issue-message { color: #eee; font-size: 14px; }
+        .issue-location { color: #6b7280; font-size: 12px; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <div>
+                <span class="logo">API Codegen - Web UI</span>
+                <span class="demo-badge">演示：path // 错误检测</span>
+            </div>
+        </div>
+        <div class="container">
+            <div class="editor-panel">
+                <div class="panel-header">YAML 编辑器</div>
+                <textarea id="editor" style="display:none;">apis:
+  - name: createUser
+    path: /api//users
+    method: POST
+    request:
+      className: CreateUserReq
+      fields:
+        - name: username
+          type: String
+          required: true</textarea>
+            <div id="codeMirror"></div>
+            <div id="issues"></div>
+        </div>
+            <div class="issues-panel">
+                <div class="panel-header">校验分析结果</div>
+                <div class="issue-list">
+                    <div class="issue">
+                        <div class="issue-header">
+                            <span class="severity-error">ERROR</span>
+                        </div>
+                        <div class="issue-message">路径不能包含 //</div>
+                        <div class="issue-location">API: createUser | 字段: path</div>
+                    </div>
+                    <div class="issue" style="border-left-color: #fbbf24;">
+                        <div class="issue-header">
+                            <span class="severity-warn">WARN</span>
+                        </div>
+                        <div class="issue-message">必填字段缺少 @NotNull 校验</div>
+                        <div class="issue-location">API: createUser | 字段: username</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="lib/codemirror.min.js"></script>
+    <script src="lib/yaml.min.js"></script>
+    <script>
+        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: 'yaml',
+            theme: 'dracula',
+            lineNumbers: true,
+            readOnly: true
+        });
+        editor.setSize(null, '100%');
+    </script>
+</body>
+</html>
