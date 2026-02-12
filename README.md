@@ -148,9 +148,32 @@ mvn api-codegen:generate -DyamlFile=src/main/resources/api.yaml -DbasePackage=co
 
 ## API 定义示例
 
-创建 `api.yaml` 文件，支持两种格式：
+项目支持 **三种** YAML 格式，会自动检测并转换：
+
+### 格式对比
+
+| 格式 | 文件示例 | 特点 | 适用场景 |
+|------|----------|------|----------|
+| **自定义格式** | `api-example.yaml` | 简洁、类型丰富、校验规则完善 | 快速定义 API |
+| **Swagger 2.0** | `swagger2-example.yaml` | 行业标准、生态丰富 | 现有 Swagger 项目 |
+| **OpenAPI 3.0** | `openapi3-example.yaml` | 最新标准、功能更强大 | 新项目推荐 |
+
+### 运行示例
+
+```bash
+# 自定义格式
+java -jar api-codegen.jar api-example.yaml
+
+# Swagger 2.0（自动转换）
+java -jar api-codegen.jar swagger2-example.yaml
+
+# OpenAPI 3.0（自动转换）
+java -jar api-codegen.jar openapi3-example.yaml
+```
 
 ### 格式一：自定义格式（推荐）
+
+**文件**: `api-example.yaml`
 
 ```yaml
 apis:
@@ -182,9 +205,15 @@ apis:
           description: 用户ID
 ```
 
-### 格式二：Swagger 2.0 / OpenAPI 3.0（自动转换）
+**特点：**
+- ✅ 简洁易读，学习成本低
+- ✅ 支持丰富的 Java 类型（LocalDate、LocalDateTime、List、Enum）
+- ✅ 内置校验规则（minLength、maxLength、pattern、email 等）
+- ✅ 支持嵌套对象
 
-直接导入 Swagger 或 OpenAPI 格式的 YAML：
+### 格式二：Swagger 2.0
+
+**文件**: `swagger2-example.yaml`
 
 ```yaml
 swagger: '2.0'
@@ -194,9 +223,119 @@ info:
   description: 用户相关的 API 接口
 schemes:
   - https
-basePath: /api
+basePath: /api/v1
 paths:
   /users:
+    get:
+      summary: 获取用户列表
+      operationId: getUserList
+      parameters:
+        - name: page
+          in: query
+          type: integer
+      responses:
+        '200':
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+    post:
+      summary: 创建用户
+      operationId: createUser
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: '#/definitions/CreateUserRequest'
+      responses:
+        '200':
+          schema:
+            $ref: '#/definitions/User'
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+      username:
+        type: string
+      email:
+        type: string
+        format: email
+```
+
+**转换说明：**
+- `operationId` → API 方法名
+- `paths.{path}.{method}` → path + method
+- `definitions` → 自定义对象类型
+- `parameters` → Request 字段
+- `responses` → Response 字段
+
+### 格式三：OpenAPI 3.0
+
+**文件**: `openapi3-example.yaml`
+
+```yaml
+openapi: 3.0.0
+info:
+  title: 订单管理 API
+  version: v1.0.0
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /orders:
+    get:
+      summary: 获取订单列表
+      operationId: getOrderList
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+    post:
+      summary: 创建订单
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        orderNo:
+          type: string
+        totalAmount:
+          type: number
+          format: double
+```
+
+**转换说明：**
+- `operationId` → API 方法名
+- `components.schemas` → 自定义对象类型
+- `requestBody` → Request 字段
+- `responses.{code}.content` → Response 字段
+
+**提示：** 系统会自动检测 YAML 格式，无需手动指定。
     get:
       summary: 获取用户列表
       operationId: getUserList

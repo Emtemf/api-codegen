@@ -1,0 +1,274 @@
+# OpenAPI 3.0 示例
+# 订单管理 API 定义
+#
+# 说明：
+# - 本项目会自动检测 Swagger/OpenAPI 格式并转换为自定义格式
+# - 使用 Java 运行：java -jar api-codegen.jar openapi3-example.yaml
+# - 使用 Maven 运行：mvn api-codegen:generate -DyamlFile=openapi3-example.yaml
+
+openapi: 3.0.0
+info:
+  title: 订单管理 API
+  version: v1.0.0
+  description: 订单相关的 API 接口，包括创建、查询、更新订单
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: 生产环境
+
+paths:
+  /orders:
+    get:
+      summary: 获取订单列表
+      description: 分页获取订单列表
+      operationId: getOrderList
+      tags:
+        - Order
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: 页码
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: 每页数量
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PENDING, PAID, SHIPPED, COMPLETED, CANCELLED]
+          description: 订单状态
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+
+    post:
+      summary: 创建订单
+      description: 创建新订单
+      operationId: createOrder
+      tags:
+        - Order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /orders/{orderId}:
+    get:
+      summary: 获取订单详情
+      description: 根据订单ID获取订单详情
+      operationId: getOrderById
+      tags:
+        - Order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 订单ID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+    patch:
+      summary: 更新订单状态
+      description: 更新订单状态
+      operationId: updateOrderStatus
+      tags:
+        - Order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 订单ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+
+  /orders/{orderId}/items:
+    get:
+      summary: 获取订单商品列表
+      description: 获取订单中的商品明细
+      operationId: getOrderItems
+      tags:
+        - OrderItem
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: 订单ID
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderItem'
+
+components:
+  schemas:
+    Order:
+      type: object
+      description: 订单信息
+      properties:
+        id:
+          type: integer
+          description: 订单ID
+        orderNo:
+          type: string
+          description: 订单编号
+        customerId:
+          type: integer
+          description: 客户ID
+        totalAmount:
+          type: number
+          format: double
+          description: 订单总金额
+        status:
+          type: string
+          description: 订单状态
+          enum: [PENDING, PAID, SHIPPED, COMPLETED, CANCELLED]
+        createdAt:
+          type: string
+          format: date-time
+          description: 创建时间
+        updatedAt:
+          type: string
+          format: date-time
+          description: 更新时间
+
+    OrderItem:
+      type: object
+      description: 订单商品明细
+      properties:
+        id:
+          type: integer
+          description: 明细ID
+        orderId:
+          type: integer
+          description: 订单ID
+        productId:
+          type: integer
+          description: 商品ID
+        productName:
+          type: string
+          description: 商品名称
+        quantity:
+          type: integer
+          minimum: 1
+          description: 数量
+        unitPrice:
+          type: number
+          format: double
+          minimum: 0.0
+          description: 单价
+        totalPrice:
+          type: number
+          format: double
+          description: 小计
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - customerId
+        - items
+      properties:
+        customerId:
+          type: integer
+          description: 客户ID
+        items:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: 商品列表
+          items:
+            type: object
+            required:
+              - productId
+              - quantity
+            properties:
+              productId:
+                type: integer
+                description: 商品ID
+              quantity:
+                type: integer
+                minimum: 1
+                description: 数量
+
+    UpdateOrderRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          description: 订单状态
+          enum: [PENDING, PAID, SHIPPED, COMPLETED, CANCELLED]
+
+    OrderResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/Order'
