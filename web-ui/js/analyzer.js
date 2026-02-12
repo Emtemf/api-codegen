@@ -1,7 +1,7 @@
 /**
  * API Codegen Web UI - YAML 分析器
  * 用于分析和验证 API YAML 定义
- * 支持 Swagger/OpenAPI 自动转换为自定义格式
+ * 支持 Swagger/OpenAPI 直接分析和修复（不转换格式）
  */
 
 class ApiYamlAnalyzer {
@@ -18,27 +18,18 @@ class ApiYamlAnalyzer {
         this.yamlLines = yamlContent.split('\n');
 
         try {
-            let parsed = jsyaml.load(yamlContent);
+            const parsed = jsyaml.load(yamlContent);
             if (!parsed) {
                 this.addIssue('error', 'YAML 内容为空', 0);
                 return this.issues;
             }
 
-            // 检测 Swagger/OpenAPI 格式并转换
+            // 检测格式并使用对应的分析器
             if (this.isSwaggerFormat(yamlContent)) {
-                this.addIssue('info', '✨ 检测到 Swagger/OpenAPI 格式，已自动转换为自定义格式', 0);
-                parsed = this.convertSwaggerToCustom(parsed);
-                // 继续分析转换后的内容
+                this.analyzeSwagger(parsed);
+            } else {
+                this.analyzeCustom(parsed);
             }
-
-            if (!parsed.apis) {
-                this.addIssue('error', '缺少 apis 字段', 0);
-                return this.issues;
-            }
-
-            parsed.apis.forEach((api, index) => {
-                this.analyzeApi(api, index);
-            });
 
         } catch (e) {
             const line = this.getLineNumberFromError(e.message);
@@ -60,298 +51,104 @@ class ApiYamlAnalyzer {
     }
 
     /**
-     * 转换 Swagger/OpenAPI 为自定义格式
+     * 分析自定义格式
      */
-    convertSwaggerToCustom(swagger) {
-        const apis = [];
-        const basePath = swagger.basePath || '';
-
-        // 获取 paths
-        const paths = swagger.paths || {};
-        for (const [path, methods] of Object.entries(paths)) {
-            for (const [method, operation] of Object.entries(methods)) {
-                const api = {
-                    name: operation.operationId || this.generateApiName(method, path),
-                    path: basePath + path,
-                    method: method.toUpperCase(),
-                    description: operation.summary || operation.description || ''
-                };
-
-                // 转换 parameters 到 request
-                if (operation.parameters || operation.requestBody) {
-                    api.request = {
-                        className: this.toClassName(api.name, 'Req'),
-                        fields: this.convertParametersToFields(operation)
-                    };
-                }
-
-                // 转换 response
-                if (operation.responses) {
-                    const successResponse = this.findSuccessResponse(operation.responses);
-                    if (successResponse) {
-                        api.response = {
-                            className: this.toClassName(api.name, 'Rsp'),
-                            fields: this.convertResponseToFields(successResponse, swagger)
-                        };
-                    }
-                }
-
-                apis.push(api);
-            }
+    analyzeCustom(parsed) {
+        if (!parsed.apis) {
+            this.addIssue('error', '缺少 apis 字段', 0);
+            return;
         }
 
-        return { apis };
-    }
-
-    /**
-     * 转换 parameters/requestBody 为字段列表
-     */
-    convertParametersToFields(operation) {
-        const fields = [];
-        const paramMap = new Map();
-
-        // 处理 parameters
-        if (operation.parameters) {
-            operation.parameters.forEach(param => {
-                if (param.in === 'body' || param.in === 'formData') {
-                    const schema = param.schema || {};
-                    if (schema.$ref) {
-                        // 引用类型
-                        const refName = this.extractRefName(schema.$ref);
-                        fields.push({
-                            name: param.name || this.toCamelCase(refName),
-                            type: refName,
-                            required: param.required || false,
-                            description: param.description || ''
-                        });
-                    } else {
-                        fields.push({
-                            name: param.name,
-                            type: this.convertJsonType(schema.type || 'string', schema.format),
-                            required: param.required || false,
-                            description: param.description || ''
-                        });
-                    }
-                } else if (param.in === 'path' || param.in === 'query') {
-                    fields.push({
-                        name: param.name,
-                        type: this.convertJsonType(param.type || 'string', param.format),
-                        required: param.required || false,
-                        description: param.description || ''
-                    });
-                }
-            });
-        }
-
-        // 处理 requestBody (OpenAPI 3.0)
-        if (operation.requestBody && operation.requestBody.content) {
-            const content = operation.requestBody.content['application/json'];
-            if (content && content.schema) {
-                if (content.schema.$ref) {
-                    const refName = this.extractRefName(content.schema.$ref);
-                    fields.push({
-                        name: 'body',
-                        type: refName,
-                        required: operation.requestBody.required || false,
-                        description: 'Request body'
-                    });
-                } else if (content.schema.properties) {
-                    for (const [name, prop] of Object.entries(content.schema.properties)) {
-                        const required = content.schema.required?.includes(name);
-                        fields.push({
-                            name,
-                            type: this.convertJsonType(prop.type, prop.format),
-                            required,
-                            description: prop.description || ''
-                        });
-                    }
-                }
-            }
-        }
-
-        return fields;
-    }
-
-    /**
-     * 转换 response 为字段列表
-     */
-    convertResponseToFields(response, swagger) {
-        const fields = [];
-
-        // OpenAPI 3.0
-        if (response.content) {
-            const content = response.content['application/json'];
-            if (content && content.schema) {
-                if (content.schema.$ref) {
-                    const refName = this.extractRefName(content.schema.$ref);
-                    fields.push({
-                        name: 'data',
-                        type: refName,
-                        description: 'Response data'
-                    });
-                } else if (content.schema.properties) {
-                    for (const [name, prop] of Object.entries(content.schema.properties)) {
-                        fields.push({
-                            name,
-                            type: this.convertJsonType(prop.type, prop.format),
-                            description: prop.description || ''
-                        });
-                    }
-                } else if (content.schema.type === 'array' && content.schema.items) {
-                    fields.push({
-                        name: 'data',
-                        type: 'List<' + this.convertJsonType(content.schema.items.type, content.schema.items.format) + '>',
-                        description: 'Data list'
-                    });
-                }
-            }
-        }
-        // Swagger 2.0
-        else if (response.schema) {
-            if (response.schema.$ref) {
-                const refName = this.extractRefName(response.schema.$ref);
-                fields.push({
-                    name: 'data',
-                    type: refName,
-                    description: 'Response data'
-                });
-            } else if (response.schema.properties) {
-                for (const [name, prop] of Object.entries(response.schema.properties)) {
-                    fields.push({
-                        name,
-                        type: this.convertJsonType(prop.type, prop.format),
-                        description: prop.description || ''
-                    });
-                }
-            } else if (response.schema.type === 'array' && response.schema.items) {
-                if (response.schema.items.$ref) {
-                    const refName = this.extractRefName(response.schema.items.$ref);
-                    fields.push({
-                        name: 'data',
-                        type: 'List<' + refName + '>',
-                        description: 'Data list'
-                    });
-                } else {
-                    fields.push({
-                        name: 'data',
-                        type: 'List<' + this.convertJsonType(response.schema.items.type, response.schema.items.format) + '>',
-                        description: 'Data list'
-                    });
-                }
-            }
-        }
-
-        // 如果没有字段，添加默认 success 字段
-        if (fields.length === 0) {
-            fields.push({
-                name: 'success',
-                type: 'Boolean',
-                description: '操作是否成功'
-            });
-        }
-
-        return fields;
-    }
-
-    /**
-     * 查找成功的响应
-     */
-    findSuccessResponse(responses) {
-        return responses['200'] || responses['201'] || responses['204'] ||
-               Object.values(responses)[0];
-    }
-
-    /**
-     * 提取 $ref 的名称
-     */
-    extractRefName(ref) {
-        if (!ref) return 'Object';
-        const idx = ref.lastIndexOf('/');
-        return idx >= 0 ? ref.substring(idx + 1) : ref;
-    }
-
-    /**
-     * 转换 JSON 类型为 Java 类型
-     */
-    convertJsonType(type, format) {
-        if (!type) return 'String';
-
-        const typeLower = type.toLowerCase();
-        switch (typeLower) {
-            case 'string':
-                if (format === 'date-time') return 'LocalDateTime';
-                if (format === 'date') return 'LocalDate';
-                if (format === 'email') return 'String';
-                return 'String';
-            case 'integer':
-            case 'int32':
-                return 'Integer';
-            case 'long':
-            case 'int64':
-                return 'Long';
-            case 'number':
-                if (format === 'double' || format === 'float') return 'Double';
-                return 'Double';
-            case 'boolean':
-                return 'Boolean';
-            case 'array':
-                return 'List<Object>';
-            default:
-                return type.charAt(0).toUpperCase() + type.slice(1);
-        }
-    }
-
-    /**
-     * 生成 API 名称
-     */
-    generateApiName(method, path) {
-        const name = path.replaceAll('/\\{([^}]+)\\}', '')
-                          .replaceAll('^/', '')
-                          .replaceAll('/', '_');
-        if (name.isEmpty()) {
-            name = 'root';
-        }
-        return method.toLowerCase() + name.charAt(0).toUpperCase() + name.slice(1);
-    }
-
-    /**
-     * 转换为类名
-     */
-    toClassName(apiName, suffix) {
-        const name = apiName.charAt(0).toUpperCase() + apiName.slice(1);
-        return name + suffix;
-    }
-
-    /**
-     * 转换为驼峰命名
-     */
-    toCamelCase(str) {
-        return str.charAt(0).toLowerCase() + str.slice(1);
-    }
-
-    /**
-     * 添加问题
-     */
-    addIssue(severity, message, line, apiIndex, field) {
-        this.issues.push({
-            severity: severity,
-            message: message,
-            line: line,
-            api: apiIndex,
-            field: field
+        parsed.apis.forEach((api, index) => {
+            this.analyzeApi(api, index);
         });
     }
 
     /**
-     * 从错误消息获取行号
+     * 分析 Swagger/OpenAPI 格式
      */
-    getLineNumberFromError(errorMessage) {
-        const match = errorMessage.match(/line (\d+)/);
-        return match ? parseInt(match[1]) : 0;
+    analyzeSwagger(parsed) {
+        if (!parsed.paths) {
+            this.addIssue('error', '缺少 paths 字段', 0);
+            return;
+        }
+
+        const basePath = parsed.basePath || '';
+        const paths = parsed.paths || {};
+
+        for (const [path, methods] of Object.entries(paths)) {
+            for (const [method, operation] of Object.entries(methods)) {
+                // 检查必需字段
+                if (!operation.operationId) {
+                    this.addIssue('warn', `API ${method.toUpperCase()} ${path} 缺少 operationId`, 0);
+                }
+
+                // 检查路径格式
+                const fullPath = basePath + path;
+                if (!fullPath.startsWith('/')) {
+                    this.addIssue('error', `路径必须以 / 开头: ${fullPath}`, 0);
+                } else if (fullPath.includes('//')) {
+                    this.addIssue('error', `路径不能包含 //: ${fullPath}`, 0);
+                }
+
+                // 分析 parameters
+                if (operation.parameters) {
+                    operation.parameters.forEach((param, idx) => {
+                        this.analyzeSwaggerParameter(param, fullPath, method.toUpperCase(), idx);
+                    });
+                }
+
+                // 分析 requestBody
+                if (operation.requestBody) {
+                    this.analyzeRequestBody(operation.requestBody, fullPath, method.toUpperCase());
+                }
+
+                // 分析 responses
+                if (operation.responses) {
+                    this.analyzeResponses(operation.responses, fullPath, method.toUpperCase());
+                }
+            }
+        }
     }
 
     /**
-     * 分析单个 API
+     * 分析 Swagger parameter
+     */
+    analyzeSwaggerParameter(param, path, method, index) {
+        // 检查必需参数是否有描述
+        if (param.required && !param.description) {
+            this.addIssue('warn', `必填参数 ${param.name} 缺少 description`, 0, null, `${method} ${path} parameters[${index}]`);
+        }
+
+        // 检查参数类型
+        if (!param.type && !param.schema) {
+            this.addIssue('warn', `参数 ${param.name} 缺少类型定义`, 0, null, `${method} ${path} parameters[${index}]`);
+        }
+    }
+
+    /**
+     * 分析 requestBody
+     */
+    analyzeRequestBody(requestBody, path, method) {
+        // 检查必需的 requestBody 是否有 description
+        if (requestBody.required && !requestBody.description) {
+            this.addIssue('warn', `requestBody 缺少 description`, 0, null, `${method} ${path}`);
+        }
+    }
+
+    /**
+     * 分析 responses
+     */
+    analyzeResponses(responses, path, method) {
+        // 检查是否有成功的响应
+        const hasSuccessResponse = ['200', '201', '204'].some(code => responses[code]);
+        if (!hasSuccessResponse) {
+            this.addIssue('warn', `API ${method} ${path} 缺少成功响应 (2xx)`, 0);
+        }
+    }
+
+    /**
+     * 分析单个 API（自定义格式）
      */
     analyzeApi(api, apiIndex) {
         // 检查必需字段
@@ -393,7 +190,7 @@ class ApiYamlAnalyzer {
     }
 
     /**
-     * 分析字段
+     * 分析字段（自定义格式）
      */
     analyzeField(field, apiIndex, fieldIndex, type) {
         const fieldPath = type + '.fields[' + fieldIndex + ']';
@@ -483,15 +280,17 @@ class ApiYamlAnalyzer {
     fix(yamlContent) {
         try {
             const parsed = jsyaml.load(yamlContent);
-            if (!parsed || !parsed.apis) {
+            if (!parsed) {
                 return yamlContent;
             }
 
-            parsed.apis.forEach((api) => {
-                this.fixApi(api);
-            });
+            // 判断格式并使用对应的修复方法
+            if (this.isSwaggerFormat(yamlContent)) {
+                return this.fixSwagger(parsed);
+            } else {
+                return this.fixCustom(parsed);
+            }
 
-            return jsyaml.dump(parsed, { indent: 2 });
         } catch (e) {
             console.error('Fix error:', e);
             return yamlContent;
@@ -499,7 +298,77 @@ class ApiYamlAnalyzer {
     }
 
     /**
-     * 修复单个 API
+     * 修复自定义格式
+     */
+    fixCustom(parsed) {
+        if (!parsed.apis) {
+            return yamlContent;
+        }
+
+        parsed.apis.forEach((api) => {
+            this.fixApi(api);
+        });
+
+        return jsyaml.dump(parsed, { indent: 2 });
+    }
+
+    /**
+     * 修复 Swagger/OpenAPI 格式
+     */
+    fixSwagger(parsed) {
+        // 修复 paths 中的路径格式
+        const paths = parsed.paths || {};
+        for (const [path, methods] of Object.entries(paths)) {
+            // 修复路径包含 // 的问题
+            if (path.includes('//')) {
+                const fixedPath = path.replace(/\/+/g, '/');
+                paths[fixedPath] = methods;
+                if (fixedPath !== path) {
+                    delete paths[path];
+                    this.addInfoMessage(`修复路径: ${path} → ${fixedPath}`);
+                }
+            }
+
+            // 修复每个 operation
+            for (const [method, operation] of Object.entries(methods)) {
+                this.fixSwaggerOperation(operation);
+            }
+        }
+
+        return jsyaml.dump(parsed, { indent: 2 });
+    }
+
+    /**
+     * 修复 Swagger operation
+     */
+    fixSwaggerOperation(operation) {
+        // 确保 operationId 存在
+        if (!operation.operationId && operation.summary) {
+            operation.operationId = this.toOperationId(operation.summary);
+        }
+
+        // 确保有 description
+        if (!operation.description && operation.summary) {
+            operation.description = operation.summary;
+        }
+
+        // 确保有 parameters 的 description
+        if (operation.parameters) {
+            operation.parameters.forEach(param => {
+                if (!param.description && param.name) {
+                    param.description = this.toDescription(param.name);
+                }
+            });
+        }
+
+        // 确保有 requestBody 的 description
+        if (operation.requestBody && !operation.requestBody.description) {
+            operation.requestBody.description = 'Request body';
+        }
+    }
+
+    /**
+     * 修复单个 API（自定义格式）
      */
     fixApi(api) {
         if (api.request && api.request.fields) {
@@ -516,7 +385,7 @@ class ApiYamlAnalyzer {
     }
 
     /**
-     * 修复字段
+     * 修复字段（自定义格式）
      */
     fixField(field) {
         // 确保 validation 对象存在
@@ -577,6 +446,50 @@ class ApiYamlAnalyzer {
             !field.validation.past) {
             field.validation.past = true;
         }
+    }
+
+    /**
+     * 添加信息消息
+     */
+    addInfoMessage(message) {
+        // 可以选择是否显示修复信息
+        console.log('[INFO] ' + message);
+    }
+
+    /**
+     * 添加问题
+     */
+    addIssue(severity, message, line, apiIndex, field) {
+        this.issues.push({
+            severity: severity,
+            message: message,
+            line: line,
+            api: apiIndex,
+            field: field
+        });
+    }
+
+    /**
+     * 从错误消息获取行号
+     */
+    getLineNumberFromError(errorMessage) {
+        const match = errorMessage.match(/line (\d+)/);
+        return match ? parseInt(match[1]) : 0;
+    }
+
+    /**
+     * 转换为 operationId
+     */
+    toOperationId(summary) {
+        // 处理中文和特殊字符
+        return 'api' + Math.random().toString(36).substring(2, 8);
+    }
+
+    /**
+     * 转换为 description
+     */
+    toDescription(name) {
+        return name.charAt(0).toUpperCase() + name.slice(1).replace(/([A-Z])/g, ' $1');
     }
 }
 

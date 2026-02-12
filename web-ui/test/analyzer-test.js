@@ -197,7 +197,7 @@ test('错误检测', '路径包含 // 应报错 (Issue #2)',
     { errorCount: 1, hasMessage: '//' }
 );
 
-test('错误检测', 'Swagger 格式应自动转换并继续分析 (Issue #4)',
+test('错误检测', 'Swagger 格式应直接分析，不需要转换 (Issue #4)',
     `swagger: '2.0'
 info:
   version: v1
@@ -206,11 +206,18 @@ paths:
   /users:
     get:
       summary: 获取用户列表
-      operationId: getUserList`,
-    { hasMessage: '自动转换', errorCount: 0 }
+      operationId: getUserList
+      responses:
+        '200':
+          schema:
+            type: object
+  /users//profile:
+    get:
+      summary: 获取用户资料`,
+    { errorCount: 1, hasMessage: '//' }  // 检测到 // 路径错误
 );
 
-test('错误检测', 'OpenAPI 格式应自动转换并继续分析 (Issue #4)',
+test('错误检测', 'OpenAPI 格式应直接分析 (Issue #4)',
     `openapi: '3.0'
 info:
   title: 示例 API
@@ -218,8 +225,11 @@ paths:
   /users:
     get:
       summary: 获取用户
-      operationId: getUser`,
-    { hasMessage: '自动转换', errorCount: 0 }
+      operationId: getUser
+      responses:
+        '200':
+          description: 成功`,
+    { errorCount: 0 }  // 正常的 Swagger，无错误
 );
 
 test('错误检测', '缺少 HTTP 方法应报错',
@@ -573,6 +583,55 @@ test('自动修复', '生日字段 → 添加 past: true',
 // ============================================
 console.log('\n\x1b[36m┌─ 分类 4: 边界情况\x1b[0m');
 console.log('\x1b[36m│\x1b[0m');
+
+test('边界情况', 'Swagger 路径 // 修复 (Issue #4)',
+    `swagger: '2.0'
+info:
+  title: 用户管理 API
+paths:
+  /users//profile:
+    get:
+      summary: 获取用户资料
+      operationId: getUserProfile`,
+    { fixedValue: (parsed) => {
+        // 修复后路径应该从 /users//profile 变为 /users/profile
+        return !parsed.paths['/users//profile'] && parsed.paths['/users/profile'];
+    }}
+);
+
+test('边界情况', 'Swagger 添加 operationId',
+    `swagger: '2.0'
+info:
+  title: 用户管理 API
+paths:
+  /users:
+    get:
+      summary: 获取用户列表`,
+    { fixedValue: (parsed) => {
+        // 修复后应该有 operationId
+        return !!parsed.paths['/users'].get.operationId;
+    }}
+);
+
+test('边界情况', 'Swagger 添加 description',
+    `swagger: '2.0'
+info:
+  title: 用户管理 API
+paths:
+  /users:
+    get:
+      summary: 获取用户列表
+      operationId: getUserList
+    post:
+      operationId: createUser
+      requestBody:
+        required: true`,
+    { fixedValue: (parsed) => {
+        // 修复后应该有 description
+        return parsed.paths['/users'].get.description === '获取用户列表' &&
+               parsed.paths['/users'].post.requestBody.description === 'Request body';
+    }}
+);
 
 test('边界情况', '多个 API 应全部检测',
     `apis:
