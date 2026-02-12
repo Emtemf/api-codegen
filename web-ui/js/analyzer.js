@@ -12,6 +12,9 @@ class ApiYamlAnalyzer {
     /**
      * 分析 YAML 定义
      */
+    /**
+     * 分析 YAML 定义
+     */
     analyze(yamlContent) {
         this.issues = [];
         this.yamlLines = yamlContent.split('\n');
@@ -20,6 +23,13 @@ class ApiYamlAnalyzer {
             const parsed = jsyaml.load(yamlContent);
             if (!parsed) {
                 this.addIssue('error', 'YAML 内容为空', 0);
+                return this.issues;
+            }
+
+            // 检测 Swagger/OpenAPI 格式
+            if (this.isSwaggerFormat(yamlContent)) {
+                this.addIssue('warn', '检测到 Swagger/OpenAPI 格式。Java 端会自动转换，Web UI 暂不支持预览。', 0);
+                // 不继续分析，让 Java 端处理
                 return this.issues;
             }
 
@@ -38,6 +48,17 @@ class ApiYamlAnalyzer {
         }
 
         return this.issues;
+    }
+
+    /**
+     * 检测是否是 Swagger/OpenAPI 格式
+     */
+    isSwaggerFormat(content) {
+        if (!content) return false;
+        const lower = content.toLowerCase();
+        return lower.includes('swagger:') ||
+               lower.includes('openapi:') ||
+               (lower.includes('info:') && lower.includes('paths:'));
     }
 
     /**
@@ -74,6 +95,8 @@ class ApiYamlAnalyzer {
             this.addIssue('error', '缺少 API 路径 (path)', 0, apiIndex, 'path');
         } else if (!api.path.startsWith('/')) {
             this.addIssue('error', '路径必须以 / 开头', 0, apiIndex, 'path');
+        } else if (api.path.includes('//')) {
+            this.addIssue('error', '路径不能包含 //', 0, apiIndex, 'path');
         }
 
         if (!api.method) {

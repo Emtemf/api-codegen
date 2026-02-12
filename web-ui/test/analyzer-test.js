@@ -189,6 +189,37 @@ test('错误检测', '路径不以 / 开头应报错',
     { errorCount: 1, hasMessage: '/' }
 );
 
+test('错误检测', '路径包含 // 应报错 (Issue #2)',
+    `apis:
+  - name: createUser
+    path: /api//users
+    method: POST`,
+    { errorCount: 1, hasMessage: '//' }
+);
+
+test('错误检测', 'Swagger 格式应警告并提示转换 (Issue #4)',
+    `swagger: '2.0'
+info:
+  version: v1
+  title: 用户管理 API
+paths:
+  /users:
+    get:
+      summary: 获取用户列表`,
+    { warnCount: 1, hasMessage: 'Swagger' }
+);
+
+test('错误检测', 'OpenAPI 格式应警告并提示转换 (Issue #4)',
+    `openapi: '3.0'
+info:
+  title: 示例 API
+paths:
+  /users:
+    get:
+      summary: 获取用户`,
+    { warnCount: 1, hasMessage: 'OpenAPI' }
+);
+
 test('错误检测', '缺少 HTTP 方法应报错',
     `apis:
   - name: createUser
