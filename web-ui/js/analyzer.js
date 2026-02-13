@@ -523,11 +523,26 @@ class ApiYamlAnalyzer {
             operation.description = operation.summary;
         }
 
-        // 确保有 parameters 的 description
+        // 确保有 parameters 的 description 和 type
         if (operation.parameters) {
             operation.parameters.forEach(param => {
+                // 添加 description
                 if (!param.description && param.name) {
                     param.description = this.toDescription(param.name);
+                }
+                // 添加 type（如果没有 schema）
+                if (!param.type && !param.schema) {
+                    // 根据参数名推断类型
+                    const name = param.name.toLowerCase();
+                    if (name.includes('id') || name === 'page' || name === 'size' || name === 'count' || name === 'age' || name === 'quantity') {
+                        param.type = 'integer';
+                    } else if (name.includes('price') || name === 'amount' || name === 'total') {
+                        param.type = 'number';
+                    } else if (name.includes('flag') || name === 'enabled' || name === 'active' || name === 'status') {
+                        param.type = 'boolean';
+                    } else {
+                        param.type = 'string';
+                    }
                 }
             });
         }
