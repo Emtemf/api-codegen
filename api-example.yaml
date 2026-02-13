@@ -1,5 +1,6 @@
 # API 定义示例
 
+# ========== 有效的 API ==========
 apis:
   - name: createUser
     path: /api/users
@@ -104,3 +105,130 @@ apis:
         - name: createTime
           type: LocalDateTime
           description: 创建时间
+
+# ========== 问题1: 路径包含 // ==========
+  - name: getUser
+    path: //api/users/detail
+    method: GET
+    description: 获取用户详情
+    request:
+      className: GetUserReq
+      fields:
+        - name: userId
+          type: Long
+          required: true
+          # 问题: 缺少 validation
+    response:
+      className: GetUserRsp
+      fields:
+        - name: userId
+          type: Long
+
+# ========== 问题2: 路径不以 / 开头 ==========
+  - name: updateUser
+    path: api/users/update
+    method: PUT
+    description: 更新用户
+
+# ========== 问题3: 缺少 name ==========
+  - path: /api/test
+    method: GET
+
+# ========== 问题4: 缺少 method ==========
+  - name: deleteUser
+    path: /api/users/delete
+
+# ========== 问题5: 必填字段缺少 @NotNull ==========
+  - name: queryUsers
+    path: /api/users/query
+    method: GET
+    request:
+      className: QueryUsersReq
+      fields:
+        - name: keyword
+          type: String
+          required: true
+          # 问题: required=true 但缺少 notNull
+
+# ========== 问题6: String 无校验规则 ==========
+  - name: searchUsers
+    path: /api/users/search
+    method: GET
+    request:
+      className: SearchUsersReq
+      fields:
+        - name: keyword
+          type: String
+          # 问题: 无 validation
+
+# ========== 问题7: 邮箱字段缺少 @Email ==========
+  - name: contactUser
+    path: /api/users/contact
+    method: POST
+    request:
+      className: ContactUserReq
+      fields:
+        - name: email
+          type: String
+          required: true
+          # 问题: 邮箱字段缺少 email: true
+
+# ========== 问题8: 电话字段缺少正则 ==========
+  - name: registerUser
+    path: /api/users/register
+    method: POST
+    request:
+      className: RegisterUserReq
+      fields:
+        - name: phone
+          type: String
+          required: true
+          # 问题: 电话字段缺少 pattern
+
+# ========== 问题9: 数值字段缺少范围 ==========
+  - name: setAge
+    path: /api/users/age
+    method: POST
+    request:
+      className: SetAgeReq
+      fields:
+        - name: age
+          type: Integer
+          # 问题: 缺少 min/max
+
+# ========== 问题10: List 字段缺少大小 ==========
+  - name: addTags
+    path: /api/users/tags
+    method: POST
+    request:
+      className: AddTagsReq
+      fields:
+        - name: tags
+          type: List<String>
+          # 问题: 缺少 minSize/maxSize
+
+# ========== 问题11: minLength > maxLength ==========
+  - name: testValidation1
+    path: /api/test/validation1
+    method: POST
+    request:
+      className: TestValidation1Req
+      fields:
+        - name: field1
+          type: String
+          validation:
+            minLength: 20
+            maxLength: 10
+
+# ========== 问题12: min > max ==========
+  - name: testValidation2
+    path: /api/test/validation2
+    method: POST
+    request:
+      className: TestValidation2Req
+      fields:
+        - name: field2
+          type: Integer
+          validation:
+            min: 100
+            max: 50

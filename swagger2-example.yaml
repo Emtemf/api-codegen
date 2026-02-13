@@ -5,6 +5,14 @@
 # - 本项目会自动检测 Swagger/OpenAPI 格式并转换为自定义格式
 # - 使用 Java 运行：java -jar api-codegen.jar swagger2-example.yaml
 # - 使用 Maven 运行：mvn api-codegen:generate -DyamlFile=swagger2-example.yaml
+#
+# 本文件包含以下问题类型：
+# - 路径包含 // (错误)
+# - 路径不以 / 开头 (错误)
+# - 缺少 operationId (警告)
+# - 缺少参数 description (警告)
+# - 缺少 requestBody description (警告)
+# - 缺少成功响应 (警告)
 
 swagger: '2.0'
 info:
@@ -18,6 +26,7 @@ schemes:
   - https
 basePath: /api/v1
 
+# ========== 有效的 API ==========
 paths:
   /users:
     get:
@@ -139,6 +148,74 @@ paths:
               success:
                 type: boolean
                 description: 操作是否成功
+
+  # ========== 问题1: 路径包含 // ==========
+  //XXX/users/detail:
+    get:
+      summary: 用户详情
+      # 缺少 operationId - 警告
+      parameters:
+        - name: id
+          in: query
+          required: true
+          # 缺少 description - 警告
+      responses:
+        '200':
+          description: Success
+
+  # ========== 问题2: 路径不以 / 开头 ==========
+  users/profile:
+    get:
+      summary: 用户资料
+      operationId: getUserProfile
+      # 缺少成功响应 - 警告
+
+  # ========== 问题3: 多个 // 路径 ==========
+  //api/v1/message:
+    get:
+      summary: 获取消息
+      operationId: getMessage
+      responses:
+        '200':
+          description: Success
+  //api/v1/messageStatus:
+    get:
+      summary: 获取消息状态
+      operationId: getMessageStatus
+      responses:
+        '200':
+          description: Success
+  //api/v1/messageUnreadTotal:
+    get:
+      summary: 获取未读总数
+      operationId: getUnreadTotal
+      responses:
+        '200':
+          description: Success
+
+  # ========== 问题4: 缺少 operationId ==========
+  /users/search:
+    get:
+      summary: 搜索用户
+      # 缺少 operationId - 警告
+      parameters:
+        - name: keyword
+          in: query
+          type: string
+          # 缺少 description - 警告
+      responses:
+        '200':
+          description: Success
+
+  # ========== 问题5: 缺少 requestBody description ==========
+  /users/import:
+    post:
+      summary: 导入用户
+      operationId: importUsers
+      # 缺少 requestBody - 警告
+      responses:
+        '200':
+          description: Success
 
 definitions:
   User:

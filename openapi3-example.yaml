@@ -5,6 +5,14 @@
 # - 本项目会自动检测 Swagger/OpenAPI 格式并转换为自定义格式
 # - 使用 Java 运行：java -jar api-codegen.jar openapi3-example.yaml
 # - 使用 Maven 运行：mvn api-codegen:generate -DyamlFile=openapi3-example.yaml
+#
+# 本文件包含以下问题类型：
+# - 路径包含 // (错误)
+# - 路径不以 / 开头 (错误)
+# - 缺少 operationId (警告)
+# - 缺少参数 description (警告)
+# - 缺少 requestBody description (警告)
+# - 缺少成功响应 (警告)
 
 openapi: 3.0.0
 info:
@@ -19,6 +27,7 @@ servers:
   - url: https://api.example.com/v1
     description: 生产环境
 
+# ========== 有效的 API ==========
 paths:
   /orders:
     get:
@@ -160,6 +169,52 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/OrderItem'
+
+  # ========== 问题1: 路径包含 // ==========
+  //XXX/orders/detail:
+    get:
+      summary: 订单详情
+      # 缺少 operationId - 警告
+      parameters:
+        - name: orderId
+          in: query
+          required: true
+          # 缺少 description - 警告
+      responses:
+        '200':
+          description: Success
+
+  # ========== 问题2: 路径不以 / 开头 ==========
+  orders/export:
+    get:
+      summary: 导出订单
+      operationId: exportOrders
+      # 缺少成功响应 - 警告
+
+  # ========== 问题3: 多个 // 路径 ==========
+  //api/v1/products:
+    get:
+      summary: 获取产品列表
+      operationId: getProducts
+      responses:
+        '200':
+          description: Success
+  //api/v1/products/{id}:
+    get:
+      summary: 获取产品详情
+      operationId: getProductById
+      responses:
+        '200':
+          description: Success
+
+  # ========== 问题4: 缺少 operationId ==========
+  /orders/search:
+    get:
+      summary: 搜索订单
+      # 缺少 operationId - 警告
+      responses:
+        '200':
+          description: Success
 
 components:
   schemas:
