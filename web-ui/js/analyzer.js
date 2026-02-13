@@ -298,6 +298,158 @@ class ApiYamlAnalyzer {
     }
 
     /**
+     * 选择性修复问题 - 只修复选中的问题
+     */
+    fixSelective(yamlContent, selectedIndices) {
+        try {
+            const parsed = jsyaml.load(yamlContent);
+            if (!parsed) {
+                return yamlContent;
+            }
+
+            const isSwagger = this.isSwaggerFormat(yamlContent);
+
+            // 先分析获取所有问题
+            this.issues = [];
+            if (isSwagger) {
+                this.analyzeSwagger(parsed);
+            } else {
+                this.analyzeCustom(parsed);
+            }
+
+            // 如果是Swagger格式，修复路径和参数问题
+            if (isSwagger) {
+                this.fixSwagger(parsed);
+            }
+
+            // 根据选中的问题索引，构建需要修复的字段集合
+            // key 格式: apiIndex-fieldName (如 "0-username")
+            const fieldsToFix = new Map();
+
+            this.issues.forEach((issue, index) => {
+                if (!selectedIndices.includes(index)) return;
+                // 注意: issue.api 是 API 索引 (0-based)
+                if (issue.api === undefined || issue.api === null) return;
+
+                // 从 field 中提取字段名
+                // field 格式可能是: "request.fields[0].name", "response.fields[1].name", "path", "name" 等
+                let fieldName = issue.field;
+                if (fieldName) {
+                    // 提取字段名
+                    if (fieldName.includes('fields[')) {
+                        // 格式: "request.fields[0].name" 或 "response.fields[1].name"
+                        if (fieldName.includes('fields[0]')) {
+                            fieldName = 'field_0';
+                        } else if (fieldName.includes('fields[1]')) {
+                            fieldName = 'field_1';
+                        } else if (fieldName.includes('fields[2]')) {
+                            fieldName = 'field_2';
+                        }
+                    } else {
+                        const parts = fieldName.split('.');
+                        fieldName = parts[parts.length - 1];
+                    }
+                }
+                if (!fieldName) return;
+
+                const key = issue.api + '-' + fieldName;
+
+                if (!fieldsToFix.has(key)) {
+                    fieldsToFix.set(key, {});
+                }
+
+                // 根据问题类型添加验证规则
+                const msg = issue.message;
+                const rules = fieldsToFix.get(key);
+
+                if (msg.includes('notNull') || msg.includes('@NotNull')) {
+                    rules.notNull = true;
+                }
+                if (msg.includes('@Email') || msg.includes('邮箱')) {
+                    rules.email = true;
+                }
+                if (msg.includes('正则') || msg.includes('pattern') || msg.includes('电话')) {
+                    rules.pattern = '^1[3-9]\\d{9}$';
+                }
+                if (msg.includes('长度')) {
+                    if (!rules.minLength) rules.minLength = 1;
+                    if (!rules.maxLength) rules.maxLength = 255;
+                }
+                if (msg.includes('范围') || msg.includes('min') || msg.includes('max')) {
+                    if (msg.includes('Integer') || msg.includes('Long')) {
+                        if (!rules.hasOwnProperty('min')) rules.min = 0;
+                        if (!rules.hasOwnProperty('max')) rules.max = 2147483647;
+                    }
+                }
+            });
+
+            // 应用修复 - 使用字段索引而非名称进行匹配
+            if (parsed.apis) {
+                // Custom format
+                parsed.apis.forEach((api, idx) => {
+                    const sections = ['request', 'response'];
+                    for (const section of sections) {
+                        if (api[section] && api[section].fields) {
+                            api[section].fields.forEach((field, fieldIdx) => {
+                                // 尝试多种 key 格式进行匹配
+                                const keysToTry = [
+                                    idx + '-field_' + fieldIdx,  // 如 "0-field_0"
+                                    idx + '-' + field.name,       // 如 "0-username"
+                                    idx + '-' + fieldIdx          // 如 "0-0"
+                                ];
+
+                                for (const key of keysToTry) {
+                                    if (fieldsToFix.has(key)) {
+                                        if (!field.validation) field.validation = {};
+                                        const rules = fieldsToFix.get(key);
+                                        for (const k in rules) {
+                                            field.validation[k] = rules[k];
+                                        }
+                                        break; // 只应用一次
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            } else if (parsed.definitions || parsed.components) {
+                // Swagger format - update definitions
+                const defs = parsed.definitions || (parsed.components && parsed.components.schemas) || {};
+                if (defs) {
+                    for (const defName in defs) {
+                        const def = defs[defName];
+                        if (def.properties) {
+                            for (const propName in def.properties) {
+                                // Swagger 使用不同的 key 格式，尝试匹配
+                                const key = defName + '-' + propName;
+                                if (fieldsToFix.has(key)) {
+                                    const rules = fieldsToFix.get(key);
+                                    for (const k in rules) {
+                                        if (k === 'notNull') {
+                                            if (!def.required) def.required = [];
+                                            if (!def.required.includes(propName)) {
+                                                def.required.push(propName);
+                                            }
+                                        } else {
+                                            def.properties[propName][k] = rules[k];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return jsyaml.dump(parsed, { indent: 2 });
+
+        } catch (e) {
+            console.error('Fix selective error:', e);
+            return yamlContent;
+        }
+    }
+
+    /**
      * 修复自定义格式
      */
     fixCustom(parsed) {
@@ -310,6 +462,25 @@ class ApiYamlAnalyzer {
         });
 
         return jsyaml.dump(parsed, { indent: 2 });
+    }
+
+    /**
+     * 修复 Swagger/OpenAPI 格式的路径问题（不序列化）
+     */
+    fixSwaggerPaths(parsed) {
+        // 修复 paths 中的路径格式
+        const paths = parsed.paths || {};
+
+        for (const [path, methods] of Object.entries(paths)) {
+            // 修复路径包含 // 的问题
+            if (path.includes('//')) {
+                const fixedPath = path.replace(/\/+/g, '/');
+                paths[fixedPath] = methods;
+                if (fixedPath !== path) {
+                    delete paths[path];
+                }
+            }
+        }
     }
 
     /**

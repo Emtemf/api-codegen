@@ -59,12 +59,17 @@
         }
 
         .panel {
-            flex: 1;
             display: flex;
             flex-direction: column;
             border-right: 1px solid #0f3460;
             overflow: hidden;
             min-width: 0;
+        }
+        .api-panel {
+            flex: 4;
+        }
+        .config-panel {
+            flex: 3;
         }
         .panel:last-child { border-right: none; }
 
@@ -78,6 +83,24 @@
             justify-content: space-between;
             border-bottom: 1px solid #0f3460;
             flex-shrink: 0;
+        }
+        .panel-header span:first-child {
+            flex: 1;
+        }
+        .panel-load-btn {
+            padding: 4px 12px;
+            background: #0f3460;
+            border: none;
+            border-radius: 4px;
+            color: #aaa;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 8px;
+        }
+        .panel-load-btn:hover {
+            background: #e94560;
+            color: white;
         }
 
         .editor-wrapper {
@@ -95,7 +118,9 @@
 
         /* Analysis Panel */
         .analysis {
-            width: 380px;
+            flex: 3;
+            min-width: 300px;
+            max-width: 450px;
             background: #16213e;
             display: flex;
             flex-direction: column;
@@ -127,9 +152,44 @@
             border-radius: 6px;
             margin-bottom: 8px;
             border-left: 3px solid;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
         }
         .issue.error { background: rgba(231, 76, 60, 0.15); border-color: #e74c3c; }
         .issue.warn { background: rgba(243, 156, 18, 0.15); border-color: #f39c12; }
+        .issue-checkbox {
+            flex-shrink: 0;
+            padding-top: 2px;
+        }
+        .issue-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #e94560;
+        }
+        .issue-content {
+            flex: 1;
+            min-width: 0;
+        }
+        .issue-select-all {
+            padding: 10px 12px;
+            background: rgba(233, 69, 96, 0.1);
+            border-bottom: 1px solid #0f3460;
+            font-size: 13px;
+        }
+        .issue-select-all label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: #e94560;
+        }
+        .issue-select-all input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #e94560;
+        }
         .issue-title { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
         .issue-icon { width: 8px; height: 8px; border-radius: 50%; }
         .issue.error .issue-icon { background: #e74c3c; }
@@ -185,8 +245,8 @@
         .diff-container {
             background: #1e1e1e;
             border-radius: 12px;
-            width: 92%;
-            max-width: 1400px;
+            width: 96%;
+            max-width: 1600px;
             max-height: 88vh;
             display: flex;
             flex-direction: column;
@@ -360,6 +420,7 @@
         .diff-line-empty .diff-line-num {
             color: #3a3a3a;
         }
+
         .diff-footer {
             padding: 16px 24px;
             border-top: 1px solid #3a3a3a;
@@ -395,6 +456,191 @@
             background: #f85149;
             box-shadow: 0 0 6px rgba(248, 81, 73, 0.5);
         }
+
+        /* Right Panel: API + Field stacked */
+        .diff-right-panel {
+            width: 380px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-left: 1px solid #3a3a3a;
+        }
+        .diff-api-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-bottom: 1px solid #3a3a3a;
+            min-height: 0;
+        }
+        .diff-field-section {
+            flex: 1.5;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .diff-panel-count {
+            background: #0f3460;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+            color: #79c0ff;
+            margin-left: auto;
+        }
+
+        /* API Panels with before/after */
+        .diff-api-panels {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .diff-api-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .diff-api-panel-left {
+            border-right: 1px solid #3a3a3a;
+        }
+        .diff-api-header, .diff-field-header {
+            padding: 8px 12px;
+            background: #252525;
+            font-size: 11px;
+            color: #8b949e;
+            border-bottom: 1px solid #3a3a3a;
+            text-align: center;
+        }
+        .diff-api-list, .diff-field-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            min-height: 0;
+        }
+
+        /* Field Panels with before/after */
+        .diff-field-panels {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .diff-field-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .diff-field-panel-left {
+            border-right: 1px solid #3a3a3a;
+        }
+
+        /* API/Field item styles */
+        .diff-api-item-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 12px;
+        }
+        .diff-api-item-row.added {
+            border-left: 3px solid #57ab38;
+        }
+        .diff-api-item-row.removed {
+            border-left: 3px solid #f85149;
+        }
+        .diff-api-item-row.modified {
+            border-left: 3px solid #f0883e;
+        }
+        .diff-api-item-row.unchanged {
+            border-left: 3px solid #3a3a3a;
+            opacity: 0.7;
+        }
+        .diff-api-method {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .diff-api-method.get { background: rgba(46, 160, 67, 0.2); color: #57ab38; }
+        .diff-api-method.post { background: rgba(46, 107, 207, 0.2); color: #79c0ff; }
+        .diff-api-method.put { background: rgba(240, 136, 62, 0.2); color: #f0883e; }
+        .diff-api-method.delete { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+
+        /* Field item styles */
+        .diff-field-class {
+            margin-bottom: 12px;
+        }
+        .diff-field-class-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e94560;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #3a3a3a;
+        }
+        .diff-field-item-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #1a1a1a;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 11px;
+        }
+        .diff-field-item-row.added {
+            border-left: 3px solid #57ab38;
+        }
+        .diff-field-item-row.removed {
+            border-left: 3px solid #f85149;
+        }
+        .diff-field-item-row.modified {
+            border-left: 3px solid #f0883e;
+        }
+        .diff-field-item-row.unchanged {
+            border-left: 3px solid #3a3a3a;
+            opacity: 0.7;
+        }
+        .diff-field-type {
+            color: #79c0ff;
+        }
+        .diff-field-name {
+            color: #ffa657;
+        }
+        .diff-field-annotations {
+            margin-left: auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .diff-field-ann {
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+        .diff-field-ann.added {
+            background: rgba(46, 160, 67, 0.2);
+            color: #57ab38;
+        }
+        .diff-field-ann.removed {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+        .diff-field-ann.original {
+            background: rgba(240, 136, 62, 0.2);
+            color: #f0883e;
+        }
     </style>
 </head>
 <body>
@@ -402,12 +648,10 @@
         <header class="header">
             <div class="logo">API Codegen</div>
             <nav class="nav">
-                <button class="nav-btn active" data-tab="editor">编辑器</button>
-                <button class="nav-btn" data-tab="config">配置</button>
+                <button class="nav-btn active">API + Config</button>
             </nav>
             <div class="actions">
                 <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
-                <button class="btn btn-secondary" onclick="loadFile()">打开文件</button>
                 <button class="btn btn-secondary" onclick="saveFile()">保存</button>
                 <button class="btn btn-primary" onclick="analyze()">分析</button>
                 <button class="btn btn-success" onclick="autoFix()">自动修复</button>
@@ -415,21 +659,24 @@
         </header>
 
         <main class="main">
-            <!-- YAML Editor -->
-            <div class="panel tab-content active" data-panel="editor">
+            <!-- API YAML Editor -->
+            <div class="panel api-panel">
                 <div class="panel-header">
                     <span>API 定义 (api.yaml)</span>
                     <span id="yaml-info">-</span>
+                    <button class="panel-load-btn" onclick="loadApiFile()">打开</button>
                 </div>
                 <div class="editor-wrapper">
                     <textarea id="yaml-editor"></textarea>
                 </div>
             </div>
 
-            <!-- Config Editor -->
-            <div class="panel tab-content" data-panel="config">
+            <!-- Config YAML Editor -->
+            <div class="panel config-panel">
                 <div class="panel-header">
-                    <span>codegen-config.yaml</span>
+                    <span>生成配置 (codegen-config.yaml)</span>
+                    <span id="config-info">-</span>
+                    <button class="panel-load-btn" onclick="loadConfigFile()">打开</button>
                 </div>
                 <div class="editor-wrapper">
                     <textarea id="config-editor"></textarea>
@@ -483,19 +730,61 @@
                 <button class="btn btn-secondary" onclick="closeDiffModal()">关闭</button>
             </div>
             <div class="diff-body">
+                <!-- Left: YAML Before -->
                 <div class="diff-panel diff-panel-left">
                     <div class="diff-panel-header">
                         <span class="diff-panel-badge before">修复前</span>
                         <span>原始 YAML</span>
                     </div>
-                    <div class="diff-content" id="diff-before"></div>
+                    <div class="diff-content" id="diff-before" data-scroll-group="yaml"></div>
                 </div>
+
+                <!-- Middle: YAML After -->
                 <div class="diff-panel">
                     <div class="diff-panel-header">
                         <span class="diff-panel-badge after">修复后</span>
                         <span>修复后的 YAML</span>
                     </div>
-                    <div class="diff-content" id="diff-after"></div>
+                    <div class="diff-content" id="diff-after" data-scroll-group="yaml"></div>
+                </div>
+
+                <!-- Right: API + Field stacked, each with before/after -->
+                <div class="diff-right-panel">
+                    <!-- API Changes -->
+                    <div class="diff-api-section">
+                        <div class="diff-panel-header">
+                            <span>&#128279; 接口变更</span>
+                            <span id="diff-api-count" class="diff-panel-count">0</span>
+                        </div>
+                        <div class="diff-api-panels">
+                            <div class="diff-api-panel diff-api-panel-left">
+                                <div class="diff-api-header">修复前</div>
+                                <div class="diff-api-list" id="diff-api-before"></div>
+                            </div>
+                            <div class="diff-api-panel">
+                                <div class="diff-api-header">修复后</div>
+                                <div class="diff-api-list" id="diff-api-after" data-scroll-group="api"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Field Changes -->
+                    <div class="diff-field-section">
+                        <div class="diff-panel-header">
+                            <span>&#128196; 字段变更</span>
+                            <span id="diff-field-count" class="diff-panel-count">0</span>
+                        </div>
+                        <div class="diff-field-panels">
+                            <div class="diff-field-panel diff-field-panel-left">
+                                <div class="diff-field-header">修复前</div>
+                                <div class="diff-field-list" id="diff-field-before"></div>
+                            </div>
+                            <div class="diff-field-panel">
+                                <div class="diff-field-header">修复后</div>
+                                <div class="diff-field-list" id="diff-field-after" data-scroll-group="field"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="diff-footer">
@@ -559,6 +848,11 @@
                 document.getElementById('yaml-info').textContent = '已修改';
             });
 
+            // Config editor events
+            configEditor.on('change', function() {
+                document.getElementById('config-info').textContent = '已修改';
+            });
+
             updateStatus();
         }
 
@@ -592,29 +886,22 @@
             }
         }
 
-        // Tab switching
-        document.querySelectorAll('.nav-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var tab = this.dataset.tab;
-                document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
-                this.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(function(p) { p.classList.remove('active'); });
-                document.querySelector('[data-panel="' + tab + '"]').classList.add('active');
-            });
-        });
-
         function loadExample() {
             yamlEditor.setValue(defaultYaml);
             configEditor.setValue(defaultConfig);
+            yamlEditor.refresh();
+            configEditor.refresh();
             updateStatus();
             document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
             document.getElementById('issue-count').textContent = '0';
             document.getElementById('issue-count').className = 'issue-count';
             document.getElementById('yaml-info').textContent = '示例已加载';
+            document.getElementById('config-info').textContent = '示例已加载';
             setMessage('已加载示例');
         }
 
-        function loadFile() {
+        // Load API YAML file
+        function loadApiFile() {
             var input = document.createElement('input');
             input.type = 'file';
             input.accept = '.yaml,.yml';
@@ -624,8 +911,28 @@
                 reader.onload = function(e) {
                     yamlEditor.setValue(e.target.result);
                     yamlEditor.refresh();
+                    document.getElementById('yaml-info').textContent = file.name;
                     updateStatus();
-                    setMessage('已加载: ' + file.name);
+                    setMessage('已加载 API: ' + file.name);
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Load Config YAML file
+        function loadConfigFile() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.yaml,.yml';
+            input.onchange = function(e) {
+                var file = e.target.files[0];
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    configEditor.setValue(e.target.result);
+                    configEditor.refresh();
+                    document.getElementById('config-info').textContent = file.name;
+                    setMessage('已加载配置: ' + file.name);
                 };
                 reader.readAsText(file);
             };
@@ -663,6 +970,9 @@
             setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告');
         }
 
+        // Store issues with selection state
+        var selectedIssues = {};
+
         function renderIssues(issues) {
             var container = document.getElementById('issue-list');
 
@@ -671,25 +981,66 @@
                 return;
             }
 
-            var html = issues.map(function(issue, index) {
+            // Reset selection - all selected by default
+            selectedIssues = {};
+            issues.forEach(function(_, i) { selectedIssues[i] = true; });
+
+            var html = '<div class="issue-select-all">' +
+                '<label><input type="checkbox" id="select-all-issues" checked onchange="toggleAllIssues(this.checked)"> 全选</label>' +
+                '</div>';
+
+            html += issues.map(function(issue, index) {
+                var checked = selectedIssues[index] ? 'checked' : '';
                 return '<div class="issue ' + issue.severity + '">' +
+                    '<div class="issue-checkbox">' +
+                    '<input type="checkbox" ' + checked + ' onchange="toggleIssue(' + index + ', this.checked)">' +
+                    '</div>' +
+                    '<div class="issue-content">' +
                     '<div class="issue-title">' +
                     '<span class="issue-icon"></span>' +
                     '<span class="issue-type">' + (issue.severity === 'error' ? '错误' : '警告') + '</span>' +
                     '</div>' +
                     '<div class="issue-message">' + issue.message + '</div>' +
                     (issue.api !== undefined ? '<div class="issue-api">API: ' + issue.api + '</div>' : '') +
+                    '</div>' +
                     '</div>';
             }).join('');
 
             container.innerHTML = html;
             window.currentIssues = issues;
+            updateIssueCount();
+        }
+
+        function toggleIssue(index, checked) {
+            selectedIssues[index] = checked;
+            updateIssueCount();
+        }
+
+        function toggleAllIssues(checked) {
+            var checkboxes = document.querySelectorAll('#issue-list input[type="checkbox"]:not(#select-all-issues)');
+            checkboxes.forEach(function(cb, i) {
+                cb.checked = checked;
+                selectedIssues[i] = checked;
+            });
+            updateIssueCount();
+        }
+
+        function updateIssueCount() {
+            var total = Object.keys(selectedIssues).length;
+            var selected = Object.values(selectedIssues).filter(function(v) { return v; }).length;
+            var countEl = document.getElementById('issue-count');
+            countEl.textContent = selected + '/' + total;
         }
 
         function autoFix() {
             var content = yamlEditor.getValue();
             var analyzer = new ApiYamlAnalyzer();
-            var fixed = analyzer.fix(content);
+
+            // Get selected issues and compute selective fix
+            var issues = window.currentIssues || [];
+            var selectedIndices = Object.keys(selectedIssues).filter(function(i) { return selectedIssues[i]; }).map(function(i) { return parseInt(i); });
+
+            var fixed = analyzer.fixSelective(content, selectedIndices);
 
             // Show diff preview
             showDiffPreview(content, fixed);
@@ -711,10 +1062,17 @@
             document.getElementById('diff-adds').textContent = addCount + ' 处添加';
             document.getElementById('diff-removes').textContent = removeCount + ' 处删除';
 
+            // Compute and display impact summary
+            var impact = computeImpact(before, after);
+
+            // Render API and Field changes
+            renderApiChanges(impact);
+            renderFieldChanges(impact);
+
             // Store fixed content for apply
             window.pendingFixedContent = after;
 
-            // Sync scroll between left and right panels
+            // Sync scroll between left and right panels (YAML only)
             setupScrollSync();
 
             // Show modal
@@ -722,28 +1080,589 @@
         }
 
         /**
-         * Setup synchronized scrolling for diff panels
+         * Render API-level changes with before/after comparison
          */
-        function setupScrollSync() {
-            var beforePanel = document.getElementById('diff-before');
-            var afterPanel = document.getElementById('diff-after');
-            var isSyncing = false;
+        function renderApiChanges(impact) {
+            var beforeContainer = document.getElementById('diff-api-before');
+            var afterContainer = document.getElementById('diff-api-after');
+            var countEl = document.getElementById('diff-api-count');
 
-            function syncScroll(source, target) {
-                if (isSyncing) return;
-                isSyncing = true;
-                target.scrollTop = source.scrollTop;
-                target.scrollLeft = source.scrollLeft;
-                setTimeout(function() { isSyncing = false; }, 10);
+            if (!impact || !impact.apis || impact.apis.length === 0) {
+                beforeContainer.innerHTML = '<div class="diff-field-empty">无接口变更</div>';
+                afterContainer.innerHTML = '<div class="diff-field-empty">无接口变更</div>';
+                countEl.textContent = '0';
+                return;
             }
 
-            beforePanel.addEventListener('scroll', function() {
-                syncScroll(beforePanel, afterPanel);
+            var apis = impact.apis;
+            countEl.textContent = apis.length;
+
+            var beforeHtml = '';
+            var afterHtml = '';
+
+            apis.forEach(function(api) {
+                var method = (api.method || 'get').toLowerCase();
+                var typeText = api.type === 'added' ? '新增' : api.type === 'deleted' ? '删除' : '修改';
+
+                if (api.type === 'added') {
+                    // Added - only show in after
+                    afterHtml += '<div class="diff-api-item-row added">';
+                    afterHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
+                    afterHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    afterHtml += '<span style="color:#57ab38;margin-left:auto;">' + typeText + '</span>';
+                    afterHtml += '</div>';
+                } else if (api.type === 'deleted') {
+                    // Deleted - only show in before
+                    beforeHtml += '<div class="diff-api-item-row removed">';
+                    beforeHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
+                    beforeHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    beforeHtml += '<span style="color:#f85149;margin-left:auto;">' + typeText + '</span>';
+                    beforeHtml += '</div>';
+                } else {
+                    // Modified - show in both
+                    beforeHtml += '<div class="diff-api-item-row unchanged">';
+                    beforeHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
+                    beforeHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    beforeHtml += '<span style="color:#666;margin-left:auto;">修改前</span>';
+                    beforeHtml += '</div>';
+
+                    afterHtml += '<div class="diff-api-item-row modified">';
+                    afterHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
+                    afterHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    afterHtml += '<span style="color:#f0883e;margin-left:auto;">' + typeText + '</span>';
+                    afterHtml += '</div>';
+                }
             });
 
-            afterPanel.addEventListener('scroll', function() {
-                syncScroll(afterPanel, beforePanel);
+            if (beforeHtml === '') beforeHtml = '<div class="diff-field-empty">-</div>';
+            if (afterHtml === '') afterHtml = '<div class="diff-field-empty">-</div>';
+
+            beforeContainer.innerHTML = beforeHtml;
+            afterContainer.innerHTML = afterHtml;
+        }
+
+        /**
+         * Render field-level changes with before/after comparison
+         */
+        function renderFieldChanges(impact) {
+            var beforeContainer = document.getElementById('diff-field-before');
+            var afterContainer = document.getElementById('diff-field-after');
+            var countEl = document.getElementById('diff-field-count');
+
+            if (!impact || !impact.fields || impact.fields.length === 0) {
+                beforeContainer.innerHTML = '<div class="diff-field-empty">无字段变更</div>';
+                afterContainer.innerHTML = '<div class="diff-field-empty">无字段变更</div>';
+                countEl.textContent = '0';
+                return;
+            }
+
+            var fields = impact.fields;
+            countEl.textContent = fields.length;
+
+            // Group by class
+            var byClass = {};
+            fields.forEach(function(item) {
+                if (!byClass[item.className]) {
+                    byClass[item.className] = [];
+                }
+                byClass[item.className].push(item);
             });
+
+            var beforeHtml = '';
+            var afterHtml = '';
+
+            for (var className in byClass) {
+                var classFields = byClass[className];
+
+                beforeHtml += '<div class="diff-field-class"><div class="diff-field-class-title">' + escapeHtml(className) + '.java</div>';
+                afterHtml += '<div class="diff-field-class"><div class="diff-field-class-title">' + escapeHtml(className) + '.java</div>';
+
+                classFields.forEach(function(item) {
+                    var fieldType = item.fieldType || 'String';
+                    var fieldName = item.field;
+                    var changes = item.changes || [];
+
+                    // Build annotations HTML for before
+                    var beforeAnnotations = '';
+                    var afterAnnotations = '';
+
+                    if (changes.length > 0) {
+                        changes.forEach(function(change) {
+                            if (change === 'YAML格式变化') {
+                                beforeAnnotations += '<span class="diff-field-ann original">格式变化</span>';
+                                afterAnnotations += '<span class="diff-field-ann original">格式变化</span>';
+                            } else if (change.startsWith('+')) {
+                                afterAnnotations += '<span class="diff-field-ann added">' + escapeHtml(change) + '</span>';
+                            } else if (change.startsWith('-')) {
+                                beforeAnnotations += '<span class="diff-field-ann removed">' + escapeHtml(change) + '</span>';
+                            } else {
+                                // Annotation added
+                                afterAnnotations += '<span class="diff-field-ann added">' + escapeHtml(change) + '</span>';
+                            }
+                        });
+                    }
+
+                    beforeHtml += '<div class="diff-field-item-row modified">';
+                    beforeHtml += '<span class="diff-field-type">' + escapeHtml(fieldType) + '</span>';
+                    beforeHtml += '<span class="diff-field-name">' + escapeHtml(fieldName) + '</span>;';
+                    if (beforeAnnotations) {
+                        beforeHtml += '<div class="diff-field-annotations">' + beforeAnnotations + '</div>';
+                    }
+                    beforeHtml += '</div>';
+
+                    afterHtml += '<div class="diff-field-item-row modified">';
+                    afterHtml += '<span class="diff-field-type">' + escapeHtml(fieldType) + '</span>';
+                    afterHtml += '<span class="diff-field-name">' + escapeHtml(fieldName) + '</span>;';
+                    if (afterAnnotations) {
+                        afterHtml += '<div class="diff-field-annotations">' + afterAnnotations + '</div>';
+                    }
+                    afterHtml += '</div>';
+                });
+
+                beforeHtml += '</div>';
+                afterHtml += '</div>';
+            }
+
+            beforeContainer.innerHTML = beforeHtml;
+            afterContainer.innerHTML = afterHtml;
+        }
+
+        /**
+         * Compute impact on Java code
+         */
+        function computeImpact(before, after) {
+            var result = {
+                apis: [],  // API/interface level changes
+                fields: []  // Field level changes
+            };
+
+            try {
+                var beforeParsed = jsyaml.load(before);
+                var afterParsed = jsyaml.load(after);
+
+                if (!beforeParsed || !afterParsed) {
+                    return result;
+                }
+
+                // Check if it's Swagger/OpenAPI format
+                var isSwagger = (beforeParsed.swagger || beforeParsed.openapi || beforeParsed.paths);
+
+                if (isSwagger) {
+                    // Swagger/OpenAPI format - compare paths/APIs
+                    var beforePaths = beforeParsed.paths || {};
+                    var afterPaths = afterParsed.paths || {};
+
+                    // Compare each path
+                    for (var path in afterPaths) {
+                        var beforePath = beforePaths[path];
+                        var afterPath = afterPaths[path];
+
+                        if (!beforePath) {
+                            // New API path added
+                            result.apis.push({
+                                path: path,
+                                method: Object.keys(afterPath)[0],
+                                type: 'added',
+                                summary: afterPath[Object.keys(afterPath)[0]].summary || ''
+                            });
+                        } else {
+                            // Check if methods changed
+                            for (var method in afterPath) {
+                                var beforeMethod = beforePath[method];
+                                var afterMethod = afterPath[method];
+
+                                if (!beforeMethod) {
+                                    result.apis.push({
+                                        path: path,
+                                        method: method,
+                                        type: 'added',
+                                        summary: afterMethod.summary || ''
+                                    });
+                                } else {
+                                    // Check if operation changed
+                                    var beforeStr = JSON.stringify(beforeMethod);
+                                    var afterStr = JSON.stringify(afterMethod);
+                                    if (beforeStr !== afterStr) {
+                                        result.apis.push({
+                                            path: path,
+                                            method: method,
+                                            type: 'modified',
+                                            summary: afterMethod.summary || ''
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Check for deleted paths
+                    for (var path in beforePaths) {
+                        if (!afterPaths[path]) {
+                            result.apis.push({
+                                path: path,
+                                method: Object.keys(beforePaths[path])[0],
+                                type: 'deleted',
+                                summary: ''
+                            });
+                        }
+                    }
+
+                    // Compare definitions (field changes)
+                    var beforeDefs = beforeParsed.definitions || (beforeParsed.components && beforeParsed.components.schemas) || {};
+                    var afterDefs = afterParsed.definitions || (afterParsed.components && afterParsed.components.schemas) || {};
+
+                    // Extract definitions section for format comparison
+                    var beforeDefSection = extractDefinitionsSection(before);
+                    var afterDefSection = extractDefinitionsSection(after);
+
+                    // Compare each definition
+                    for (var defName in afterDefs) {
+                        var beforeDef = beforeDefs[defName] || {};
+                        var afterDef = afterDefs[defName];
+                        var beforeProps = beforeDef.properties || {};
+                        var afterProps = afterDef.properties || {};
+
+                        var hasChanges = false;
+                        var fieldChangesList = [];
+
+                        for (var propName in afterProps) {
+                            var beforeProp = beforeProps[propName] || {};
+                            var afterProp = afterProps[propName];
+
+                            // Check if validation changed
+                            var beforeVal = JSON.stringify(beforeProp);
+                            var afterVal = JSON.stringify(afterProp);
+
+                            if (beforeVal !== afterVal) {
+                                hasChanges = true;
+                                var fieldType = afterProp.type || 'Object';
+                                if (fieldType === 'integer') fieldType = 'Integer';
+                                if (fieldType === 'number' && afterProp.format === 'double') fieldType = 'Double';
+                                if (fieldType === 'boolean') fieldType = 'Boolean';
+                                if (fieldType === 'array') fieldType = 'List';
+
+                                var changes = getSwaggerFieldChanges(beforeProp, afterProp);
+                                fieldChangesList.push({
+                                    field: propName,
+                                    fieldType: fieldType,
+                                    changes: changes
+                                });
+                            }
+                        }
+
+                        // If there are changes, add them
+                        if (fieldChangesList.length > 0) {
+                            fieldChangesList.forEach(function(fc) {
+                                result.fields.push({
+                                    className: defName,
+                                    field: fc.field,
+                                    fieldType: fc.fieldType,
+                                    type: 'model',
+                                    changes: fc.changes
+                                });
+                            });
+                        } else if (hasChanges === false && JSON.stringify(beforeDef) !== JSON.stringify(afterDef)) {
+                            // Parsed objects are same but might have YAML format difference
+                            // Add all fields as having "格式变化"
+                            for (var propName in afterProps) {
+                                var fieldType = afterProps[propName].type || 'Object';
+                                if (fieldType === 'integer') fieldType = 'Integer';
+                                if (fieldType === 'boolean') fieldType = 'Boolean';
+                                if (fieldType === 'array') fieldType = 'List';
+
+                                result.fields.push({
+                                    className: defName,
+                                    field: propName,
+                                    fieldType: fieldType,
+                                    type: 'model',
+                                    changes: ['YAML格式变化']
+                                });
+                            }
+                        }
+                    }
+
+                    // If no field changes detected but YAML has changes in definitions, show them
+                    if (result.fields.length === 0 && beforeDefSection !== afterDefSection) {
+                        // Show all definitions as changed
+                        for (var defName in afterDefs) {
+                            var afterDef = afterDefs[defName];
+                            if (afterDef.properties) {
+                                for (var propName in afterDef.properties) {
+                                    var fieldType = afterDef.properties[propName].type || 'Object';
+                                    if (fieldType === 'integer') fieldType = 'Integer';
+                                    if (fieldType === 'boolean') fieldType = 'Boolean';
+                                    if (fieldType === 'array') fieldType = 'List';
+
+                                    result.fields.push({
+                                        className: defName,
+                                        field: propName,
+                                        fieldType: fieldType,
+                                        type: 'model',
+                                        changes: ['YAML格式变化']
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    return result;
+                }
+
+                /**
+                 * Extract definitions section from YAML text for comparison
+                 */
+                function extractDefinitionsSection(yamlText) {
+                    // Remove line numbers that might be at the start
+                    var text = yamlText.replace(/^\d+/gm, '');
+                    var lines = text.split('\n');
+                    var inDefinitions = false;
+                    var result = [];
+
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+                        if (line.match(/^definitions:\s*$/) || line.match(/^components:\s*$/)) {
+                            inDefinitions = true;
+                            continue;
+                        }
+                        if (inDefinitions) {
+                            // Stop at next top-level key
+                            if (line.match(/^[a-zA-Z]/) && !line.match(/^\s/)) {
+                                break;
+                            }
+                            result.push(line);
+                        }
+                    }
+                    return result.join('\n');
+                }
+
+                // Custom format - check apis
+                if (!beforeParsed.apis || !afterParsed.apis) {
+                    return result;
+                }
+
+                // Compare each API
+                beforeParsed.apis.forEach(function(api, apiIndex) {
+                    var afterApi = afterParsed.apis[apiIndex];
+                    if (!afterApi) return;
+
+                    var className = (api.request && api.request.className) ||
+                                   (api.response && api.response.className) ||
+                                   'Unknown';
+
+                    // Track API level changes
+                    var apiChanged = false;
+
+                    // Check request fields
+                    if (api.request && api.request.fields && afterApi.request && afterApi.request.fields) {
+                        var maxReqFields = Math.max(api.request.fields.length, afterApi.request.fields.length);
+                        for (var fieldIndex = 0; fieldIndex < maxReqFields; fieldIndex++) {
+                            var field = api.request.fields[fieldIndex];
+                            var afterField = afterApi.request.fields[fieldIndex];
+
+                            if (!field && afterField) {
+                                // New field added
+                                if (afterField.validation && Object.keys(afterField.validation).length > 0) {
+                                    result.fields.push({
+                                        className: afterApi.request.className || className + 'Req',
+                                        field: afterField.name,
+                                        fieldType: afterField.type || 'String',
+                                        type: 'request',
+                                        changes: getFieldChanges({}, afterField.validation)
+                                    });
+                                    apiChanged = true;
+                                }
+                            } else if (field && afterField) {
+                                var beforeVal = JSON.stringify(field.validation || {});
+                                var afterVal = JSON.stringify(afterField.validation || {});
+                                if (beforeVal !== afterVal) {
+                                    result.fields.push({
+                                        className: afterApi.request.className || className + 'Req',
+                                        field: field.name,
+                                        fieldType: field.type || 'String',
+                                        type: 'request',
+                                        changes: getFieldChanges(field.validation, afterField.validation)
+                                    });
+                                    apiChanged = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // Check response fields
+                    if (api.response && api.response.fields && afterApi.response && afterApi.response.fields) {
+                        var maxRspFields = Math.max(api.response.fields.length, afterApi.response.fields.length);
+                        for (var fieldIndex = 0; fieldIndex < maxRspFields; fieldIndex++) {
+                            var field = api.response.fields[fieldIndex];
+                            var afterField = afterApi.response.fields[fieldIndex];
+
+                            if (!field && afterField) {
+                                // New field added
+                                if (afterField.validation && Object.keys(afterField.validation).length > 0) {
+                                    result.fields.push({
+                                        className: afterApi.response.className || className + 'Rsp',
+                                        field: afterField.name,
+                                        fieldType: afterField.type || 'String',
+                                        type: 'response',
+                                        changes: getFieldChanges({}, afterField.validation)
+                                    });
+                                    apiChanged = true;
+                                }
+                            } else if (field && afterField) {
+                                var beforeVal = JSON.stringify(field.validation || {});
+                                var afterVal = JSON.stringify(afterField.validation || {});
+                                if (beforeVal !== afterVal) {
+                                    result.fields.push({
+                                        className: afterApi.response.className || className + 'Rsp',
+                                        field: field.name,
+                                        fieldType: field.type || 'String',
+                                        type: 'response',
+                                        changes: getFieldChanges(field.validation, afterField.validation)
+                                    });
+                                    apiChanged = true;
+                                }
+                            }
+                        }
+                    }
+
+                    // Add API to changes if fields changed
+                    if (apiChanged) {
+                        result.apis.push({
+                            name: api.name || 'API ' + (apiIndex + 1),
+                            path: api.path || '',
+                            method: api.method || '',
+                            type: 'modified'
+                        });
+                    }
+                });
+            } catch (e) {
+                console.log('Impact analysis error:', e);
+            }
+
+            return result;
+        }
+
+        /**
+         * Get field validation changes
+         */
+        function getFieldChanges(beforeVal, afterVal) {
+            var changes = [];
+            var before = beforeVal || {};
+            var after = afterVal || {};
+
+            // Check each validation property
+            var props = ['notNull', 'minLength', 'maxLength', 'email', 'pattern', 'min', 'max', 'minSize', 'maxSize', 'past', 'future'];
+            props.forEach(function(prop) {
+                if (before[prop] !== after[prop]) {
+                    if (after[prop] !== undefined && after[prop] !== false) {
+                        var annotation = propToAnnotation(prop, after[prop]);
+                        if (annotation) changes.push(annotation);
+                    }
+                }
+            });
+
+            return changes;
+        }
+
+        /**
+         * Get swagger field validation changes
+         */
+        function getSwaggerFieldChanges(beforeProp, afterProp) {
+            var changes = [];
+
+            // Check required
+            if (afterProp.required && !beforeProp.required) {
+                changes.push('@NotNull');
+            }
+
+            // Check format
+            if (afterProp.format === 'email' || afterProp.description && afterProp.description.toLowerCase().includes('email')) {
+                changes.push('@Email');
+            }
+
+            // Check pattern
+            if (afterProp.pattern) {
+                changes.push('@Pattern(regexp="' + afterProp.pattern + '")');
+            }
+
+            // Check minimum/maximum
+            if (afterProp.minimum !== undefined) {
+                changes.push('@Min(value=' + afterProp.minimum + ')');
+            }
+            if (afterProp.maximum !== undefined) {
+                changes.push('@Max(value=' + afterProp.maximum + ')');
+            }
+
+            // Check minLength/maxLength
+            if (afterProp.minLength !== undefined) {
+                changes.push('@Size(min=' + afterProp.minLength + ')');
+            }
+            if (afterProp.maxLength !== undefined) {
+                changes.push('@Size(max=' + afterProp.maxLength + ')');
+            }
+
+            return changes;
+        }
+
+        /**
+         * Convert validation property to Java annotation
+         */
+        function propToAnnotation(prop, value) {
+            var map = {
+                'notNull': '@NotNull',
+                'minLength': '@Size(min=' + value + ')',
+                'maxLength': '@Size(max=' + value + ')',
+                'email': '@Email',
+                'pattern': '@Pattern(regexp="' + value + '")',
+                'min': '@Min(value=' + value + ')',
+                'max': '@Max(value=' + value + ')',
+                'minSize': '@Size(min=' + value + ')',
+                'maxSize': '@Size(max=' + value + ')',
+                'past': '@Past',
+                'future': '@Future'
+            };
+            return map[prop] || null;
+        }
+
+        /**
+         * Setup synchronized scrolling for all diff panel groups
+         */
+        function setupScrollSync() {
+            var isSyncing = false;
+
+            // Sync function for a group of panels
+            function setupGroupSync(groupName) {
+                var leftPanel = document.querySelector('[data-scroll-group="' + groupName + '"].diff-panel-left, #diff-' + groupName + '-before, #diff-' + groupName + '-panel-left');
+                var rightPanel = document.querySelector('[data-scroll-group="' + groupName + '"]:not(.diff-panel-left), #diff-' + groupName + '-after, #diff-' + groupName + '-panel:not(.diff-panel-left)');
+
+                // Handle YAML panels
+                if (groupName === 'yaml') {
+                    leftPanel = document.getElementById('diff-before');
+                    rightPanel = document.getElementById('diff-after');
+                }
+
+                if (!leftPanel || !rightPanel) return;
+
+                function syncScroll(source, target) {
+                    if (isSyncing) return;
+                    isSyncing = true;
+                    target.scrollTop = source.scrollTop;
+                    target.scrollLeft = source.scrollLeft;
+                    setTimeout(function() { isSyncing = false; }, 10);
+                }
+
+                leftPanel.addEventListener('scroll', function() {
+                    syncScroll(leftPanel, rightPanel);
+                });
+
+                rightPanel.addEventListener('scroll', function() {
+                    syncScroll(rightPanel, leftPanel);
+                });
+            }
+
+            // Setup sync for each group
+            setupGroupSync('yaml');
+            setupGroupSync('api');
+            setupGroupSync('field');
         }
 
         /**
