@@ -50,6 +50,7 @@ web-ui/*
 !web-ui/test/
 !web-ui/index.html
 !web-ui/package.json
+!web-ui/demo-*.html
 project-requirements.md
 .claude/
 CLAUDE.md
