@@ -490,13 +490,13 @@ class ApiYamlAnalyzer {
         // 修复 paths 中的路径格式
         const paths = parsed.paths || {};
         for (const [path, methods] of Object.entries(paths)) {
-            // 修复路径包含 // 的问题
+            // 修复路径包含 // 的问题（删除多余的 /）
             if (path.includes('//')) {
                 const fixedPath = path.replace(/\/+/g, '/');
                 paths[fixedPath] = methods;
                 if (fixedPath !== path) {
                     delete paths[path];
-                    this.addInfoMessage(`修复路径: ${path} → ${fixedPath}`);
+                    this.addInfoMessage(`修复路径重复斜杠: "${path}" → "${fixedPath}" (删除了多余的 /)`);
                 }
             }
 
