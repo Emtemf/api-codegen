@@ -565,6 +565,21 @@
             border-left: 3px solid #3a3a3a;
             opacity: 0.7;
         }
+        .diff-api-change-detail {
+            padding: 4px 10px 4px 30px;
+            font-size: 11px;
+            color: #8b949e;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+        }
+        .diff-change-prop {
+            color: #79c0ff;
+        }
+        .diff-change-before {
+            color: #f85149;
+        }
+        .diff-change-after {
+            color: #57ab38;
+        }
         .diff-api-method {
             padding: 2px 6px;
             border-radius: 3px;
@@ -1111,6 +1126,15 @@
                     afterHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
                     afterHtml += '<span style="color:#57ab38;margin-left:auto;">' + typeText + '</span>';
                     afterHtml += '</div>';
+                    // Show what was added
+                    if (api.changes && api.changes.length > 0) {
+                        api.changes.forEach(function(change) {
+                            afterHtml += '<div class="diff-api-change-detail">';
+                            afterHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
+                            afterHtml += '<span class="diff-change-after">→ ' + escapeHtml(String(change.after)) + '</span>';
+                            afterHtml += '</div>';
+                        });
+                    }
                 } else if (api.type === 'deleted') {
                     // Deleted - only show in before
                     beforeHtml += '<div class="diff-api-item-row removed">';
@@ -1119,18 +1143,42 @@
                     beforeHtml += '<span style="color:#f85149;margin-left:auto;">' + typeText + '</span>';
                     beforeHtml += '</div>';
                 } else {
-                    // Modified - show in both
+                    // Modified - show in both with before/after
                     beforeHtml += '<div class="diff-api-item-row unchanged">';
                     beforeHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
                     beforeHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
                     beforeHtml += '<span style="color:#666;margin-left:auto;">修改前</span>';
                     beforeHtml += '</div>';
 
+                    // Show what will be changed (before values)
+                    if (api.changes && api.changes.length > 0) {
+                        api.changes.forEach(function(change) {
+                            beforeHtml += '<div class="diff-api-change-detail">';
+                            beforeHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
+                            beforeHtml += '<span class="diff-change-before">' + escapeHtml(String(change.before)) + '</span>';
+                            beforeHtml += '</div>';
+                        });
+                    } else {
+                        beforeHtml += '<div class="diff-api-change-detail" style="color:#666;">(路径已修复)</div>';
+                    }
+
                     afterHtml += '<div class="diff-api-item-row modified">';
                     afterHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
                     afterHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
                     afterHtml += '<span style="color:#f0883e;margin-left:auto;">' + typeText + '</span>';
                     afterHtml += '</div>';
+
+                    // Show what will be changed (after values)
+                    if (api.changes && api.changes.length > 0) {
+                        api.changes.forEach(function(change) {
+                            afterHtml += '<div class="diff-api-change-detail">';
+                            afterHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
+                            afterHtml += '<span class="diff-change-after">→ ' + escapeHtml(String(change.after)) + '</span>';
+                            afterHtml += '</div>';
+                        });
+                    } else {
+                        afterHtml += '<div class="diff-api-change-detail" style="color:#57ab38;">(已修复)</div>';
+                    }
                 }
             });
 
@@ -1252,18 +1300,46 @@
                     var beforePaths = beforeParsed.paths || {};
                     var afterPaths = afterParsed.paths || {};
 
+                    // Track original paths (before fix) to show the actual change
+                    var originalPathMap = {};
+                    for (var origPath in beforePaths) {
+                        originalPathMap[origPath.replace(/\/+/g, '/')] = origPath;
+                    }
+
                     // Compare each path
                     for (var path in afterPaths) {
                         var beforePath = beforePaths[path];
                         var afterPath = afterPaths[path];
 
-                        if (!beforePath) {
+                        // Check if path was fixed (e.g., //users -> /users)
+                        var originalPath = path;
+                        for (var origPath in beforePaths) {
+                            if (origPath.replace(/\/+/g, '/') === path) {
+                                originalPath = origPath;
+                                beforePath = beforePaths[origPath];
+                                break;
+                            }
+                        }
+
+                        if (!beforePath && originalPath === path) {
                             // New API path added
                             result.apis.push({
                                 path: path,
+                                originalPath: path,
                                 method: Object.keys(afterPath)[0],
                                 type: 'added',
-                                summary: afterPath[Object.keys(afterPath)[0]].summary || ''
+                                summary: afterPath[Object.keys(afterPath)[0]].summary || '',
+                                changes: []
+                            });
+                        } else if (originalPath !== path) {
+                            // Path was fixed (//users -> /users)
+                            result.apis.push({
+                                path: path,
+                                originalPath: originalPath,
+                                method: Object.keys(afterPath)[0],
+                                type: 'modified',
+                                summary: afterPath[Object.keys(afterPath)[0]].summary || '',
+                                changes: [{ prop: 'path', before: originalPath, after: path }]
                             });
                         } else {
                             // Check if methods changed
@@ -1274,20 +1350,53 @@
                                 if (!beforeMethod) {
                                     result.apis.push({
                                         path: path,
+                                        originalPath: path,
                                         method: method,
                                         type: 'added',
-                                        summary: afterMethod.summary || ''
+                                        summary: afterMethod.summary || '',
+                                        changes: []
                                     });
                                 } else {
+                                    // Check what specific properties changed
+                                    var changes = [];
+
+                                    // Check operationId
+                                    if (!beforeMethod.operationId && afterMethod.operationId) {
+                                        changes.push({ prop: 'operationId', before: '(无)', after: afterMethod.operationId });
+                                    }
+                                    // Check description
+                                    if (!beforeMethod.description && afterMethod.description) {
+                                        changes.push({ prop: 'description', before: '(无)', after: afterMethod.description });
+                                    }
+
+                                    // Check parameters
+                                    if (afterMethod.parameters && afterMethod.parameters.length > 0) {
+                                        afterMethod.parameters.forEach(function(param, idx) {
+                                            var beforeParam = beforeMethod.parameters ? beforeMethod.parameters[idx] : null;
+                                            if (beforeParam) {
+                                                if (!beforeParam.description && param.description) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
+                                                }
+                                                if (!beforeParam.type && param.type) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: param.type });
+                                                }
+                                            } else {
+                                                changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: param.type || 'string' });
+                                            }
+                                        });
+                                    }
+
                                     // Check if operation changed
                                     var beforeStr = JSON.stringify(beforeMethod);
                                     var afterStr = JSON.stringify(afterMethod);
-                                    if (beforeStr !== afterStr) {
+                                    if (beforeStr !== afterStr || changes.length > 0) {
                                         result.apis.push({
                                             path: path,
+                                            originalPath: path,
                                             method: method,
                                             type: 'modified',
-                                            summary: afterMethod.summary || ''
+                                            summary: afterMethod.summary || '',
+                                            changes: changes
                                         });
                                     }
                                 }
@@ -1300,9 +1409,11 @@
                         if (!afterPaths[path]) {
                             result.apis.push({
                                 path: path,
+                                originalPath: path,
                                 method: Object.keys(beforePaths[path])[0],
                                 type: 'deleted',
-                                summary: ''
+                                summary: '',
+                                changes: []
                             });
                         }
                     }
