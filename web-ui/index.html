@@ -571,6 +571,13 @@
             color: #8b949e;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
         }
+        .diff-api-java {
+            padding: 6px 12px 6px 30px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 11px;
+            color: #8b949e;
+            border-bottom: 1px solid #2d333b;
+        }
         .diff-change-prop {
             color: #79c0ff;
         }
@@ -661,6 +668,26 @@
             font-size: 11px;
             color: #8b949e;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
+        }
+        .diff-field-java {
+            padding: 6px 12px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 12px;
+            border-bottom: 1px solid #2d333b;
+            line-height: 1.6;
+        }
+        .diff-java-ann {
+            color: #79c0ff;
+            margin-right: 4px;
+        }
+        .diff-java-ann-added {
+            color: #57ab38;
+        }
+        .diff-java-type {
+            color: #c9d1d9;
+        }
+        .diff-java-name {
+            color: #e3b341;
         }
     </style>
 </head>
@@ -1124,39 +1151,37 @@
             apis.forEach(function(api) {
                 var method = (api.method || 'get').toLowerCase();
                 var typeText = api.type === 'added' ? '新增' : api.type === 'deleted' ? '删除' : '修改';
+                var originalPath = api.originalPath || api.path || '';
+                var fixedPath = api.path || '';
 
                 if (api.type === 'added') {
-                    // Added - only show in after
+                    // Added - only show in after with Java code style
                     afterHtml += '<div class="diff-api-item-row added">';
                     afterHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    afterHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    afterHtml += '<span>' + escapeHtml(fixedPath || api.name || '') + '</span>';
                     afterHtml += '<span style="color:#57ab38;margin-left:auto;">' + typeText + '</span>';
                     afterHtml += '</div>';
-                    // Show what was added
-                    if (api.changes && api.changes.length > 0) {
-                        api.changes.forEach(function(change) {
-                            afterHtml += '<div class="diff-api-change-detail">';
-                            afterHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
-                            afterHtml += '<span class="diff-change-after">→ ' + escapeHtml(String(change.after)) + '</span>';
-                            afterHtml += '</div>';
-                        });
-                    }
+                    // Show Java code style
+                    afterHtml += '<div class="diff-api-java">@RequestMapping(value = "' + escapeHtml(fixedPath || '') + '", method = RequestMethod.' + method.toUpperCase() + ')</div>';
                 } else if (api.type === 'deleted') {
                     // Deleted - only show in before
                     beforeHtml += '<div class="diff-api-item-row removed">';
                     beforeHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    beforeHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    beforeHtml += '<span>' + escapeHtml(originalPath || api.name || '') + '</span>';
                     beforeHtml += '<span style="color:#f85149;margin-left:auto;">' + typeText + '</span>';
                     beforeHtml += '</div>';
+                    beforeHtml += '<div class="diff-api-java" style="color:#f85149;">@RequestMapping(value = "' + escapeHtml(originalPath || '') + '", method = RequestMethod.' + method.toUpperCase() + ')</div>';
                 } else {
-                    // Modified - show in both with before/after
+                    // Modified - show in both with Java code style
+                    // Before
                     beforeHtml += '<div class="diff-api-item-row unchanged">';
                     beforeHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    beforeHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    beforeHtml += '<span>' + escapeHtml(originalPath || fixedPath || '') + '</span>';
                     beforeHtml += '<span style="color:#666;margin-left:auto;">修改前</span>';
                     beforeHtml += '</div>';
+                    beforeHtml += '<div class="diff-api-java">@RequestMapping(value = "' + escapeHtml(originalPath || '') + '", method = RequestMethod.' + method.toUpperCase() + ')</div>';
 
-                    // Show what will be changed (before values)
+                    // Show changes
                     if (api.changes && api.changes.length > 0) {
                         api.changes.forEach(function(change) {
                             beforeHtml += '<div class="diff-api-change-detail">';
@@ -1164,17 +1189,16 @@
                             beforeHtml += '<span class="diff-change-before">' + escapeHtml(String(change.before)) + '</span>';
                             beforeHtml += '</div>';
                         });
-                    } else {
-                        beforeHtml += '<div class="diff-api-change-detail" style="color:#666;">(路径已修复)</div>';
                     }
 
+                    // After
                     afterHtml += '<div class="diff-api-item-row modified">';
                     afterHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    afterHtml += '<span>' + escapeHtml(api.path || api.name || '') + '</span>';
+                    afterHtml += '<span>' + escapeHtml(fixedPath || '') + '</span>';
                     afterHtml += '<span style="color:#f0883e;margin-left:auto;">' + typeText + '</span>';
                     afterHtml += '</div>';
+                    afterHtml += '<div class="diff-api-java">@RequestMapping(value = "' + escapeHtml(fixedPath || '') + '", method = RequestMethod.' + method.toUpperCase() + ')</div>';
 
-                    // Show what will be changed (after values)
                     if (api.changes && api.changes.length > 0) {
                         api.changes.forEach(function(change) {
                             afterHtml += '<div class="diff-api-change-detail">';
@@ -1182,8 +1206,6 @@
                             afterHtml += '<span class="diff-change-after">→ ' + escapeHtml(String(change.after)) + '</span>';
                             afterHtml += '</div>';
                         });
-                    } else {
-                        afterHtml += '<div class="diff-api-change-detail" style="color:#57ab38;">(已修复)</div>';
                     }
                 }
             });
@@ -1236,42 +1258,73 @@
                     var fieldName = item.field;
                     var changes = item.changes || [];
 
-                    // Show field row
-                    beforeHtml += '<div class="diff-field-item-row modified">';
-                    beforeHtml += '<span class="diff-field-type">' + escapeHtml(fieldType) + '</span>';
-                    beforeHtml += '<span class="diff-field-name">' + escapeHtml(fieldName) + '</span>;';
-                    beforeHtml += '</div>';
+                    // Build Java code style display
+                    var beforeAnnotations = [];
+                    var afterAnnotations = [];
 
-                    afterHtml += '<div class="diff-field-item-row modified">';
-                    afterHtml += '<span class="diff-field-type">' + escapeHtml(fieldType) + '</span>';
-                    afterHtml += '<span class="diff-field-name">' + escapeHtml(fieldName) + '</span>;';
-                    afterHtml += '</div>';
-
-                    // Show detailed changes
+                    // Parse changes to build annotations
                     if (changes.length > 0) {
                         changes.forEach(function(change) {
-                            if (typeof change === 'object' && change.before !== undefined) {
-                                // Object format: {prop, before, after}
-                                beforeHtml += '<div class="diff-field-change-detail">';
-                                beforeHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
-                                beforeHtml += '<span class="diff-change-before">' + escapeHtml(String(change.before)) + '</span>';
-                                beforeHtml += '</div>';
-
-                                afterHtml += '<div class="diff-field-change-detail">';
-                                afterHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
-                                afterHtml += '<span class="diff-change-after">→ ' + escapeHtml(String(change.after)) + '</span>';
-                                afterHtml += '</div>';
-                            } else if (change === 'YAML格式变化') {
-                                beforeHtml += '<div class="diff-field-change-detail" style="color:#f0883e;">格式变化</div>';
-                                afterHtml += '<div class="diff-field-change-detail" style="color:#f0883e;">格式变化</div>';
-                            } else {
-                                // String format: annotation like @NotNull, @Email
-                                afterHtml += '<div class="diff-field-change-detail">';
-                                afterHtml += '<span class="diff-change-after">+ ' + escapeHtml(change) + '</span>';
-                                afterHtml += '</div>';
+                            if (change === 'YAML格式变化') {
+                                // No specific changes detected
+                            } else if (typeof change === 'object' && change.before !== undefined) {
+                                // Has before/after values - this is Swagger format
+                                if (change.prop === 'required' && change.after === 'true') {
+                                    afterAnnotations.push('@NotNull');
+                                } else if (change.prop === 'format' && change.after === 'email') {
+                                    afterAnnotations.push('@Email');
+                                } else if (change.prop === 'pattern') {
+                                    afterAnnotations.push('@Pattern(regexp="' + change.after + '")');
+                                } else if (change.prop === 'minimum') {
+                                    afterAnnotations.push('@Min(value=' + change.after + ')');
+                                } else if (change.prop === 'maximum') {
+                                    afterAnnotations.push('@Max(value=' + change.after + ')');
+                                } else if (change.prop === 'minLength' || change.prop === 'maxLength') {
+                                    // Will be combined later
+                                }
+                            } else if (typeof change === 'string' && change.startsWith('@')) {
+                                // Direct annotation like @NotNull
+                                afterAnnotations.push(change);
                             }
                         });
                     }
+
+                    // Build @Size annotation if minLength/maxLength
+                    var hasMinLength = changes.some(function(c) { return c && c.prop === 'minLength'; });
+                    var hasMaxLength = changes.some(function(c) { return c && c.prop === 'maxLength'; });
+                    if (hasMinLength || hasMaxLength) {
+                        var sizeParts = [];
+                        changes.forEach(function(c) {
+                            if (c && c.prop === 'minLength') sizeParts.push('min=' + c.after);
+                            if (c && c.prop === 'maxLength') sizeParts.push('max=' + c.after);
+                        });
+                        if (sizeParts.length > 0) {
+                            afterAnnotations.push('@Size(' + sizeParts.join(', ') + ')');
+                        }
+                    }
+
+                    // Render Java code style
+                    // Before: just field
+                    beforeHtml += '<div class="diff-field-java">';
+                    if (beforeAnnotations.length > 0) {
+                        beforeAnnotations.forEach(function(ann) {
+                            beforeHtml += '<span class="diff-java-ann">' + escapeHtml(ann) + '</span><br>';
+                        });
+                    }
+                    beforeHtml += '<span class="diff-java-type">' + escapeHtml(fieldType) + '</span> ';
+                    beforeHtml += '<span class="diff-java-name">' + escapeHtml(fieldName) + '</span>;';
+                    beforeHtml += '</div>';
+
+                    // After: field with annotations
+                    afterHtml += '<div class="diff-field-java">';
+                    if (afterAnnotations.length > 0) {
+                        afterAnnotations.forEach(function(ann) {
+                            afterHtml += '<span class="diff-java-ann diff-java-ann-added">' + escapeHtml(ann) + '</span><br>';
+                        });
+                    }
+                    afterHtml += '<span class="diff-java-type">' + escapeHtml(fieldType) + '</span> ';
+                    afterHtml += '<span class="diff-java-name">' + escapeHtml(fieldName) + '</span>;';
+                    afterHtml += '</div>';
                 });
 
                 beforeHtml += '</div>';
