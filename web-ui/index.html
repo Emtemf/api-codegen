@@ -656,6 +656,12 @@
             background: rgba(240, 136, 62, 0.2);
             color: #f0883e;
         }
+        .diff-field-change-detail {
+            padding: 4px 10px 4px 20px;
+            font-size: 11px;
+            color: #8b949e;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+        }
     </style>
 </head>
 <body>
@@ -1230,41 +1236,42 @@
                     var fieldName = item.field;
                     var changes = item.changes || [];
 
-                    // Build annotations HTML for before
-                    var beforeAnnotations = '';
-                    var afterAnnotations = '';
-
-                    if (changes.length > 0) {
-                        changes.forEach(function(change) {
-                            if (change === 'YAML格式变化') {
-                                beforeAnnotations += '<span class="diff-field-ann original">格式变化</span>';
-                                afterAnnotations += '<span class="diff-field-ann original">格式变化</span>';
-                            } else if (change.startsWith('+')) {
-                                afterAnnotations += '<span class="diff-field-ann added">' + escapeHtml(change) + '</span>';
-                            } else if (change.startsWith('-')) {
-                                beforeAnnotations += '<span class="diff-field-ann removed">' + escapeHtml(change) + '</span>';
-                            } else {
-                                // Annotation added
-                                afterAnnotations += '<span class="diff-field-ann added">' + escapeHtml(change) + '</span>';
-                            }
-                        });
-                    }
-
+                    // Show field row
                     beforeHtml += '<div class="diff-field-item-row modified">';
                     beforeHtml += '<span class="diff-field-type">' + escapeHtml(fieldType) + '</span>';
                     beforeHtml += '<span class="diff-field-name">' + escapeHtml(fieldName) + '</span>;';
-                    if (beforeAnnotations) {
-                        beforeHtml += '<div class="diff-field-annotations">' + beforeAnnotations + '</div>';
-                    }
                     beforeHtml += '</div>';
 
                     afterHtml += '<div class="diff-field-item-row modified">';
                     afterHtml += '<span class="diff-field-type">' + escapeHtml(fieldType) + '</span>';
                     afterHtml += '<span class="diff-field-name">' + escapeHtml(fieldName) + '</span>;';
-                    if (afterAnnotations) {
-                        afterHtml += '<div class="diff-field-annotations">' + afterAnnotations + '</div>';
-                    }
                     afterHtml += '</div>';
+
+                    // Show detailed changes
+                    if (changes.length > 0) {
+                        changes.forEach(function(change) {
+                            if (typeof change === 'object' && change.before !== undefined) {
+                                // Object format: {prop, before, after}
+                                beforeHtml += '<div class="diff-field-change-detail">';
+                                beforeHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
+                                beforeHtml += '<span class="diff-change-before">' + escapeHtml(String(change.before)) + '</span>';
+                                beforeHtml += '</div>';
+
+                                afterHtml += '<div class="diff-field-change-detail">';
+                                afterHtml += '<span class="diff-change-prop">' + escapeHtml(change.prop) + ':</span> ';
+                                afterHtml += '<span class="diff-change-after">→ ' + escapeHtml(String(change.after)) + '</span>';
+                                afterHtml += '</div>';
+                            } else if (change === 'YAML格式变化') {
+                                beforeHtml += '<div class="diff-field-change-detail" style="color:#f0883e;">格式变化</div>';
+                                afterHtml += '<div class="diff-field-change-detail" style="color:#f0883e;">格式变化</div>';
+                            } else {
+                                // String format: annotation like @NotNull, @Email
+                                afterHtml += '<div class="diff-field-change-detail">';
+                                afterHtml += '<span class="diff-change-after">+ ' + escapeHtml(change) + '</span>';
+                                afterHtml += '</div>';
+                            }
+                        });
+                    }
                 });
 
                 beforeHtml += '</div>';
@@ -1675,40 +1682,60 @@
         }
 
         /**
-         * Get swagger field validation changes
+         * Get swagger field validation changes with before/after values
          */
         function getSwaggerFieldChanges(beforeProp, afterProp) {
             var changes = [];
 
+            // Check description
+            if (!beforeProp.description && afterProp.description) {
+                changes.push({ prop: 'description', before: '(无)', after: afterProp.description });
+            }
+
+            // Check type
+            if (!beforeProp.type && afterProp.type) {
+                changes.push({ prop: 'type', before: '(无)', after: afterProp.type });
+            }
+
             // Check required
             if (afterProp.required && !beforeProp.required) {
-                changes.push('@NotNull');
+                changes.push({ prop: 'required', before: 'false', after: 'true' });
             }
 
             // Check format
             if (afterProp.format === 'email' || afterProp.description && afterProp.description.toLowerCase().includes('email')) {
-                changes.push('@Email');
+                if (!beforeProp.format || beforeProp.format !== 'email') {
+                    changes.push({ prop: 'format', before: '(无)', after: 'email' });
+                }
             }
 
             // Check pattern
-            if (afterProp.pattern) {
-                changes.push('@Pattern(regexp="' + afterProp.pattern + '")');
+            if (afterProp.pattern && !beforeProp.pattern) {
+                changes.push({ prop: 'pattern', before: '(无)', after: afterProp.pattern });
             }
 
             // Check minimum/maximum
-            if (afterProp.minimum !== undefined) {
-                changes.push('@Min(value=' + afterProp.minimum + ')');
+            if (afterProp.minimum !== undefined && beforeProp.minimum === undefined) {
+                changes.push({ prop: 'minimum', before: '(无)', after: afterProp.minimum });
             }
-            if (afterProp.maximum !== undefined) {
-                changes.push('@Max(value=' + afterProp.maximum + ')');
+            if (afterProp.maximum !== undefined && beforeProp.maximum === undefined) {
+                changes.push({ prop: 'maximum', before: '(无)', after: afterProp.maximum });
             }
 
             // Check minLength/maxLength
-            if (afterProp.minLength !== undefined) {
-                changes.push('@Size(min=' + afterProp.minLength + ')');
+            if (afterProp.minLength !== undefined && beforeProp.minLength === undefined) {
+                changes.push({ prop: 'minLength', before: '(无)', after: afterProp.minLength });
             }
-            if (afterProp.maxLength !== undefined) {
-                changes.push('@Size(max=' + afterProp.maxLength + ')');
+            if (afterProp.maxLength !== undefined && beforeProp.maxLength === undefined) {
+                changes.push({ prop: 'maxLength', before: '(无)', after: afterProp.maxLength });
+            }
+
+            // Check minItems/maxItems (for arrays)
+            if (afterProp.minItems !== undefined && beforeProp.minItems === undefined) {
+                changes.push({ prop: 'minItems', before: '(无)', after: afterProp.minItems });
+            }
+            if (afterProp.maxItems !== undefined && beforeProp.maxItems === undefined) {
+                changes.push({ prop: 'maxItems', before: '(无)', after: afterProp.maxItems });
             }
 
             return changes;
