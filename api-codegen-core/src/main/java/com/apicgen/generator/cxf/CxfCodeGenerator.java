@@ -257,17 +257,31 @@ public class CxfCodeGenerator implements CodeGenerator {
 
     private String getFileHeader(CodegenConfig config) {
         StringBuilder sb = new StringBuilder();
+
+        // 获取用户配置的版权信息
+        String company = "";
+        String startYear = "";
+        if (config.getCopyright() != null) {
+            if (config.getCopyright().getCompany() != null) {
+                company = config.getCopyright().getCompany();
+            }
+            if (config.getCopyright().getStartYear() != null) {
+                startYear = config.getCopyright().getStartYear().toString();
+            }
+        }
+
+        // 如果用户未配置任何版权信息，则不生成版权声明
+        if (company.isEmpty() && startYear.isEmpty()) {
+            sb.append("/**\n");
+            sb.append(" * 此文件由 api-codegen 自动生成，请勿手动修改\n");
+            sb.append(" */\n\n");
+            return sb.toString();
+        }
+
+        // 生成版权声明
         sb.append("/**\n");
         sb.append(" * Copyright (c) ");
-        if (config.getCopyright() != null && config.getCopyright().getStartYear() != null) {
-            sb.append(config.getCopyright().getStartYear());
-        } else {
-            sb.append("2024");
-        }
-        String company = "";
-        if (config.getCopyright() != null && config.getCopyright().getCompany() != null) {
-            company = config.getCopyright().getCompany();
-        }
+        sb.append(startYear);
         if (!company.isEmpty()) {
             sb.append(" ").append(company);
         }
