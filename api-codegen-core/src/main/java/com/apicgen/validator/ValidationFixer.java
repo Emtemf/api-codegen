@@ -153,7 +153,8 @@ public class ValidationFixer {
 
             case "电话字段建议添加正则校验":
                 if (fieldNameLikelyPhone(issue.getFieldName())) {
-                    validation.setPattern("^1[3-9]\\d{9}$");
+                    // 支持手机号：+86/86开头，可选带空格或横线
+                    validation.setPattern("^(\\+86|86)?1[3-9]\\d{9}$");
                 }
                 break;
 

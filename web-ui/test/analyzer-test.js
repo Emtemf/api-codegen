@@ -494,7 +494,7 @@ test('自动修复', '电话字段 → 添加手机号正则',
           type: String`,
     { fixedValue: (parsed) => {
         const field = parsed.apis[0].request.fields[0];
-        return field.validation.pattern === '^1[3-9]\\d{9}$';
+        return field.validation.pattern === '^(\\+86|86)?1[3-9]\\d{9}$';
     }}
 );
 

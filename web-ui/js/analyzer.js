@@ -76,6 +76,20 @@ class ApiYamlAnalyzer {
         const basePath = parsed.basePath || '';
         const paths = parsed.paths || {};
 
+        // 检测 YAML 语法问题：检查每个路径下的方法是否有重复
+        for (const [path, methods] of Object.entries(paths)) {
+            if (typeof methods !== 'object') continue;
+
+            const httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'];
+            for (const method of httpMethods) {
+                // 如果同一个方法变成数组，说明 YAML 中有重复的 key
+                if (Array.isArray(methods[method])) {
+                    this.addIssue('error', `路径 "${path}" 下有重复的 ${method.toUpperCase()} 方法，请检查 YAML 语法是否正确`, 0);
+                    return; // 停止分析，防止数据丢失
+                }
+            }
+        }
+
         for (const [path, methods] of Object.entries(paths)) {
             for (const [method, operation] of Object.entries(methods)) {
                 // 检查必需字段
@@ -172,6 +186,19 @@ class ApiYamlAnalyzer {
         const validMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
         if (api.method && !validMethods.includes(api.method.toUpperCase())) {
             this.addIssue('warn', 'HTTP 方法应该是: GET, POST, PUT, DELETE, PATCH', 0, apiIndex, 'method');
+        }
+
+        // 检查 annotations 字段格式
+        if (api.annotations) {
+            if (!Array.isArray(api.annotations)) {
+                this.addIssue('error', 'annotations 必须是数组', 0, apiIndex, 'annotations');
+            } else {
+                api.annotations.forEach((ann, annIdx) => {
+                    if (typeof ann !== 'string') {
+                        this.addIssue('error', `annotations[${annIdx}] 必须是字符串`, 0, apiIndex, `annotations[${annIdx}]`);
+                    }
+                });
+            }
         }
 
         // 分析 Request 字段
@@ -317,6 +344,18 @@ class ApiYamlAnalyzer {
                 this.analyzeCustom(parsed);
             }
 
+            // 检查是否有不可修复的错误（YAML 语法错误），如果有则不修复
+            // 可修复的错误包括：// 路径、路径不以 / 开头、缺少 operationId 等
+            // 不可修复的错误：YAML 语法错误（如重复的 HTTP 方法）
+            const hasUnfixableError = this.issues.some(i =>
+                i.severity === 'error' &&
+                (i.message.includes('重复的') || i.message.includes('YAML 语法'))
+            );
+            if (hasUnfixableError) {
+                console.warn('检测到 YAML 语法错误，停止自动修复:', this.issues);
+                return yamlContent;  // 不修复，直接返回原内容
+            }
+
             // 如果是Swagger格式，修复路径和参数问题
             if (isSwagger) {
                 this.fixSwagger(parsed);
@@ -369,7 +408,7 @@ class ApiYamlAnalyzer {
                     rules.email = true;
                 }
                 if (msg.includes('正则') || msg.includes('pattern') || msg.includes('电话')) {
-                    rules.pattern = '^1[3-9]\\d{9}$';
+                    rules.pattern = '^(\\+86|86)?1[3-9]\\d{9}$';
                 }
                 if (msg.includes('长度')) {
                     if (!rules.minLength) rules.minLength = 1;
@@ -487,8 +526,46 @@ class ApiYamlAnalyzer {
      * 修复 Swagger/OpenAPI 格式
      */
     fixSwagger(parsed) {
+        // 修复 basePath 包含 // 的问题
+        if (parsed.basePath && parsed.basePath.includes('//')) {
+            const fixedBasePath = parsed.basePath.replace(/\/+/g, '/');
+            if (fixedBasePath !== parsed.basePath) {
+                this.addInfoMessage(`修复 basePath 重复斜杠: "${parsed.basePath}" → "${fixedBasePath}"`);
+                parsed.basePath = fixedBasePath;
+            }
+        }
+
+        // 修复 servers (OpenAPI 3.0) 包含 // 的问题
+        if (parsed.servers && Array.isArray(parsed.servers)) {
+            parsed.servers.forEach((server, idx) => {
+                if (server.url && server.url.includes('//')) {
+                    const fixedUrl = server.url.replace(/\/+/g, '/');
+                    if (fixedUrl !== server.url) {
+                        this.addInfoMessage(`修复 servers[${idx}] URL 重复斜杠: "${server.url}" → "${fixedUrl}"`);
+                        server.url = fixedUrl;
+                    }
+                }
+            });
+        }
+
         // 修复 paths 中的路径格式
         const paths = parsed.paths || {};
+
+        // 首先检测重复的 HTTP 方法（同一路径下多个相同方法）
+        for (const [path, methods] of Object.entries(paths)) {
+            if (typeof methods !== 'object') continue;
+
+            // 检查是否有重复的 HTTP 方法
+            const httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'];
+            for (const method of httpMethods) {
+                // 如果同一个方法出现多次，js-yaml 会把它变成数组
+                if (Array.isArray(methods[method])) {
+                    this.addIssue('error', `路径 "${path}" 下有重复的 ${method.toUpperCase()} 方法，请检查 YAML 语法`, 0);
+                    return yamlContent;  // 不修复，直接返回原内容
+                }
+            }
+        }
+
         for (const [path, methods] of Object.entries(paths)) {
             // 修复路径包含 // 的问题（删除多余的 /）
             if (path.includes('//')) {
@@ -506,7 +583,95 @@ class ApiYamlAnalyzer {
             }
         }
 
+        // 修复 definitions/components 中的字段验证规则
+        this.fixSwaggerDefinitions(parsed);
+
         return jsyaml.dump(parsed, { indent: 2 });
+    }
+
+    /**
+     * 修复 Swagger definitions/components 字段验证规则
+     */
+    fixSwaggerDefinitions(parsed) {
+        const definitions = parsed.definitions || (parsed.components && parsed.components.schemas) || {};
+        if (!definitions || Object.keys(definitions).length === 0) return;
+
+        for (const [defName, schema] of Object.entries(definitions)) {
+            if (!schema.properties) continue;
+
+            for (const [propName, prop] of Object.entries(schema.properties)) {
+                const fieldName = propName.toLowerCase();
+                let hasValidation = false;
+
+                // 1. 必填字段添加 required: true
+                if (schema.required && schema.required.includes(propName)) {
+                    if (!prop.required) {
+                        prop.required = true;
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加 required=true`);
+                        hasValidation = true;
+                    }
+                }
+
+                // 2. String 类型添加长度校验
+                if (prop.type === 'string' && !prop.minLength && !prop.maxLength && !prop.pattern) {
+                    // 特殊字段名添加特定校验
+                    if (fieldName.includes('email') || fieldName.includes('mail')) {
+                        prop.pattern = '^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$';
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加 email 格式校验 (pattern)`);
+                        hasValidation = true;
+                    } else if (fieldName.includes('phone') || fieldName.includes('mobile')) {
+                        prop.pattern = '^1[3-9]\d{9}$';
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加手机号格式校验 (pattern)`);
+                        hasValidation = true;
+                    } else if (fieldName.includes('url') || fieldName.includes('link')) {
+                        prop.pattern = '^https?://[\w\-]+(\.[\w\-]+)+[/#?]?.*$';
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加 URL 格式校验 (pattern)`);
+                        hasValidation = true;
+                    } else {
+                        // 普通String字段添加默认长度校验
+                        prop.minLength = 1;
+                        prop.maxLength = 255;
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加 String 长度校验 (minLength=1, maxLength=255)`);
+                        hasValidation = true;
+                    }
+                }
+
+                // 3. Integer/Number 类型添加范围校验
+                if ((prop.type === 'integer' || prop.type === 'number') && !prop.minimum && !prop.maximum) {
+                    // 根据字段名推断范围
+                    if (fieldName.includes('age')) {
+                        prop.minimum = 0;
+                        prop.maximum = 150;
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加年龄范围校验 (min=0, max=150)`);
+                        hasValidation = true;
+                    } else if (fieldName.includes('score') || fieldName.includes('rate')) {
+                        prop.minimum = 0;
+                        prop.maximum = 100;
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加评分范围校验 (min=0, max=100)`);
+                        hasValidation = true;
+                    } else if (fieldName.includes('price') || fieldName.includes('amount') || fieldName.includes('total')) {
+                        prop.minimum = 0;
+                        // 不设置最大值
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加金额范围校验 (min=0)`);
+                        hasValidation = true;
+                    } else if (!fieldName.includes('id') && !fieldName.includes('count') && !fieldName.includes('page') && !fieldName.includes('size')) {
+                        // 普通数值字段添加默认范围 (与Maven ValidationFixer一致)
+                        prop.minimum = 0;
+                        prop.maximum = 2147483647;
+                        this.addInfoMessage(`修复 ${defName}.${propName}: 添加数值范围校验 (min=0, max=2147483647)`);
+                        hasValidation = true;
+                    }
+                }
+
+                // 4. Array 类型添加大小校验 (与Maven ValidationFixer一致)
+                if (prop.type === 'array' && !prop.minItems && !prop.maxItems) {
+                    prop.minItems = 1;
+                    prop.maxItems = 100;
+                    this.addInfoMessage(`修复 ${defName}.${propName}: 添加数组大小校验 (minItems=1, maxItems=100)`);
+                    hasValidation = true;
+                }
+            }
+        }
     }
 
     /**
@@ -523,13 +688,21 @@ class ApiYamlAnalyzer {
             operation.description = operation.summary;
         }
 
-        // 确保有 parameters 的 description 和 type
+        // 确保有 parameters 的 description、type、required 和 validation
         if (operation.parameters) {
             operation.parameters.forEach(param => {
                 // 添加 description
                 if (!param.description && param.name) {
                     param.description = this.toDescription(param.name);
                 }
+
+                // 处理 required 参数：添加 @NotNull 注解（通过设置 minimum 来标记）
+                // Swagger参数没有专门的校验注解字段，我们用 minNotNull 来标记
+                if (param.required === true) {
+                    param.minNotNull = true;
+                    this.addInfoMessage(`修复参数 ${param.name}: 必填参数添加 @NotNull 校验`);
+                }
+
                 // 添加 type（如果没有 schema）
                 if (!param.type && !param.schema) {
                     // 根据参数名推断类型
@@ -542,6 +715,59 @@ class ApiYamlAnalyzer {
                         param.type = 'boolean';
                     } else {
                         param.type = 'string';
+                    }
+                }
+
+                // 添加 validation 校验规则（根据字段名推断）
+                const fieldName = (param.name || '').toLowerCase();
+
+                // String类型添加长度校验
+                if (param.type === 'string' && !param.minLength && !param.maxLength && !param.pattern) {
+                    if (fieldName.includes('email') || fieldName.includes('mail')) {
+                        param.pattern = '^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$';
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加 email 格式校验 (pattern)`);
+                    } else if (fieldName.includes('phone') || fieldName.includes('mobile')) {
+                        param.pattern = '^(\\+86|86)?1[3-9]\\d{9}$';
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加手机号格式校验 (pattern)`);
+                    } else if (fieldName.includes('url') || fieldName.includes('link')) {
+                        param.pattern = '^https?://[\\w\\-]+(\\.[\\w\\-]+)+[/#?]?.*$';
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加 URL 格式校验 (pattern)`);
+                    } else {
+                        // 普通String参数添加默认长度校验
+                        param.minLength = 1;
+                        param.maxLength = 255;
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加 String 长度校验 (minLength=1, maxLength=255)`);
+                    }
+                }
+
+                // Integer/Number类型添加范围校验
+                if ((param.type === 'integer' || param.type === 'number') && !param.minimum && !param.maximum) {
+                    if (fieldName === 'page' || fieldName === 'pageNum') {
+                        // 页码从1开始，添加默认最大值
+                        param.minimum = 1;
+                        param.maximum = 2147483647;
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加页码范围校验 (min=1, max=2147483647)`);
+                    } else if (fieldName.includes('size') || fieldName.includes('limit') || fieldName.includes('pageSize') || fieldName === 'pageSize') {
+                        // 每页数量
+                        param.minimum = 1;
+                        param.maximum = 100;
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加每页数量范围校验 (min=1, max=100)`);
+                    } else if (fieldName.includes('age')) {
+                        param.minimum = 0;
+                        param.maximum = 150;
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加年龄范围校验 (min=0, max=150)`);
+                    } else if (fieldName.includes('score') || fieldName.includes('rate')) {
+                        param.minimum = 0;
+                        param.maximum = 100;
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加评分范围校验 (min=0, max=100)`);
+                    } else if (fieldName.includes('price') || fieldName.includes('amount') || fieldName.includes('total')) {
+                        param.minimum = 0;
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加金额范围校验 (min=0)`);
+                    } else if (!fieldName.includes('id')) {
+                        // 普通数值参数添加默认范围（排除id），与Maven ValidationFixer一致
+                        param.minimum = 0;
+                        param.maximum = 2147483647;
+                        this.addInfoMessage(`修复参数 ${param.name}: 添加数值范围校验 (min=0, max=2147483647)`);
                     }
                 }
             });
@@ -601,7 +827,7 @@ class ApiYamlAnalyzer {
         // 电话字段自动添加正则校验
         if ((field.name.includes('phone') || field.name.includes('tel') || field.name.includes('mobile')) &&
             !field.validation.pattern) {
-            field.validation.pattern = '^1[3-9]\\d{9}$';
+            field.validation.pattern = '^(\\+86|86)?1[3-9]\\d{9}$';
         }
 
         // 数值类型添加默认范围
@@ -644,15 +870,49 @@ class ApiYamlAnalyzer {
 
     /**
      * 添加问题
+     * @param {string} severity - 严重程度: error, warn, info
+     * @param {string} message - 问题消息
+     * @param {number} line - 行号
+     * @param {number} apiIndex - API索引
+     * @param {string} field - 字段路径
+     * @param {string} rule - 规则依据/来源
      */
-    addIssue(severity, message, line, apiIndex, field) {
+    addIssue(severity, message, line, apiIndex, field, rule) {
         this.issues.push({
             severity: severity,
             message: message,
             line: line,
             api: apiIndex,
-            field: field
+            field: field,
+            rule: rule || this.getDefaultRule(severity, message)
         });
+    }
+
+    /**
+     * 获取默认规则依据
+     */
+    getDefaultRule(severity, message) {
+        // 根据消息内容推断规则
+        if (message.includes('路径不能包含 //')) return 'DFX-001: 路径规范 - 不能包含重复斜杠';
+        if (message.includes('路径必须以 / 开头')) return 'DFX-002: 路径规范 - 必须以 / 开头';
+        if (message.includes('必填字段缺少 @NotNull')) return 'DFX-003: 必填校验 - required=true 必须添加 notNull';
+        if (message.includes('String 字段缺少')) return 'DFX-004: 字符串校验 - String 类型需添加长度或格式校验';
+        if (message.includes('@Email')) return 'DFX-005: 邮箱校验 - email 类型字段需添加 @Email';
+        if (message.includes('正则校验')) return 'DFX-006: 电话校验 - 电话字段需添加正则 ^1[3-9]\\d{9}$';
+        if (message.includes('数值字段缺少范围')) return 'DFX-007: 数值校验 - 数值类型需添加 min/max 范围';
+        if (message.includes('List 字段缺少大小')) return 'DFX-008: 集合校验 - List 类型需添加 minSize/maxSize';
+        if (message.includes('minLength 不能大于 maxLength')) return 'DFX-009: 校验规则 - minLength 不能超过 maxLength';
+        if (message.includes('min 不能大于 max')) return 'DFX-010: 校验规则 - min 不能超过 max';
+        if (message.includes('minSize 不能大于 maxSize')) return 'DFX-011: 校验规则 - minSize 不能超过 maxSize';
+        if (message.includes('缺少 operationId')) return 'DFX-012: 接口规范 - operationId 用于唯一标识接口';
+        if (message.includes('缺少成功响应')) return 'DFX-013: 接口规范 - 需定义 2xx 成功响应';
+        if (message.includes('缺少 API 名称')) return 'DFX-014: 接口规范 - 必须指定 API 名称';
+        if (message.includes('缺少 API 路径')) return 'DFX-015: 接口规范 - 必须指定 API 路径';
+        if (message.includes('缺少 HTTP 方法')) return 'DFX-016: 接口规范 - 必须指定 HTTP 方法';
+        if (message.includes('重复的')) return 'DFX-017: YAML 语法 - 检测到重复的键';
+        if (message.includes('解析错误')) return 'DFX-018: YAML 语法 - YAML 格式解析失败';
+        if (severity === 'error') return '规则验证失败';
+        return '建议优化';
     }
 
     /**

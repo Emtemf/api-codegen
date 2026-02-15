@@ -110,6 +110,34 @@
             min-height: 0;
         }
 
+        .config-output-paths {
+            padding: 10px 16px;
+            background: #1a1a2e;
+            border-top: 1px solid #16213e;
+            font-size: 12px;
+        }
+
+        .output-path-item {
+            display: flex;
+            margin-bottom: 4px;
+        }
+
+        .output-path-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .output-path-label {
+            color: #888;
+            width: 80px;
+            flex-shrink: 0;
+        }
+
+        .output-path-value {
+            color: #4ecca3;
+            font-family: monospace;
+            word-break: break-all;
+        }
+
         .CodeMirror {
             height: 100% !important;
             font-size: 13px;
@@ -190,13 +218,22 @@
             height: 16px;
             accent-color: #e94560;
         }
-        .issue-title { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .issue-title { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
         .issue-icon { width: 8px; height: 8px; border-radius: 50%; }
         .issue.error .issue-icon { background: #e74c3c; }
         .issue.warn .issue-icon { background: #f39c12; }
         .issue-type { font-size: 11px; text-transform: uppercase; font-weight: 600; }
         .issue.error .issue-type { color: #e74c3c; }
         .issue.warn .issue-type { color: #f39c12; }
+        .issue-rule {
+            font-size: 10px;
+            color: #666;
+            margin-left: 8px;
+            padding: 2px 6px;
+            background: #2a2a3e;
+            border-radius: 3px;
+            font-family: monospace;
+        }
         .issue-message { font-size: 13px; color: #ccc; line-height: 1.4; }
         .issue-api { font-size: 11px; color: #666; margin-top: 4px; font-family: monospace; }
 
@@ -459,7 +496,7 @@
 
         /* Right Panel: API + Field stacked */
         .diff-right-panel {
-            width: 380px;
+            width: 55%;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
@@ -480,6 +517,15 @@
             flex-direction: column;
             overflow: hidden;
             min-height: 0;
+        }
+        /* YAML panel - limit max width */
+        .diff-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+            max-width: 45%;
         }
         .diff-panel-count {
             background: #0f3460;
@@ -602,14 +648,76 @@
             font-size: 10px;
             margin-left: auto;
         }
+        .diff-tag-mod {
+            color: #79c0ff;
+            font-size: 10px;
+            margin-left: auto;
+        }
+        /* Java 代码风格显示 */
+        .diff-api-java {
+            padding: 8px 12px;
+            border-bottom: 1px solid #2d333b;
+            font-size: 12px;
+            position: relative;
+        }
+        .diff-api-java.diff-api-add {
+            background: rgba(46, 160, 67, 0.08);
+        }
+        .diff-api-java.diff-api-del {
+            background: rgba(248, 81, 73, 0.08);
+        }
+        .diff-api-java.diff-api-del .diff-java-annotation,
+        .diff-api-java.diff-api-del .diff-java-method {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .diff-java-annotation {
+            color: #d2a8ff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+        .diff-custom-annotations {
+            color: #ff7b72;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        .diff-java-code {
+            color: #c9d1d9;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 12px;
+            margin: 0;
+            white-space: pre;
+            line-height: 1.5;
+        }
+        .diff-api-java.diff-api-del .diff-java-code {
+            opacity: 0.6;
+        }
+        .diff-java-method {
+            color: #7ee787;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .diff-api-java .diff-tag-add,
+        .diff-api-java .diff-tag-mod {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+        }
         .diff-change-prop {
             color: #79c0ff;
+        }
+        .diff-change-item {
+            padding: 3px 0;
+            line-height: 1.4;
         }
         .diff-change-before {
             color: #f85149;
         }
         .diff-change-after {
             color: #57ab38;
+            padding-left: 12px;
         }
         .diff-api-method {
             padding: 2px 6px;
@@ -706,11 +814,48 @@
             color: #57ab38;
             font-size: 11px;
         }
-        .diff-java-type {
-            color: #c9d1d9;
+        .diff-validation-details {
+            font-size: 10px;
+            color: #888;
+            margin-top: 4px;
+            padding-left: 8px;
+            border-left: 2px solid #444;
         }
-        .diff-java-name {
-            color: #e3b341;
+        .diff-validation-after {
+            color: #57ab38;
+            border-left-color: #57ab38;
+        }
+        /* IDE风格的颜色 - Java语法高亮 */
+        .diff-java-type { color: #79c0ff; }  /* 蓝色 - 类型 */
+        .diff-java-name { color: #e3b341; }  /* 黄色 - 字段名 */
+        .diff-java-keyword { color: #ff7b72; }  /* 红色 - 关键字 */
+        .diff-java-annotation { color: #d2a8ff; }  /* 紫色 - 注解 */
+        .diff-java-string { color: #a5d6ff; }  /* 浅蓝 - 字符串 */
+        .diff-java-number { color: #79c0ff; }  /* 蓝色 - 数字 */
+        .diff-java-comment { color: #8b949e; }  /* 灰色 - 注释 */
+
+        /* 变更对比的颜色 */
+        .diff-prop { color: #79c0ff; }
+        .diff-old-val { color: #f85149; text-decoration: line-through; opacity: 0.7; }
+        .diff-new-val { color: #57ab38; font-weight: 600; }
+
+        /* IDE风格语法高亮 - 统一类名 */
+        .diff-java-code .syntax-keyword { color: #ff7b72; }   /* 关键字: private, public, return, void */
+        .diff-java-code .syntax-type { color: #79c0ff; }     /* 类型: String, Integer, Response */
+        .diff-java-code .syntax-field { color: #e3b341; }    /* 字段名/参数名 */
+        .diff-java-code .syntax-string { color: #a5d6ff; }    /* 字符串 */
+        .diff-java-code .syntax-number { color: #79c0ff; }    /* 数字 */
+        .diff-java-code .syntax-comment { color: #8b949e; font-style: italic; }  /* 注释 */
+        .diff-java-code .syntax-method { color: #d2a8ff; }    /* 方法名 */
+        .diff-java-code .syntax-annotation { color: #d2a8ff; } /* 注解: @Post, @Path, @Valid */
+
+        /* API变更详情样式 */
+        .diff-changes {
+            padding: 8px 12px;
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 11px;
         }
     </style>
 </head>
@@ -751,6 +896,20 @@
                 </div>
                 <div class="editor-wrapper">
                     <textarea id="config-editor"></textarea>
+                </div>
+                <div class="config-output-paths" id="config-output-paths">
+                    <div class="output-path-item">
+                        <span class="output-path-label">Controller:</span>
+                        <span class="output-path-value" id="output-path-controller">-</span>
+                    </div>
+                    <div class="output-path-item">
+                        <span class="output-path-label">Request:</span>
+                        <span class="output-path-value" id="output-path-request">-</span>
+                    </div>
+                    <div class="output-path-item">
+                        <span class="output-path-label">Response:</span>
+                        <span class="output-path-value" id="output-path-response">-</span>
+                    </div>
                 </div>
             </div>
 
@@ -829,7 +988,7 @@
                         </div>
                         <div class="diff-api-panels">
                             <div class="diff-api-panel diff-api-panel-left">
-                                <div class="diff-api-header">修复前</div>
+                                <div class="diff-api-header">原始</div>
                                 <div class="diff-api-list" id="diff-api-before"></div>
                             </div>
                             <div class="diff-api-panel">
@@ -847,7 +1006,7 @@
                         </div>
                         <div class="diff-field-panels">
                             <div class="diff-field-panel diff-field-panel-left">
-                                <div class="diff-field-header">修复前</div>
+                                <div class="diff-field-header">原始</div>
                                 <div class="diff-field-list" id="diff-field-before"></div>
                             </div>
                             <div class="diff-field-panel">
@@ -882,12 +1041,265 @@
     <script>
         var yamlEditor, configEditor;
 
-        // Default YAML content
-        var defaultYaml = 'apis:\n  - name: createUser\n    path: /api/users\n    method: POST\n    description: 创建用户\n    request:\n      className: CreateUserReq\n      fields:\n        - name: username\n          type: String\n          required: true\n          description: 用户名\n          validation:\n            notNull: true\n            minLength: 4\n            maxLength: 20\n        - name: email\n          type: String\n          required: true\n          description: 邮箱\n          validation:\n            notNull: true\n            email: true\n    response:\n      className: CreateUserRsp\n      fields:\n        - name: userId\n          type: Long\n          description: 用户ID';
+        // Default YAML content (使用Swagger 2.0格式)
+        var defaultYaml = `swagger: "2.0"
+info:
+  title: 用户管理API
+  version: "1.0"
+basePath: /api
+paths:
+  /users:
+    get:
+      summary: 查询用户列表
+      operationId: queryUserList
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          schema:
+            type: string
+      responses:
+        200:
+          description: 成功
+  /users/{id}:
+    get:
+      summary: 获取用户详情
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: 成功
+  /users:
+    post:
+      summary: 创建用户
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+              properties:
+                username:
+                  type: string
+                  minLength: 4
+                  maxLength: 20
+                email:
+                  type: string
+                  format: email
+      responses:
+        201:
+          description: 创建成功`;
 
         var defaultConfig = 'framework: CXF\n\ncopyright:\n  company: ""\n  startYear: 2024\n\noutput:\n  controller:\n    path: generated/api/\n  request:\n    path: src/main/java/req/\n  response:\n    path: src/main/java/rsp/';
 
+        // 存储用户的原始 YAML（用于预览对比）
+        var originalYaml = defaultYaml;
+
+        // 示例数据定义
+        var examples = {
+            'swagger': {
+                name: 'Swagger 2.0',
+                yaml: `swagger: "2.0"
+info:
+  title: 用户管理API
+  version: "1.0"
+basePath: /api
+paths:
+  # 分页查询接口
+  /users:
+    get:
+      summary: 查询用户列表
+      operationId: queryUserList
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          description: 每页数量
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 成功
+
+  # 路径参数
+  /users/{id}:
+    get:
+      summary: 获取用户详情
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          description: 用户ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: 成功
+
+  # POST请求体
+  /users:
+    post:
+      summary: 创建用户
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+              properties:
+                username:
+                  type: string
+                  description: 用户名
+                  minLength: 4
+                  maxLength: 20
+                email:
+                  type: string
+                  format: email
+                  description: 邮箱
+                phone:
+                  type: string
+                  description: 手机号
+                age:
+                  type: integer
+                  description: 年龄
+                score:
+                  type: number
+                  description: 评分
+      responses:
+        201:
+          description: 创建成功`,
+                config: defaultConfig
+            },
+            'openapi': {
+                name: 'OpenAPI 3.0',
+                yaml: `openapi: "3.0.0"
+info:
+  title: 用户管理API
+  version: "1.0.0"
+servers:
+  - url: /api
+paths:
+  /users:
+    get:
+      summary: 查询用户列表
+      operationId: queryUserList
+      parameters:
+        - name: page
+          in: query
+          description: 页码
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          description: 每页数量
+          schema:
+            type: integer
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          schema:
+            type: string
+      responses:
+        200:
+          description: 成功
+  /users/{id}:
+    get:
+      summary: 获取用户详情
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: 成功
+  /users:
+    post:
+      summary: 创建用户
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+              properties:
+                username:
+                  type: string
+                  minLength: 4
+                  maxLength: 20
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                age:
+                  type: integer
+      responses:
+        201:
+          description: 创建成功`,
+                config: defaultConfig
+            }
+        };
+
+        function loadExampleFromUrl() {
+            var params = new URLSearchParams(window.location.search);
+            var demo = params.get('demo');
+            if (demo && examples[demo]) {
+                var example = examples[demo];
+                document.getElementById('yaml-info').textContent = example.name + ' (URL参数)';
+                return example.yaml;
+            }
+            return null;
+        }
+
         function init() {
+            // 尝试从URL参数加载示例
+            var urlYaml = loadExampleFromUrl();
+
             // Initialize YAML editor
             yamlEditor = CodeMirror.fromTextArea(document.getElementById('yaml-editor'), {
                 mode: 'yaml',
@@ -908,9 +1320,12 @@
                 tabSize: 2
             });
 
-            // Set default content
-            yamlEditor.setValue(defaultYaml);
-            configEditor.setValue(defaultConfig);
+            // Set default content (use URL example if provided)
+            var currentYaml = urlYaml || defaultYaml;
+            var currentConfig = defaultConfig;
+            yamlEditor.setValue(currentYaml);
+            configEditor.setValue(currentConfig);
+            originalYaml = currentYaml;  // 保存为原始版本
 
             // Events
             yamlEditor.on('cursorActivity', updateStatus);
@@ -922,7 +1337,11 @@
             // Config editor events
             configEditor.on('change', function() {
                 document.getElementById('config-info').textContent = '已修改';
+                updateConfigOutputPaths();
             });
+
+            // Initialize config output paths
+            updateConfigOutputPaths();
 
             updateStatus();
         }
@@ -958,17 +1377,35 @@
         }
 
         function loadExample() {
-            yamlEditor.setValue(defaultYaml);
-            configEditor.setValue(defaultConfig);
+            // 显示示例选择菜单
+            var exampleKeys = Object.keys(examples);
+            var options = exampleKeys.map(function(key, idx) {
+                return (idx + 1) + '. ' + examples[key].name;
+            }).join('\n');
+
+            var choice = prompt('选择格式示例:\n\n' + options + '\n\n输入数字:');
+
+            var exampleKey = 'basic';
+            if (choice) {
+                var num = parseInt(choice);
+                if (num >= 1 && num <= exampleKeys.length) {
+                    exampleKey = exampleKeys[num - 1];
+                }
+            }
+
+            var example = examples[exampleKey];
+            originalYaml = example.yaml;
+            yamlEditor.setValue(example.yaml);
+            configEditor.setValue(example.config || defaultConfig);
             yamlEditor.refresh();
             configEditor.refresh();
             updateStatus();
             document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
             document.getElementById('issue-count').textContent = '0';
             document.getElementById('issue-count').className = 'issue-count';
-            document.getElementById('yaml-info').textContent = '示例已加载';
-            document.getElementById('config-info').textContent = '示例已加载';
-            setMessage('已加载示例');
+            document.getElementById('yaml-info').textContent = example.name;
+            document.getElementById('config-info').textContent = example.name;
+            setMessage('已加载: ' + example.name);
         }
 
         // Load API YAML file
@@ -980,7 +1417,11 @@
                 var file = e.target.files[0];
                 var reader = new FileReader();
                 reader.onload = function(e) {
-                    yamlEditor.setValue(e.target.result);
+                    var content = e.target.result;
+                    // 上传时直接去掉注释
+                    var cleanContent = stripYamlComments(content);
+                    originalYaml = cleanContent;  // 保存去掉注释后的内容
+                    yamlEditor.setValue(cleanContent);
                     yamlEditor.refresh();
                     document.getElementById('yaml-info').textContent = file.name;
                     updateStatus();
@@ -989,6 +1430,37 @@
                 reader.readAsText(file);
             };
             input.click();
+        }
+
+        // 去掉 YAML 注释
+        function stripYamlComments(content) {
+            var lines = content.split('\n');
+            var result = [];
+            lines.forEach(function(line) {
+                // 去掉 # 注释（但保留 # 在字符串里的情况）
+                var trimmed = line.trim();
+                if (trimmed === '' || trimmed.startsWith('#')) {
+                    return; // 跳过空行和纯注释行
+                }
+                // 查找 # 的位置（不在引号内）
+                var inString = false;
+                var stringChar = '';
+                for (var i = 0; i < line.length; i++) {
+                    var c = line[i];
+                    if (!inString && (c === '"' || c === "'")) {
+                        inString = true;
+                        stringChar = c;
+                    } else if (inString && c === stringChar && line[i-1] !== '\\') {
+                        inString = false;
+                    } else if (!inString && c === '#') {
+                        // 找到注释开始
+                        line = line.substring(0, i);
+                        break;
+                    }
+                }
+                result.push(line);
+            });
+            return result.join('\n');
         }
 
         // Load Config YAML file
@@ -1003,6 +1475,7 @@
                     configEditor.setValue(e.target.result);
                     configEditor.refresh();
                     document.getElementById('config-info').textContent = file.name;
+                    updateConfigOutputPaths();
                     setMessage('已加载配置: ' + file.name);
                 };
                 reader.readAsText(file);
@@ -1024,6 +1497,7 @@
 
         function analyze() {
             var content = yamlEditor.getValue();
+            originalYaml = content;  // 保存当前内容作为原始版本，用于预览对比
             var analyzer = new ApiYamlAnalyzer();
             var issues = analyzer.analyze(content);
 
@@ -1070,6 +1544,7 @@
                     '<div class="issue-title">' +
                     '<span class="issue-icon"></span>' +
                     '<span class="issue-type">' + (issue.severity === 'error' ? '错误' : '警告') + '</span>' +
+                    '<span class="issue-rule" title="规则依据">' + (issue.rule || '') + '</span>' +
                     '</div>' +
                     '<div class="issue-message">' + issue.message + '</div>' +
                     (issue.api !== undefined ? '<div class="issue-api">API: ' + issue.api + '</div>' : '') +
@@ -1104,7 +1579,8 @@
         }
 
         function autoFix() {
-            var content = yamlEditor.getValue();
+            // 使用原始内容作为对比基础
+            var content = originalYaml || yamlEditor.getValue();
             var analyzer = new ApiYamlAnalyzer();
 
             // Get selected issues and compute selective fix
@@ -1113,7 +1589,7 @@
 
             var fixed = analyzer.fixSelective(content, selectedIndices);
 
-            // Show diff preview
+            // Show diff preview - 使用原始内容作为修复前
             showDiffPreview(content, fixed);
             setMessage('点击"应用修复"确认更改');
         }
@@ -1168,37 +1644,72 @@
             var apis = impact.apis;
             countEl.textContent = apis.length;
 
+            // 像 GitHub 一样显示：左边原始，右边修复后
             var beforeHtml = '';
             var afterHtml = '';
 
             apis.forEach(function(api) {
                 var method = (api.method || 'get').toLowerCase();
-                var typeText = api.type === 'added' ? '新增' : api.type === 'deleted' ? '删除' : '修改';
-                var originalPath = api.originalPath || api.path || '';
                 var fixedPath = api.path || '';
+                var originalPath = api.originalPath || api.path || '';
+                // 优先使用name，如果没有则使用summary或operationId，最后使用路径
+                var apiName = api.name || api.summary || api.operationId || fixedPath.replace(/\//g, '').replace(/\{|\}/g, '') || 'api';
+                var annotations = api.annotations || [];
+                var params = api.parameters || [];
 
-                // Compact display - just show path and method
+                // 生成完整的 Java 方法代码（带语法高亮）
+                var javaCode = generateJavaControllerCode(fixedPath, method, apiName, annotations, api.description, params);
+                var originalJavaCode = generateJavaControllerCode(originalPath, method, apiName, annotations, api.description, params);
+
                 if (api.type === 'added') {
-                    afterHtml += '<div class="diff-api-compact">';
-                    afterHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    afterHtml += '<span class="diff-path">' + escapeHtml(fixedPath || api.name || '') + '</span>';
-                    afterHtml += '<span class="diff-tag-add">' + typeText + '</span>';
+                    // 新增的接口 - 只在右边显示
+                    afterHtml += '<div class="diff-api-java diff-api-add">';
+                    afterHtml += '<pre class="diff-java-code">' + javaCode + '</pre>';
                     afterHtml += '</div>';
                 } else if (api.type === 'deleted') {
-                    beforeHtml += '<div class="diff-api-compact">';
-                    beforeHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    beforeHtml += '<span class="diff-path">' + escapeHtml(originalPath || api.name || '') + '</span>';
-                    beforeHtml += '<span class="diff-tag-del">' + typeText + '</span>';
+                    // 删除的接口 - 只在左边显示
+                    beforeHtml += '<div class="diff-api-java diff-api-del">';
+                    beforeHtml += '<pre class="diff-java-code">' + originalJavaCode + '</pre>';
                     beforeHtml += '</div>';
-                } else {
-                    // Modified - show both paths
-                    beforeHtml += '<div class="diff-api-compact">';
-                    beforeHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    beforeHtml += '<span class="diff-path-old">' + escapeHtml(originalPath || '') + '</span>';
+                } else if (api.type === 'modified') {
+                    // 修改的接口 - 左边显示原始，右边显示修复后
+                    // 只显示重要变更（路径、description、type等），注解类变更已在代码中体现
+                    var importantChangesHtml = '';
+                    if (api.changes && api.changes.length > 0) {
+                        var hasImportantChange = false;
+                        var changeLines = [];
+
+                        api.changes.forEach(function(change) {
+                            // 只显示非注解类的变更
+                            if (change.prop === 'path') {
+                                changeLines.push('<span class="diff-change-before">路径: ' + escapeHtml(change.before) + '</span> → <span class="diff-change-after">' + escapeHtml(change.after) + '</span>');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('description')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' description', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加描述');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes(' type')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' type', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加类型');
+                                hasImportantChange = true;
+                            }
+                        });
+
+                        if (hasImportantChange) {
+                            importantChangesHtml = '<div class="diff-changes">' + changeLines.join('<br>') + '</div>';
+                        }
+                    }
+
+                    // 左边显示原始代码
+                    beforeHtml += '<div class="diff-api-java diff-api-mod">';
+                    beforeHtml += importantChangesHtml;
+                    beforeHtml += '<pre class="diff-java-code">' + originalJavaCode + '</pre>';
                     beforeHtml += '</div>';
-                    afterHtml += '<div class="diff-api-compact">';
-                    afterHtml += '<span class="diff-api-method ' + method + '">' + method.toUpperCase() + '</span>';
-                    afterHtml += '<span class="diff-path-new">' + escapeHtml(fixedPath || '') + '</span>';
+
+                    // 右边显示修复后代码
+                    afterHtml += '<div class="diff-api-java diff-api-mod">';
+                    afterHtml += importantChangesHtml;
+                    afterHtml += '<pre class="diff-java-code">' + javaCode + '</pre>';
                     afterHtml += '</div>';
                 }
             });
@@ -1208,6 +1719,234 @@
 
             beforeContainer.innerHTML = beforeHtml;
             afterContainer.innerHTML = afterHtml;
+        }
+
+        /**
+         * 生成 Java Controller 代码风格（完整方法预览，带语法高亮）
+         */
+        function generateJavaControllerCode(path, httpMethod, apiName, annotations, description, params) {
+            var methodName = toCamelCase(apiName);
+            var returnType = 'Response';
+            annotations = annotations || [];
+            description = description || apiName;
+            params = params || [];
+
+            switch (httpMethod.toLowerCase()) {
+                case 'get':
+                    returnType = 'Response';
+                    break;
+                case 'post':
+                    returnType = 'Response';
+                    break;
+                case 'put':
+                    returnType = 'Response';
+                    break;
+                case 'delete':
+                    returnType = 'Response';
+                    break;
+                case 'patch':
+                    returnType = 'Response';
+                    break;
+            }
+
+            // 生成自定义注解（带语法高亮）
+            var customAnnotationsHtml = '';
+            if (annotations && annotations.length > 0) {
+                annotations.forEach(function(ann) {
+                    var highlighted = ann
+                        .replace(/(@\w+)/g, '<span class="syntax-keyword">$1</span>')
+                        .replace(/(\w+)=/g, '<span class="syntax-field">$1</span>=')
+                        .replace(/(".*?")/g, '<span class="syntax-string">$1</span>');
+                    customAnnotationsHtml += '    <span class="syntax-annotation">' + highlighted + '</span>\n';
+                });
+            }
+
+            // 生成完整的方法代码（带语法高亮）
+            var code = '';
+            if (customAnnotationsHtml) {
+                code += customAnnotationsHtml;
+            }
+            code += '    <span class="syntax-annotation">@' + httpMethod.toUpperCase() + '</span>\n';
+            code += '    <span class="syntax-annotation">@Path("' + path + '")</span>\n';
+
+            // 处理参数
+            var hasRequestBody = false;
+            var pathParams = [];
+            var queryParams = [];
+
+            if (params && params.length > 0) {
+                params.forEach(function(param) {
+                    if (param.in === 'path') {
+                        pathParams.push(param);  // 保存完整对象
+                    } else if (param.in === 'query') {
+                        queryParams.push(param);  // 保存完整对象
+                    } else if (param.in === 'body' || param.name === 'body') {
+                        hasRequestBody = true;
+                    }
+                });
+
+                // 添加PathParam注解和参数
+                pathParams.forEach(function(p) {
+                    var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
+                    var paramAnnot = '    <span class="syntax-annotation">@PathParam("' + p.name + '")</span>\n';
+                    var paramDecl = '<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>';
+                    code += paramAnnot;
+                });
+
+                // 添加QueryParam注解和参数
+                queryParams.forEach(function(p) {
+                    var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
+                    // 检查是否有长度限制 minLength/maxLength
+                    var sizeAnnot = '';
+                    if (p.minLength !== undefined || p.maxLength !== undefined) {
+                        var min = p.minLength !== undefined ? p.minLength : 0;
+                        var max = p.maxLength !== undefined ? p.maxLength : '';
+                        sizeAnnot = '<span class="syntax-annotation">@Size</span>(';
+                        var parts = [];
+                        if (min > 0) parts.push('min=' + min);
+                        if (max) parts.push('max=' + max);
+                        sizeAnnot += parts.join(', ') + ') ';
+                    }
+                    // 检查是否有数值范围限制 minimum/maximum
+                    if (p.minimum !== undefined || p.maximum !== undefined) {
+                        var minVal = p.minimum !== undefined ? p.minimum : '';
+                        var maxVal = p.maximum !== undefined ? p.maximum : '';
+                        if (minVal !== '' || maxVal !== '') {
+                            sizeAnnot += '<span class="syntax-annotation">@Min</span>(' + (minVal !== '' ? minVal : '0') + ') ';
+                            if (maxVal !== '') {
+                                sizeAnnot += '<span class="syntax-annotation">@Max</span>(' + maxVal + ') ';
+                            }
+                        }
+                    }
+                    // @QueryParam只生成注解
+                    var paramAnnot = '    <span class="syntax-annotation">@QueryParam("' + p.name + '")</span>\n';
+                    code += paramAnnot;
+                });
+            }
+
+            if (hasRequestBody) {
+                code += '    <span class="syntax-annotation">@Consumes</span>(<span class="syntax-string">MediaType.APPLICATION_JSON</span>)\n';
+            }
+            code += '    <span class="syntax-annotation">@Produces</span>(<span class="syntax-string">MediaType.APPLICATION_JSON</span>)\n';
+
+            // 生成方法签名 - @Size放在参数前面
+            var paramStr = '()';
+            if (hasRequestBody) {
+                paramStr = '(@Valid <span class="syntax-type">RequestBody</span> <span class="syntax-field">req</span>)';
+            } else if (pathParams.length > 0 || queryParams.length > 0) {
+                var methodParams = [];
+                pathParams.forEach(function(p) {
+                    var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
+                    methodParams.push('<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
+                });
+                queryParams.forEach(function(p) {
+                    var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
+                    // @NotNull注解（必填参数）、@Size注解和@Min/@Max注解放在参数前面
+                    var annots = '';
+                    // required参数 -> @NotNull
+                    if (p.required === true) {
+                        annots += '<span class="syntax-annotation">@NotNull</span> ';
+                    }
+                    // minLength/maxLength -> @Size
+                    if (p.minLength !== undefined || p.maxLength !== undefined) {
+                        var min = p.minLength !== undefined ? p.minLength : 0;
+                        var max = p.maxLength !== undefined ? p.maxLength : '';
+                        annots += '<span class="syntax-annotation">@Size</span>(';
+                        var parts = [];
+                        if (min > 0) parts.push('min=' + min);
+                        if (max) parts.push('max=' + max);
+                        annots += parts.join(', ') + ') ';
+                    }
+                    // minimum/maximum -> @Min/@Max
+                    if (p.minimum !== undefined || p.maximum !== undefined) {
+                        if (p.minimum !== undefined) {
+                            annots += '<span class="syntax-annotation">@Min</span>(' + p.minimum + ') ';
+                        }
+                        if (p.maximum !== undefined) {
+                            annots += '<span class="syntax-annotation">@Max</span>(' + p.maximum + ') ';
+                        }
+                    }
+                    if (annots) {
+                        methodParams.push(annots + '<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
+                    } else {
+                        methodParams.push('<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
+                    }
+                });
+                paramStr = '(' + methodParams.join(', ') + ')';
+            }
+
+            code += '    <span class="syntax-keyword">public</span> <span class="syntax-type">' + returnType + '</span> <span class="syntax-method">' + methodName + '</span>' + paramStr + ' {\n';
+            code += '        <span class="syntax-comment">// TODO: 实现业务逻辑</span>\n';
+            code += '        <span class="syntax-keyword">return</span> <span class="syntax-keyword">null</span>;\n';
+            code += '    }';
+
+            return code;
+        }
+
+        /**
+         * 生成 Java 字段代码（完整效果，带语法高亮）
+         * 使用简单的方式：先转义HTML，再简单高亮注解名
+         */
+        function generateJavaFieldCode(fieldName, fieldType, annotations, validation) {
+            annotations = annotations || [];
+            validation = validation || {};
+
+            var code = '';
+
+            // 添加注解
+            annotations.forEach(function(ann) {
+                // 先转义HTML特殊字符，避免注入
+                var escapedAnn = ann
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+
+                // 简单高亮注解名 @开头的部分
+                escapedAnn = escapedAnn.replace(/^(@\w+)/, '<span class="syntax-annotation">$1</span>');
+
+                code += '    ' + escapedAnn + '\n';
+            });
+
+            // 字段
+            var escapedType = fieldType.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            var escapedName = fieldName.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            code += '    <span class="syntax-keyword">private</span> <span class="syntax-type">' + escapedType + '</span> <span class="syntax-field">' + escapedName + '</span>;\n';
+
+            return code;
+        }
+
+        /**
+         * 生成 Java 字段代码（纯文本版本，用于escapeHtml）
+         */
+        function generateJavaFieldCodePlain(fieldName, fieldType, annotations, validation) {
+            annotations = annotations || [];
+            validation = validation || {};
+
+            var code = '';
+
+            // 添加注解
+            annotations.forEach(function(ann) {
+                code += '    ' + ann + '\n';
+            });
+
+            // 字段
+            code += '    private ' + fieldType + ' ' + fieldName + ';\n';
+
+            return code;
+        }
+
+        /**
+         * 转换为驼峰命名
+         */
+        function toCamelCase(str) {
+            if (!str) return 'api';
+            return str.replace(/[-_\/](\w)/g, function(match, c) {
+                return c ? c.toUpperCase() : '';
+            }).replace(/^\w/, function(c) {
+                return c.toLowerCase();
+            });
         }
 
         /**
@@ -1250,51 +1989,129 @@
                     var fieldType = item.fieldType || 'String';
                     var fieldName = item.field;
                     var changes = item.changes || [];
+                    var changeType = item.type || 'modified';
 
-                    // Build annotations that will be added
+                    // Build detailed changes info - 分离before和after
                     var addedAnnotations = [];
+                    var beforeDetails = [];  // 修复前缺失的校验
+                    var afterDetails = [];   // 修复后新增的校验
+
+                    // 先收集所有的变更，按字段分组
                     if (changes.length > 0) {
+                        // 用于收集每个字段的变更
+                        var fieldChangesMap = {};
+                        var yamlFormatChange = false;
+
                         changes.forEach(function(change) {
                             if (change === 'YAML格式变化') {
-                                addedAnnotations.push('校验规则');
+                                yamlFormatChange = true;
+                                addedAnnotations.push('@Valid');
+                                beforeDetails.push('缺失校验规则');
+                                afterDetails.push('新增 @Valid');
                             } else if (typeof change === 'object' && change.before !== undefined) {
-                                // Swagger format changes
-                                if (change.prop === 'required' && change.after === 'true') {
+                                if (change.prop === 'required') {
+                                    beforeDetails.push('缺失必填校验');
+                                    afterDetails.push('新增 @NotNull');
                                     addedAnnotations.push('@NotNull');
                                 } else if (change.prop === 'format' && change.after === 'email') {
+                                    beforeDetails.push('缺失邮箱格式校验');
+                                    afterDetails.push('新增 @Email');
                                     addedAnnotations.push('@Email');
                                 } else if (change.prop === 'pattern') {
-                                    addedAnnotations.push('@Pattern');
+                                    // 检查是否已经有同字段的变更
+                                    var existingIdx = beforeDetails.findIndex(function(d) {
+                                        return d.includes('缺失正则校验');
+                                    });
+                                    if (existingIdx === -1) {
+                                        beforeDetails.push('缺失正则校验');
+                                        afterDetails.push('新增 @Pattern(regexp="' + escapeHtml(change.after || '') + '")');
+                                        addedAnnotations.push('@Pattern(regexp="' + (change.after || '') + '")');
+                                    }
                                 } else if (change.prop === 'minimum') {
-                                    addedAnnotations.push('@Min');
+                                    // 收集minimum，后面合并
+                                    if (!fieldChangesMap['min']) fieldChangesMap['min'] = [];
+                                    fieldChangesMap['min'].push(change.after);
                                 } else if (change.prop === 'maximum') {
-                                    addedAnnotations.push('@Max');
-                                } else if (change.prop === 'minLength' || change.prop === 'maxLength') {
-                                    addedAnnotations.push('@Size');
+                                    if (!fieldChangesMap['max']) fieldChangesMap['max'] = [];
+                                    fieldChangesMap['max'].push(change.after);
+                                } else if (change.prop === 'minLength') {
+                                    if (!fieldChangesMap['sizeMin']) fieldChangesMap['sizeMin'] = [];
+                                    fieldChangesMap['sizeMin'].push(change.after);
+                                } else if (change.prop === 'maxLength') {
+                                    if (!fieldChangesMap['sizeMax']) fieldChangesMap['sizeMax'] = [];
+                                    fieldChangesMap['sizeMax'].push(change.after);
                                 }
                             } else if (typeof change === 'string' && change.startsWith('@')) {
                                 addedAnnotations.push(change);
                             }
                         });
+
+                        // 合并数值范围校验 @Min/@Max
+                        if (fieldChangesMap['min'] || fieldChangesMap['max']) {
+                            var minVals = fieldChangesMap['min'] || [0];
+                            var maxVals = fieldChangesMap['max'] || [];
+                            // 去重
+                            minVals = [...new Set(minVals)];
+                            maxVals = [...new Set(maxVals)];
+
+                            beforeDetails.push('缺失数值范围校验');
+                            var mmAnnots = [];
+                            minVals.forEach(function(m) {
+                                mmAnnots.push('@Min(' + m + ')');
+                            });
+                            maxVals.forEach(function(m) {
+                                mmAnnots.push('@Max(' + m + ')');
+                            });
+                            afterDetails.push('新增 ' + mmAnnots.join(' '));
+                            mmAnnots.forEach(function(a) { addedAnnotations.push(a); });
+                        }
+
+                        // 合并长度校验 @Size
+                        if (fieldChangesMap['sizeMin'] || fieldChangesMap['sizeMax']) {
+                            var sMinVals = fieldChangesMap['sizeMin'] || [];
+                            var sMaxVals = fieldChangesMap['sizeMax'] || [];
+                            sMinVals = [...new Set(sMinVals)];
+                            sMaxVals = [...new Set(sMaxVals)];
+
+                            beforeDetails.push('缺失长度范围校验');
+                            var sizeParts = [];
+                            var hasSizeMin = false;
+                            sMinVals.forEach(function(m) {
+                                if (m > 0) {
+                                    sizeParts.push('min=' + m);
+                                    hasSizeMin = true;
+                                }
+                            });
+                            sMaxVals.forEach(function(m) {
+                                sizeParts.push('max=' + m);
+                            });
+                            var sizeAnnot = '@Size(' + sizeParts.join(', ') + ')';
+                            afterDetails.push('新增 ' + sizeAnnot);
+                            addedAnnotations.push(sizeAnnot);
+                        }
                     }
 
                     // Deduplicate
                     addedAnnotations = [...new Set(addedAnnotations)];
 
-                    // Render - simple and compact
-                    // Before: just the field
+                    // Generate field code for before/after
+                    var beforeCode = generateJavaFieldCode(fieldName, fieldType, [], {});
+                    var afterCode = generateJavaFieldCode(fieldName, fieldType, addedAnnotations, {});
+
+                    // Before: show field without annotations - 显示缺失的校验
                     beforeHtml += '<div class="diff-field-row">';
-                    beforeHtml += '<span class="diff-java-type">' + escapeHtml(fieldType) + '</span> ';
-                    beforeHtml += '<span class="diff-java-name">' + escapeHtml(fieldName) + '</span>;';
+                    beforeHtml += '<pre class="diff-java-code">' + beforeCode + '</pre>';
+                    if (beforeDetails.length > 0) {
+                        beforeHtml += '<div class="diff-validation-details">' + beforeDetails.join('<br>') + '</div>';
+                    }
                     beforeHtml += '</div>';
 
-                    // After: field with annotations added
+                    // After: field with annotations added - 显示新增的校验
                     afterHtml += '<div class="diff-field-row">';
-                    if (addedAnnotations.length > 0) {
-                        afterHtml += '<span class="diff-annotations">' + escapeHtml(addedAnnotations.join(' ')) + '</span> ';
+                    afterHtml += '<pre class="diff-java-code">' + afterCode + '</pre>';
+                    if (afterDetails.length > 0) {
+                        afterHtml += '<div class="diff-validation-details diff-validation-after">' + afterDetails.join('<br>') + '</div>';
                     }
-                    afterHtml += '<span class="diff-java-type">' + escapeHtml(fieldType) + '</span> ';
-                    afterHtml += '<span class="diff-java-name">' + escapeHtml(fieldName) + '</span>;';
                     afterHtml += '</div>';
                 });
 
@@ -1331,64 +2148,93 @@
                     var beforePaths = beforeParsed.paths || {};
                     var afterPaths = afterParsed.paths || {};
 
-                    // Track original paths (before fix) to show the actual change
-                    var originalPathMap = {};
-                    for (var origPath in beforePaths) {
-                        originalPathMap[origPath.replace(/\/+/g, '/')] = origPath;
+                    // Normalize path: ensure it starts with /
+                    function normalizePath(path) {
+                        if (!path) return path;
+                        // Remove duplicate slashes
+                        var normalized = path.replace(/\/+/g, '/');
+                        // Remove /XXX/ prefix (placeholder path)
+                        normalized = normalized.replace(/^\/XXX\//, '/');
+                        if (!normalized.startsWith('/')) {
+                            normalized = '/' + normalized;
+                        }
+                        return normalized;
                     }
 
-                    // Compare each path
+                    // Build normalized map for before paths
+                    var normalizedBeforePaths = {};
+                    for (var origPath in beforePaths) {
+                        var np = normalizePath(origPath);
+                        normalizedBeforePaths[np] = origPath;
+                    }
+
+                    // Compare each path in after
                     for (var path in afterPaths) {
+                        var np = normalizePath(path);
                         var beforePath = beforePaths[path];
                         var afterPath = afterPaths[path];
-
-                        // Check if path was fixed (e.g., //users -> /users)
                         var originalPath = path;
-                        for (var origPath in beforePaths) {
-                            if (origPath.replace(/\/+/g, '/') === path) {
-                                originalPath = origPath;
-                                beforePath = beforePaths[origPath];
-                                break;
-                            }
+
+                        // Check if path was fixed (e.g., //users -> /users or users -> /users)
+                        if (normalizedBeforePaths[np]) {
+                            // Found matching normalized path
+                            originalPath = normalizedBeforePaths[np];
+                            beforePath = beforePaths[originalPath];
                         }
 
                         if (!beforePath && originalPath === path) {
-                            // New API path added
-                            result.apis.push({
-                                path: path,
-                                originalPath: path,
-                                method: Object.keys(afterPath)[0],
-                                type: 'added',
-                                summary: afterPath[Object.keys(afterPath)[0]].summary || '',
-                                changes: []
-                            });
+                            // New API path added - check if it's truly new (not just normalized difference)
+                            if (!normalizedBeforePaths[np]) {
+                                var afterOp = afterPath[Object.keys(afterPath)[0]];
+                                // Only add if there's actual content
+                                if (afterOp.summary || afterOp.operationId || (afterOp.parameters && afterOp.parameters.length > 0)) {
+                                    result.apis.push({
+                                        path: path,
+                                        originalPath: path,
+                                        method: Object.keys(afterPath)[0],
+                                        name: afterOp.operationId || afterOp.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
+                                        summary: afterOp.summary || '',
+                                        operationId: afterOp.operationId || '',
+                                        parameters: afterOp.parameters || [],
+                                        type: 'added',
+                                        changes: [{ prop: 'API', before: '(无)', after: '新增接口' }]
+                                    });
+                                }
+                            }
                         } else if (originalPath !== path) {
-                            // Path was fixed (//users -> /users)
+                            // Path was fixed (//users -> /users or users -> /users)
+                            var afterOpFixed = afterPath[Object.keys(afterPath)[0]];
                             result.apis.push({
                                 path: path,
                                 originalPath: originalPath,
                                 method: Object.keys(afterPath)[0],
+                                name: afterOpFixed.operationId || afterOpFixed.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
+                                summary: afterOpFixed.summary || '',
+                                operationId: afterOpFixed.operationId || '',
+                                parameters: afterOpFixed.parameters || [],
                                 type: 'modified',
-                                summary: afterPath[Object.keys(afterPath)[0]].summary || '',
                                 changes: [{ prop: 'path', before: originalPath, after: path }]
                             });
                         } else {
-                            // Check if methods changed
+                            // Check if methods changed - only add if there are actual changes
+                            var hasActualChange = false;
+                            var pathChanges = [];
+
+                            // Check if path was fixed
+                            if (originalPath !== path) {
+                                hasActualChange = true;
+                                pathChanges.push({ prop: 'path', before: originalPath, after: path });
+                            }
+
                             for (var method in afterPath) {
                                 var beforeMethod = beforePath[method];
                                 var afterMethod = afterPath[method];
 
                                 if (!beforeMethod) {
-                                    result.apis.push({
-                                        path: path,
-                                        originalPath: path,
-                                        method: method,
-                                        type: 'added',
-                                        summary: afterMethod.summary || '',
-                                        changes: []
-                                    });
+                                    // New method added - this is an actual change
+                                    hasActualChange = true;
                                 } else {
-                                    // Check what specific properties changed
+                                    // Check specific property changes
                                     var changes = [];
 
                                     // Check operationId
@@ -1400,37 +2246,70 @@
                                         changes.push({ prop: 'description', before: '(无)', after: afterMethod.description });
                                     }
 
-                                    // Check parameters
+                                    // Check parameters - compare by name
                                     if (afterMethod.parameters && afterMethod.parameters.length > 0) {
-                                        afterMethod.parameters.forEach(function(param, idx) {
-                                            var beforeParam = beforeMethod.parameters ? beforeMethod.parameters[idx] : null;
-                                            if (beforeParam) {
+                                        var beforeParamMap = {};
+                                        if (beforeMethod.parameters) {
+                                            beforeMethod.parameters.forEach(function(p) { beforeParamMap[p.name] = p; });
+                                        }
+                                        afterMethod.parameters.forEach(function(param) {
+                                            var beforeParam = beforeParamMap[param.name];
+                                            if (!beforeParam) {
+                                                changes.push({ prop: '参数 ' + param.name, before: '(无)', after: '新增' });
+                                            } else {
+                                                // 检查description变化
                                                 if (!beforeParam.description && param.description) {
                                                     changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
                                                 }
+                                                // 检查type变化
                                                 if (!beforeParam.type && param.type) {
                                                     changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: param.type });
                                                 }
-                                            } else {
-                                                changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: param.type || 'string' });
+                                                // 检查校验规则变化
+                                                if (!beforeParam.required && param.required === true) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' required', before: '(无)', after: true });
+                                                }
+                                                if (!beforeParam.minLength && param.minLength !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: param.minLength });
+                                                }
+                                                if (!beforeParam.maxLength && param.maxLength !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: param.maxLength });
+                                                }
+                                                if (!beforeParam.minimum && param.minimum !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: param.minimum });
+                                                }
+                                                if (!beforeParam.maximum && param.maximum !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: param.maximum });
+                                                }
+                                                if (!beforeParam.pattern && param.pattern) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: param.pattern });
+                                                }
                                             }
                                         });
                                     }
 
-                                    // Check if operation changed
-                                    var beforeStr = JSON.stringify(beforeMethod);
-                                    var afterStr = JSON.stringify(afterMethod);
-                                    if (beforeStr !== afterStr || changes.length > 0) {
-                                        result.apis.push({
-                                            path: path,
-                                            originalPath: path,
-                                            method: method,
-                                            type: 'modified',
-                                            summary: afterMethod.summary || '',
-                                            changes: changes
-                                        });
+                                    // Only add to changes if there are actual content changes
+                                    if (changes.length > 0) {
+                                        hasActualChange = true;
+                                        pathChanges = pathChanges.concat(changes);
                                     }
                                 }
+                            }
+
+                            // Only add to result if there are actual changes
+                            if (hasActualChange) {
+                                var firstAfterMethod = afterPath[Object.keys(afterPath)[0]];
+                                result.apis.push({
+                                    path: path,
+                                    originalPath: originalPath,
+                                    method: Object.keys(afterPath)[0],
+                                    name: firstAfterMethod.operationId || firstAfterMethod.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
+                                    summary: firstAfterMethod.summary || '',
+                                    operationId: firstAfterMethod.operationId || '',
+                                    parameters: firstAfterMethod.parameters || [],
+                                    type: (originalPath !== path || pathChanges.some(function(c) { return c.prop === 'path'; })) ? 'modified' : 'modified',
+                                    changes: pathChanges
+                                });
                             }
                         }
                     }
@@ -1438,12 +2317,16 @@
                     // Check for deleted paths
                     for (var path in beforePaths) {
                         if (!afterPaths[path]) {
+                            var beforeOp = beforePaths[path][Object.keys(beforePaths[path])[0]];
                             result.apis.push({
                                 path: path,
                                 originalPath: path,
                                 method: Object.keys(beforePaths[path])[0],
+                                name: beforeOp.operationId || beforeOp.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
+                                summary: beforeOp.summary || '',
+                                operationId: beforeOp.operationId || '',
+                                parameters: beforeOp.parameters || [],
                                 type: 'deleted',
-                                summary: '',
                                 changes: []
                             });
                         }
@@ -1672,6 +2555,7 @@
                             name: api.name || 'API ' + (apiIndex + 1),
                             path: api.path || '',
                             method: api.method || '',
+                            annotations: api.annotations || [],
                             type: 'modified'
                         });
                     }
@@ -1833,6 +2717,16 @@
         function closeDiffModal() {
             document.getElementById('diff-modal').classList.remove('active');
             window.pendingFixedContent = null;
+        }
+
+        /**
+         * Show debug info (full YAML content)
+         */
+        function showDebugInfo() {
+            var before = originalYaml || yamlEditor.getValue();
+            var after = window.pendingFixedContent || '';
+            var msg = '=== 修复前 YAML (共 ' + before.length + ' 字符) ===\n\n' + before + '\n\n=== 修复后 YAML (共 ' + after.length + ' 字符) ===\n\n' + after;
+            alert(msg);
         }
 
         /**
@@ -2013,6 +2907,39 @@
             var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        /**
+         * Update config output paths display
+         */
+        function updateConfigOutputPaths() {
+            try {
+                var configContent = configEditor.getValue();
+                if (!configContent || !configContent.trim()) {
+                    document.getElementById('output-path-controller').textContent = '-';
+                    document.getElementById('output-path-request').textContent = '-';
+                    document.getElementById('output-path-response').textContent = '-';
+                    return;
+                }
+
+                var config = jsyaml.load(configContent);
+                if (!config || !config.output) {
+                    document.getElementById('output-path-controller').textContent = '-';
+                    document.getElementById('output-path-request').textContent = '-';
+                    document.getElementById('output-path-response').textContent = '-';
+                    return;
+                }
+
+                var output = config.output;
+                document.getElementById('output-path-controller').textContent = output.controller ? output.controller.path || '-' : '-';
+                document.getElementById('output-path-request').textContent = output.request ? output.request.path || '-' : '-';
+                document.getElementById('output-path-response').textContent = output.response ? output.response.path || '-' : '-';
+            } catch (e) {
+                // Invalid YAML, ignore
+                document.getElementById('output-path-controller').textContent = '-';
+                document.getElementById('output-path-request').textContent = '-';
+                document.getElementById('output-path-response').textContent = '-';
+            }
         }
 
         function setMessage(msg) {
