@@ -29,11 +29,7 @@ class CodeGeneratorTest {
         CodegenConfig config = new CodegenConfig();
         config.setFramework(CodegenConfig.FrameworkType.CXF);
         config.setBasePackage("com.apicgen");
-
-        CodegenConfig.CopyrightConfig copyright = new CodegenConfig.CopyrightConfig();
-        copyright.setCompany("");
-        copyright.setStartYear(2024);
-        config.setCopyright(copyright);
+        config.setCopyright("");
 
         CodegenConfig.OutputConfig output = new CodegenConfig.OutputConfig();
         CodegenConfig.PathConfig controllerPath = new CodegenConfig.PathConfig();

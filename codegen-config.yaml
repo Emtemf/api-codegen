@@ -2,10 +2,9 @@
 
 framework: CXF
 
-# 版权配置（生成代码时添加）
-copyright:
-  company: ""      # 公司名称，为空则不生成版权声明
-  startYear: ""    # 起始年份，为空则不生成
+# 版权声明（生成代码时添加到文件顶部）
+# 例如: Copyright (c) 2024 MyCompany. All rights reserved.
+copyright: ""
 
 # OpenAPI 配置
 openApi:

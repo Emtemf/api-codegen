@@ -53,10 +53,8 @@ java -jar api-codegen-core/target/api-codegen.jar api.yaml
 framework:
   type: cxf
 
-# 版权信息（生成代码时添加）
-copyright:
-  company: ""      # 公司名称，为空则不生成版权声明
-  startYear: ""    # 起始年份，为空则不生成
+# 版权声明（直接塞到文件顶部）
+copyright: "Copyright (c) 2024 MyCompany. All rights reserved."
 
 # 输出路径配置
 output:
@@ -81,8 +79,7 @@ customAnnotations:
 | 配置项 | 说明 |
 |--------|------|
 | `framework.type` | 框架类型，目前仅支持 `cxf` |
-| `copyright.company` | 生成代码的版权公司名，为空则不添加版权声明 |
-| `copyright.startYear` | 版权起始年份，为空则不添加 |
+| `copyright` | 版权声明，直接放到文件顶部，为空则不添加 |
 | `output.controller.path` | 生成的 Controller 类输出路径 |
 | `output.request.path` | 生成的 Request 类输出路径 |
 | `output.response.path` | 生成的 Response 类输出路径 |

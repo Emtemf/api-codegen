@@ -29,7 +29,7 @@ import java.util.Map;
  * Options:
  *   -output, --outputDir <directory>  Output base directory (default: ./generated)
  *   -package, --basePackage <package>  Base package name (default: com.apicgen)
- *   -company <company>                 Copyright company name
+ *   -company <text>                  Copyright声明，直接放到文件顶部
  *   -framework <framework>              Framework type: cxf (default: cxf)
  *   -force                             Force overwrite existing files
  *   -analyze                           Analyze missing validation rules
@@ -155,7 +155,7 @@ public class Main {
         // Create config
         CodegenConfig config = createDefaultConfig();
         config.setBasePackage(basePackage);
-        config.getCopyright().setCompany(company);
+        config.setCopyright(company);
 
         try {
             config.setFramework(CodegenConfig.FrameworkType.valueOf(framework.toUpperCase()));
@@ -285,7 +285,7 @@ public class Main {
             Options:
               -output, --outputDir <directory>  Output base directory (default: ./generated)
               -package, --basePackage <package>  Base package name (default: com.apicgen)
-              -company <company>                 Copyright company name
+              -company <text>                  Copyright声明，直接放到文件顶部
               -framework <framework>              Framework type: cxf (default: cxf)
               -force                             Force overwrite existing files
               -analyze, --analyze                Analyze missing validation rules
@@ -305,11 +305,7 @@ public class Main {
         CodegenConfig config = new CodegenConfig();
         config.setFramework(CodegenConfig.FrameworkType.CXF);
         config.setBasePackage("com.apicgen");
-
-        CodegenConfig.CopyrightConfig copyright = new CodegenConfig.CopyrightConfig();
-        copyright.setCompany("");
-        copyright.setStartYear(2024);
-        config.setCopyright(copyright);
+        config.setCopyright("");
 
         CodegenConfig.OutputConfig output = new CodegenConfig.OutputConfig();
         output.setController(new CodegenConfig.PathConfig());

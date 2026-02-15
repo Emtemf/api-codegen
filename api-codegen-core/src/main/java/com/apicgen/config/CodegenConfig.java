@@ -22,9 +22,10 @@ public class CodegenConfig {
     private String basePackage = "com.apicgen";
 
     /**
-     * 版权配置
+     * 版权声明（直接塞到文件顶部）
+     * 例如: Copyright (c) 2024 MyCompany. All rights reserved.
      */
-    private CopyrightConfig copyright;
+    private String copyright = "";
 
     /**
      * OpenAPI 配置
@@ -52,22 +53,6 @@ public class CodegenConfig {
     public enum FrameworkType {
         CXF,
         SPRING
-    }
-
-    /**
-     * 版权配置
-     */
-    @Data
-    public static class CopyrightConfig {
-        /**
-         * 公司名称（可配置，为空时使用默认值或省略）
-         */
-        private String company = "";
-
-        /**
-         * 开始年份
-         */
-        private Integer startYear;
     }
 
     /**
