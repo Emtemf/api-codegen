@@ -150,7 +150,7 @@ paths:
                 description: 操作是否成功
 
   # ========== 问题1: 路径包含 // ==========
-  //XXX/users/detail:
+  /XXX/users/detail:
     get:
       summary: 用户详情
       # 缺少 operationId - 警告
@@ -168,24 +168,29 @@ paths:
     get:
       summary: 用户资料
       operationId: getUserProfile
+      responses:
+        '200':
+          description: Success
       # 缺少成功响应 - 警告
 
   # ========== 问题3: 多个 // 路径 ==========
-  //api/v1/message:
+  /api/v1/message:
     get:
       summary: 获取消息
       operationId: getMessage
       responses:
         '200':
           description: Success
-  //api/v1/messageStatus:
+
+  /api/v1/messageStatus:
     get:
       summary: 获取消息状态
       operationId: getMessageStatus
       responses:
         '200':
           description: Success
-  //api/v1/messageUnreadTotal:
+
+  /api/v1/messageUnreadTotal:
     get:
       summary: 获取未读总数
       operationId: getUnreadTotal

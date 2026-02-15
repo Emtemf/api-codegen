@@ -412,6 +412,13 @@ public class CxfCodeGenerator implements CodeGenerator {
             }
         }
 
+        // 添加 API 级别的自定义注解（来自接口yaml中的annotations字段）
+        if (api.getAnnotations() != null && !api.getAnnotations().isEmpty()) {
+            for (String annotation : api.getAnnotations()) {
+                sb.append("    ").append(annotation).append("\n");
+            }
+        }
+
         // HTTP 方法注解
         String httpMethod = getHttpMethodAnnotation(api.getMethod());
         sb.append("    @").append(httpMethod).append("\n");

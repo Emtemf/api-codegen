@@ -2,6 +2,8 @@ package com.apicgen.model;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * API 定义
  */
@@ -37,6 +39,11 @@ public class Api {
      * 响应定义
      */
     private ClassDefinition response;
+
+    /**
+     * 自定义注解列表（应用于该API的方法）
+     */
+    private List<String> annotations;
 
     /**
      * HTTP 方法枚举
