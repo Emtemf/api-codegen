@@ -44,32 +44,30 @@ mvn com.apicgen:api-codegen-maven-plugin:generate -DyamlFile=api.yaml
 java -jar api-codegen-core/target/api-codegen.jar api.yaml
 ```
 
-## 配置
+## 配置文件
 
-在 `codegen-config.yaml` 中配置：
+在项目根目录创建 `codegen-config.yaml`：
 
 ```yaml
+# 框架类型: cxf（支持 cxf）
 framework:
   type: cxf
 
+# 版权信息（生成代码时添加）
 copyright:
-  company: ""
-  startYear: 2024
+  company: ""      # 公司名称，为空则不生成版权声明
+  startYear: ""    # 起始年份，为空则不生成
 
+# 输出路径配置
 output:
   controller:
-    path: generated/api/
+    path: generated/api/    # Controller 输出目录
   request:
-    path: src/main/java/req/
+    path: src/main/java/req/  # Request 输出目录
   response:
-    path: src/main/java/rsp/
-```
+    path: src/main/java/rsp/  # Response 输出目录
 
-### 自定义注解
-
-支持为生成的类和方法添加自定义注解：
-
-```yaml
+# 自定义注解（可选）
 customAnnotations:
   classAnnotations:
     - "@Secured"
@@ -78,7 +76,21 @@ customAnnotations:
     - "@Permission(\"default\")"
 ```
 
-生成效果：
+### 配置说明
+
+| 配置项 | 说明 |
+|--------|------|
+| `framework.type` | 框架类型，目前仅支持 `cxf` |
+| `copyright.company` | 生成代码的版权公司名，为空则不添加版权声明 |
+| `copyright.startYear` | 版权起始年份，为空则不添加 |
+| `output.controller.path` | 生成的 Controller 类输出路径 |
+| `output.request.path` | 生成的 Request 类输出路径 |
+| `output.response.path` | 生成的 Response 类输出路径 |
+| `customAnnotations` | 可选，自定义注解配置 |
+
+### 自定义注解示例
+
+支持为生成的类和方法添加自定义注解：
 
 ```java
 @Path("/api")
