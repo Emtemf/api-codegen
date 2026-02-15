@@ -704,69 +704,106 @@ class ApiYamlAnalyzer {
                 }
 
                 // 添加 type（如果没有 schema）
-                if (!param.type && !param.schema) {
+                // 注意：Swagger参数类型可能在 param.type 或 param.schema.type
+                var paramType = param.type || (param.schema && param.schema.type);
+                if (!paramType && !param.schema) {
                     // 根据参数名推断类型
                     const name = param.name.toLowerCase();
                     if (name.includes('id') || name === 'page' || name === 'size' || name === 'count' || name === 'age' || name === 'quantity') {
                         param.type = 'integer';
+                        if (param.schema) param.schema.type = 'integer';
                     } else if (name.includes('price') || name === 'amount' || name === 'total') {
                         param.type = 'number';
+                        if (param.schema) param.schema.type = 'number';
                     } else if (name.includes('flag') || name === 'enabled' || name === 'active' || name === 'status') {
                         param.type = 'boolean';
+                        if (param.schema) param.schema.type = 'boolean';
                     } else {
                         param.type = 'string';
+                        if (param.schema) param.schema.type = 'string';
                     }
                 }
 
                 // 添加 validation 校验规则（根据字段名推断）
                 const fieldName = (param.name || '').toLowerCase();
+                var paramType = param.type || (param.schema && param.schema.type);
 
                 // String类型添加长度校验
-                if (param.type === 'string' && !param.minLength && !param.maxLength && !param.pattern) {
+                if (paramType === 'string' && !param.minLength && !param.maxLength && !param.pattern && !(param.schema && param.schema.minLength) && !(param.schema && param.schema.maxLength) && !(param.schema && param.schema.pattern)) {
                     if (fieldName.includes('email') || fieldName.includes('mail')) {
                         param.pattern = '^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$';
+                        if (param.schema) param.schema.pattern = param.pattern;
                         this.addInfoMessage(`修复参数 ${param.name}: 添加 email 格式校验 (pattern)`);
                     } else if (fieldName.includes('phone') || fieldName.includes('mobile')) {
                         param.pattern = '^(\\+86|86)?1[3-9]\\d{9}$';
+                        if (param.schema) param.schema.pattern = param.pattern;
                         this.addInfoMessage(`修复参数 ${param.name}: 添加手机号格式校验 (pattern)`);
                     } else if (fieldName.includes('url') || fieldName.includes('link')) {
                         param.pattern = '^https?://[\\w\\-]+(\\.[\\w\\-]+)+[/#?]?.*$';
+                        if (param.schema) param.schema.pattern = param.pattern;
                         this.addInfoMessage(`修复参数 ${param.name}: 添加 URL 格式校验 (pattern)`);
                     } else {
                         // 普通String参数添加默认长度校验
                         param.minLength = 1;
                         param.maxLength = 255;
+                        if (param.schema) {
+                            param.schema.minLength = 1;
+                            param.schema.maxLength = 255;
+                        }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加 String 长度校验 (minLength=1, maxLength=255)`);
                     }
                 }
 
                 // Integer/Number类型添加范围校验
-                if ((param.type === 'integer' || param.type === 'number') && !param.minimum && !param.maximum) {
+                if ((paramType === 'integer' || paramType === 'number') && !param.minimum && !param.maximum && !(param.schema && param.schema.minimum) && !(param.schema && param.schema.maximum)) {
                     if (fieldName === 'page' || fieldName === 'pageNum') {
                         // 页码从1开始，添加默认最大值
                         param.minimum = 1;
                         param.maximum = 2147483647;
+                        if (param.schema) {
+                            param.schema.minimum = 1;
+                            param.schema.maximum = 2147483647;
+                        }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加页码范围校验 (min=1, max=2147483647)`);
-                    } else if (fieldName.includes('size') || fieldName.includes('limit') || fieldName.includes('pageSize') || fieldName === 'pageSize') {
+                    } else if (fieldName.includes('size') || fieldName.includes('limit') || fieldName === 'pageSize') {
                         // 每页数量
                         param.minimum = 1;
                         param.maximum = 100;
+                        if (param.schema) {
+                            param.schema.minimum = 1;
+                            param.schema.maximum = 100;
+                        }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加每页数量范围校验 (min=1, max=100)`);
                     } else if (fieldName.includes('age')) {
                         param.minimum = 0;
                         param.maximum = 150;
+                        if (param.schema) {
+                            param.schema.minimum = 0;
+                            param.schema.maximum = 150;
+                        }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加年龄范围校验 (min=0, max=150)`);
                     } else if (fieldName.includes('score') || fieldName.includes('rate')) {
                         param.minimum = 0;
                         param.maximum = 100;
+                        if (param.schema) {
+                            param.schema.minimum = 0;
+                            param.schema.maximum = 100;
+                        }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加评分范围校验 (min=0, max=100)`);
                     } else if (fieldName.includes('price') || fieldName.includes('amount') || fieldName.includes('total')) {
                         param.minimum = 0;
+                        if (param.schema) {
+                            param.schema.minimum = 0;
+                        }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加金额范围校验 (min=0)`);
                     } else if (!fieldName.includes('id')) {
                         // 普通数值参数添加默认范围（排除id），与Maven ValidationFixer一致
                         param.minimum = 0;
                         param.maximum = 2147483647;
+                        if (param.schema) {
+                            param.schema.minimum = 0;
+                            param.schema.maximum = 2147483647;
+                        }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加数值范围校验 (min=0, max=2147483647)`);
                     }
                 }

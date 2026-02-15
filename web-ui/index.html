@@ -1773,22 +1773,28 @@ paths:
 
                 // 添加QueryParam注解和参数
                 queryParams.forEach(function(p) {
-                    var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
-                    // 检查是否有长度限制 minLength/maxLength
+                    // 支持 param.type 或 param.schema.type
+                    var paramType = p.type || (p.schema && p.schema.type);
+                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
+                    // 检查是否有长度限制 minLength/maxLength（支持 param 或 schema）
                     var sizeAnnot = '';
-                    if (p.minLength !== undefined || p.maxLength !== undefined) {
-                        var min = p.minLength !== undefined ? p.minLength : 0;
-                        var max = p.maxLength !== undefined ? p.maxLength : '';
+                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
+                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    if (minLength !== undefined || maxLength !== undefined) {
+                        var min = minLength !== undefined ? minLength : 0;
+                        var max = maxLength !== undefined ? maxLength : '';
                         sizeAnnot = '<span class="syntax-annotation">@Size</span>(';
                         var parts = [];
                         if (min > 0) parts.push('min=' + min);
                         if (max) parts.push('max=' + max);
                         sizeAnnot += parts.join(', ') + ') ';
                     }
-                    // 检查是否有数值范围限制 minimum/maximum
-                    if (p.minimum !== undefined || p.maximum !== undefined) {
-                        var minVal = p.minimum !== undefined ? p.minimum : '';
-                        var maxVal = p.maximum !== undefined ? p.maximum : '';
+                    // 检查是否有数值范围限制 minimum/maximum（支持 param 或 schema）
+                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
+                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    if (minimum !== undefined || maximum !== undefined) {
+                        var minVal = minimum !== undefined ? minimum : '';
+                        var maxVal = maximum !== undefined ? maximum : '';
                         if (minVal !== '' || maxVal !== '') {
                             sizeAnnot += '<span class="syntax-annotation">@Min</span>(' + (minVal !== '' ? minVal : '0') + ') ';
                             if (maxVal !== '') {
@@ -1818,30 +1824,36 @@ paths:
                     methodParams.push('<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
                 });
                 queryParams.forEach(function(p) {
-                    var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
+                    // 支持 param.type 或 param.schema.type
+                    var paramType = p.type || (p.schema && p.schema.type);
+                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
                     // @NotNull注解（必填参数）、@Size注解和@Min/@Max注解放在参数前面
                     var annots = '';
                     // required参数 -> @NotNull
-                    if (p.required === true) {
+                    if (p.required === true || (p.schema && p.schema.required === true)) {
                         annots += '<span class="syntax-annotation">@NotNull</span> ';
                     }
-                    // minLength/maxLength -> @Size
-                    if (p.minLength !== undefined || p.maxLength !== undefined) {
-                        var min = p.minLength !== undefined ? p.minLength : 0;
-                        var max = p.maxLength !== undefined ? p.maxLength : '';
+                    // minLength/maxLength -> @Size（支持 param 或 schema）
+                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
+                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    if (minLength !== undefined || maxLength !== undefined) {
+                        var min = minLength !== undefined ? minLength : 0;
+                        var max = maxLength !== undefined ? maxLength : '';
                         annots += '<span class="syntax-annotation">@Size</span>(';
                         var parts = [];
                         if (min > 0) parts.push('min=' + min);
                         if (max) parts.push('max=' + max);
                         annots += parts.join(', ') + ') ';
                     }
-                    // minimum/maximum -> @Min/@Max
-                    if (p.minimum !== undefined || p.maximum !== undefined) {
-                        if (p.minimum !== undefined) {
-                            annots += '<span class="syntax-annotation">@Min</span>(' + p.minimum + ') ';
+                    // minimum/maximum -> @Min/@Max（支持 param 或 schema）
+                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
+                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    if (minimum !== undefined || maximum !== undefined) {
+                        if (minimum !== undefined) {
+                            annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         }
-                        if (p.maximum !== undefined) {
-                            annots += '<span class="syntax-annotation">@Max</span>(' + p.maximum + ') ';
+                        if (maximum !== undefined) {
+                            annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
                         }
                     }
                     if (annots) {
