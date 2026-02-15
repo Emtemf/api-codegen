@@ -1071,20 +1071,6 @@ paths:
       responses:
         200:
           description: 成功
-  /users/{id}:
-    get:
-      summary: 获取用户详情
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: 成功
-  /users:
     post:
       summary: 创建用户
       operationId: createUser
@@ -1107,9 +1093,22 @@ paths:
                   format: email
       responses:
         201:
-          description: 创建成功`;
+          description: 创建成功
+  /users/{id}:
+    get:
+      summary: 获取用户详情
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: 成功`;
 
-        var defaultConfig = 'framework: CXF\n\ncopyright:\n  company: ""\n  startYear: 2024\n\noutput:\n  controller:\n    path: generated/api/\n  request:\n    path: src/main/java/req/\n  response:\n    path: src/main/java/rsp/';
+        var defaultConfig = 'framework: CXF\n\ncopyright: ""\n\noutput:\n  controller:\n    path: generated/api/\n  request:\n    path: src/main/java/req/\n  response:\n    path: src/main/java/rsp/';
 
         // 存储用户的原始 YAML（用于预览对比）
         var originalYaml = defaultYaml;
@@ -1124,7 +1123,6 @@ info:
   version: "1.0"
 basePath: /api
 paths:
-  # 分页查询接口
   /users:
     get:
       summary: 查询用户列表
@@ -1153,25 +1151,6 @@ paths:
       responses:
         200:
           description: 成功
-
-  # 路径参数
-  /users/{id}:
-    get:
-      summary: 获取用户详情
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          description: 用户ID
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: 成功
-
-  # POST请求体
-  /users:
     post:
       summary: 创建用户
       operationId: createUser
@@ -1240,20 +1219,6 @@ paths:
       responses:
         200:
           description: 成功
-  /users/{id}:
-    get:
-      summary: 获取用户详情
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        200:
-          description: 成功
-  /users:
     post:
       summary: 创建用户
       operationId: createUser
@@ -1277,6 +1242,26 @@ paths:
                 phone:
                   type: string
                 age:
+                  type: integer
+      responses:
+        201:
+          description: 创建成功
+  /users/{id}:
+    get:
+      summary: 获取用户详情
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: 成功`,
+                config: defaultConfig
+            }
+        };
                   type: integer
       responses:
         201:
