@@ -1950,9 +1950,9 @@ paths:
                 pathParams.forEach(function(p) {
                     var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
                     var annots = '';
-                    // required参数 -> @NotNull
+                    // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true) {
-                        annots += '<span class="syntax-annotation">@NotNull</span> ';
+                        annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // 数值类型 -> @Min/@Max
                     var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
@@ -1980,9 +1980,9 @@ paths:
                     var paramType = p.type || (p.schema && p.schema.type);
                     paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
                     var annots = '';
-                    // required参数 -> @NotNull
+                    // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true || (p.schema && p.schema.required === true)) {
-                        annots += '<span class="syntax-annotation">@NotNull</span> ';
+                        annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // minLength/maxLength -> @Size
                     var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
@@ -2009,9 +2009,9 @@ paths:
                     var paramType = p.type || (p.schema && p.schema.type);
                     paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
                     var annots = '';
-                    // required参数 -> @NotNull
+                    // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true || (p.schema && p.schema.required === true)) {
-                        annots += '<span class="syntax-annotation">@NotNull</span> ';
+                        annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // minLength/maxLength -> @Size
                     var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
@@ -2038,9 +2038,9 @@ paths:
                     var paramType = p.type || (p.schema && p.schema.type);
                     paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
                     var annots = '';
-                    // required参数 -> @NotNull
+                    // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true || (p.schema && p.schema.required === true)) {
-                        annots += '<span class="syntax-annotation">@NotNull</span> ';
+                        annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // minLength/maxLength -> @Size
                     var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
@@ -2200,9 +2200,10 @@ paths:
                                 afterDetails.push('新增 @Valid');
                             } else if (typeof change === 'object' && change.before !== undefined) {
                                 if (change.prop === 'required') {
+                                    var requiredAnnot = fieldType === 'String' ? '@NotBlank' : '@NotNull';
                                     beforeDetails.push('缺失必填校验');
-                                    afterDetails.push('新增 @NotNull');
-                                    addedAnnotations.push('@NotNull');
+                                    afterDetails.push('新增 ' + requiredAnnot);
+                                    addedAnnotations.push(requiredAnnot);
                                 } else if (change.prop === 'format' && change.after === 'email') {
                                     beforeDetails.push('缺失邮箱格式校验');
                                     afterDetails.push('新增 @Email');
