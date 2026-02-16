@@ -1131,14 +1131,10 @@ paths:
       parameters:
         - name: page
           in: query
-          description: 页码
-          required: false
           schema:
             type: integer
         - name: pageSize
           in: query
-          description: 每页数量
-          required: false
           schema:
             type: integer
         - name: keyword
@@ -1147,12 +1143,8 @@ paths:
           required: false
           schema:
             type: string
-        - name: orderBy
+        - name: limit
           in: query
-          description: 排序字段
-          required: false
-          schema:
-            type: string
       responses:
         200:
           description: 成功
@@ -1292,14 +1284,10 @@ paths:
       parameters:
         - name: page
           in: query
-          description: 页码
-          required: false
           schema:
             type: integer
         - name: pageSize
           in: query
-          description: 每页数量
-          required: false
           schema:
             type: integer
         - name: keyword
@@ -1308,12 +1296,8 @@ paths:
           required: false
           schema:
             type: string
-        - name: orderBy
+        - name: limit
           in: query
-          description: 排序字段
-          required: false
-          schema:
-            type: string
       responses:
         200:
           description: 成功
