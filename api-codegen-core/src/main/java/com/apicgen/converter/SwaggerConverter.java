@@ -132,6 +132,40 @@ public class SwaggerConverter {
                 }
                 if (param.has("schema") && param.get("schema").has("type")) {
                     field.setType(convertJsonType(param.get("schema").get("type").asText()));
+                    // 从 schema 提取校验规则
+                    JsonNode schema = param.get("schema");
+                    ValidationConfig validation = new ValidationConfig();
+
+                    // 数值类型校验
+                    if (schema.has("minimum")) {
+                        validation.setMin(schema.get("minimum").asDouble());
+                    }
+                    if (schema.has("maximum")) {
+                        validation.setMax(schema.get("maximum").asDouble());
+                    }
+                    // 字符串类型校验
+                    if (schema.has("minLength")) {
+                        validation.setMinLength(schema.get("minLength").asInt());
+                    }
+                    if (schema.has("maxLength")) {
+                        validation.setMaxLength(schema.get("maxLength").asInt());
+                    }
+                    // 正则校验
+                    if (schema.has("pattern")) {
+                        validation.setPattern(schema.get("pattern").asText());
+                    }
+                    // 邮箱格式
+                    if (schema.has("format") && "email".equals(schema.get("format").asText())) {
+                        validation.setEmail(true);
+                    }
+
+                    // 如果有校验规则，设置到字段
+                    if (validation.getMin() != null || validation.getMax() != null
+                            || validation.getMinLength() != null || validation.getMaxLength() != null
+                            || (validation.getPattern() != null && !validation.getPattern().isEmpty())
+                            || Boolean.TRUE.equals(validation.getEmail())) {
+                        field.setValidation(validation);
+                    }
                 } else {
                     field.setType("String");
                 }
