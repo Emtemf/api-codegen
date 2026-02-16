@@ -42,6 +42,14 @@ Thumbs.db
 *.backup
 
 # ===========================================
+# Node.js
+# ===========================================
+node_modules/
+package.json
+package-lock.json
+screenshot.js
+
+# ===========================================
 # Local tools and private docs
 # ===========================================
 web-ui/*

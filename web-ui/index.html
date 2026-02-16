@@ -1127,6 +1127,7 @@ paths:
     get:
       summary: 查询用户列表
       operationId: queryUserList
+      description: 支持分页查询，可按关键词搜索
       parameters:
         - name: page
           in: query
@@ -1134,18 +1135,62 @@ paths:
           required: false
           schema:
             type: integer
-            default: 1
         - name: pageSize
           in: query
           description: 每页数量
           required: false
           schema:
             type: integer
-            default: 10
         - name: keyword
           in: query
           description: 搜索关键词
           required: false
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          description: 排序字段
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 成功
+  /users/{id}:
+    get:
+      summary: 根据ID获取用户
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          description: 用户ID
+          required: true
+          schema:
+            type: integer
+        - name: X-Token
+          in: header
+          description: 认证令牌
+          required: true
+          schema:
+            type: string
+        - name: JSESSIONID
+          in: cookie
+          description: 会话ID
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 成功
+  /users/{userCode}:
+    get:
+      summary: 根据编码获取用户
+      operationId: getUserByCode
+      parameters:
+        - name: userCode
+          in: path
+          description: 用户编码
+          required: true
           schema:
             type: string
       responses:
@@ -1163,6 +1208,7 @@ paths:
               required:
                 - username
                 - email
+                - phone
               properties:
                 username:
                   type: string
@@ -1182,6 +1228,48 @@ paths:
                 score:
                   type: number
                   description: 评分
+                price:
+                  type: number
+                  description: 价格
+                balance:
+                  type: number
+                  description: 账户余额
+                tags:
+                  type: array
+                  description: 标签列表
+                  items:
+                    type: string
+                birthday:
+                  type: string
+                  format: date
+                  description: 生日
+                enabled:
+                  type: boolean
+                  description: 是否启用
+      responses:
+        201:
+          description: 创建成功
+  /users/batch:
+    post:
+      summary: 批量创建用户
+      operationId: batchCreateUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                users:
+                  type: array
+                  description: 用户列表
+                  items:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      email:
+                        type: string
       responses:
         201:
           description: 创建成功`,
@@ -1200,20 +1288,70 @@ paths:
     get:
       summary: 查询用户列表
       operationId: queryUserList
+      description: 支持分页查询，可按关键词搜索
       parameters:
         - name: page
           in: query
           description: 页码
+          required: false
           schema:
             type: integer
         - name: pageSize
           in: query
           description: 每页数量
+          required: false
           schema:
             type: integer
         - name: keyword
           in: query
           description: 搜索关键词
+          required: false
+          schema:
+            type: string
+        - name: orderBy
+          in: query
+          description: 排序字段
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 成功
+  /users/{id}:
+    get:
+      summary: 根据ID获取用户
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          description: 用户ID
+          required: true
+          schema:
+            type: integer
+        - name: X-Token
+          in: header
+          description: 认证令牌
+          required: true
+          schema:
+            type: string
+        - name: JSESSIONID
+          in: cookie
+          description: 会话ID
+          required: false
+          schema:
+            type: string
+      responses:
+        200:
+          description: 成功
+  /users/{userCode}:
+    get:
+      summary: 根据编码获取用户
+      operationId: getUserByCode
+      parameters:
+        - name: userCode
+          in: path
+          description: 用户编码
+          required: true
           schema:
             type: string
       responses:
@@ -1231,34 +1369,71 @@ paths:
               required:
                 - username
                 - email
+                - phone
               properties:
                 username:
                   type: string
+                  description: 用户名
                   minLength: 4
                   maxLength: 20
                 email:
                   type: string
                   format: email
+                  description: 邮箱
                 phone:
                   type: string
+                  description: 手机号
                 age:
                   type: integer
+                  description: 年龄
+                score:
+                  type: number
+                  description: 评分
+                price:
+                  type: number
+                  description: 价格
+                balance:
+                  type: number
+                  description: 账户余额
+                tags:
+                  type: array
+                  description: 标签列表
+                  items:
+                    type: string
+                birthday:
+                  type: string
+                  format: date
+                  description: 生日
+                enabled:
+                  type: boolean
+                  description: 是否启用
       responses:
         201:
           description: 创建成功
-  /users/{id}:
-    get:
-      summary: 获取用户详情
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+  /users/batch:
+    post:
+      summary: 批量创建用户
+      operationId: batchCreateUsers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                users:
+                  type: array
+                  description: 用户列表
+                  items:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      email:
+                        type: string
       responses:
-        200:
-          description: 成功`,
+        201:
+          description: 创建成功`,
                 config: defaultConfig
             }
         };
