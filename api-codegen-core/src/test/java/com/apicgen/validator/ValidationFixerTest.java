@@ -241,28 +241,28 @@ class ValidationFixerTest {
         }
 
         /**
-         * 测试场景：Double 字段添加 min 和 max
-         * 预期结果：修复后的 YAML 包含范围校验
-         * 实际结果：fixedYaml 包含正确的Double范围
+         * 测试场景：page 字段添加 min=1, max=2147483647
+         * 预期结果：修复后的 YAML 包含页码范围校验
+         * 实际结果：fixedYaml 包含 min: 1 和 max: 2147483647
          */
         @Test
-        @DisplayName("should_add_range_for_double")
-        void shouldAddRangeForDouble() throws IOException {
+        @DisplayName("should_add_range_for_page_field")
+        void shouldAddRangeForPageField() throws IOException {
             // Given
             String yamlContent = """
                 apis:
-                  - name: createUser
+                  - name: queryUsers
                     path: /api/users
-                    method: POST
+                    method: GET
                     request:
-                      className: CreateUserReq
+                      className: QueryUsersReq
                       fields:
-                        - name: balance
-                          type: Double
+                        - name: page
+                          type: Integer
                           required: false
-                          description: 余额
+                          description: 页码
                     response:
-                      className: CreateUserRsp
+                      className: QueryUsersRsp
                       fields:
                         - name: success
                           type: Boolean
@@ -276,8 +276,170 @@ class ValidationFixerTest {
 
             // Then
             assertNotNull(fixedYaml);
-            assertTrue(fixedYaml.contains("min:"), "应添加min");
-            assertTrue(fixedYaml.contains("max:"), "应添加max");
+            assertTrue(fixedYaml.contains("min: 1"), "页码字段应添加min: 1");
+            // Double类型序列化为科学计数法，检查是否包含 2147483647 或 2.147483647E9
+            assertTrue(fixedYaml.contains("2147483647") || fixedYaml.contains("2.147483647E9"), "页码字段应添加max");
+        }
+
+        /**
+         * 测试场景：pageNum 字段添加 min=1, max=2147483647
+         * 预期结果：修复后的 YAML 包含页码范围校验
+         * 实际结果：fixedYaml 包含 min: 1 和 max: 2147483647
+         */
+        @Test
+        @DisplayName("should_add_range_for_pageNum_field")
+        void shouldAddRangeForPageNumField() throws IOException {
+            // Given
+            String yamlContent = """
+                apis:
+                  - name: queryUsers
+                    path: /api/users
+                    method: GET
+                    request:
+                      className: QueryUsersReq
+                      fields:
+                        - name: pageNum
+                          type: Integer
+                          required: false
+                          description: 页码
+                    response:
+                      className: QueryUsersRsp
+                      fields:
+                        - name: success
+                          type: Boolean
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            // When
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            // Then
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("min: 1"), "页码字段应添加min: 1");
+            // Double类型序列化为科学计数法，检查是否包含 2147483647 或 2.147483647E9
+            assertTrue(fixedYaml.contains("2147483647") || fixedYaml.contains("2.147483647E9"), "页码字段应添加max");
+        }
+
+        /**
+         * 测试场景：pageSize 字段添加 min=1, max=100
+         * 预期结果：修复后的 YAML 包含每页数量范围校验
+         * 实际结果：fixedYaml 包含 min: 1 和 max: 100
+         */
+        @Test
+        @DisplayName("should_add_range_for_pageSize_field")
+        void shouldAddRangeForPageSizeField() throws IOException {
+            // Given
+            String yamlContent = """
+                apis:
+                  - name: queryUsers
+                    path: /api/users
+                    method: GET
+                    request:
+                      className: QueryUsersReq
+                      fields:
+                        - name: pageSize
+                          type: Integer
+                          required: false
+                          description: 每页数量
+                    response:
+                      className: QueryUsersRsp
+                      fields:
+                        - name: success
+                          type: Boolean
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            // When
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            // Then
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("min: 1"), "每页数量字段应添加min: 1");
+            assertTrue(fixedYaml.contains("max: 100"), "每页数量字段应添加max: 100");
+        }
+
+        /**
+         * 测试场景：limit 字段添加 min=1, max=100
+         * 预期结果：修复后的 YAML 包含限制范围校验
+         * 实际结果：fixedYaml 包含 min: 1 和 max: 100
+         */
+        @Test
+        @DisplayName("should_add_range_for_limit_field")
+        void shouldAddRangeForLimitField() throws IOException {
+            // Given
+            String yamlContent = """
+                apis:
+                  - name: queryUsers
+                    path: /api/users
+                    method: GET
+                    request:
+                      className: QueryUsersReq
+                      fields:
+                        - name: limit
+                          type: Integer
+                          required: false
+                          description: 限制数量
+                    response:
+                      className: QueryUsersRsp
+                      fields:
+                        - name: success
+                          type: Boolean
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            // When
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            // Then
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("min: 1"), "限制字段应添加min: 1");
+            assertTrue(fixedYaml.contains("max: 100"), "限制字段应添加max: 100");
+        }
+
+        /**
+         * 测试场景：size 字段添加 min=1, max=100
+         * 预期结果：修复后的 YAML 包含大小范围校验
+         * 实际结果：fixedYaml 包含 min: 1 和 max: 100
+         */
+        @Test
+        @DisplayName("should_add_range_for_size_field")
+        void shouldAddRangeForSizeField() throws IOException {
+            // Given
+            String yamlContent = """
+                apis:
+                  - name: queryUsers
+                    path: /api/users
+                    method: GET
+                    request:
+                      className: QueryUsersReq
+                      fields:
+                        - name: size
+                          type: Integer
+                          required: false
+                          description: 大小
+                    response:
+                      className: QueryUsersRsp
+                      fields:
+                        - name: success
+                          type: Boolean
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            // When
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            // Then
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("min: 1"), "大小字段应添加min: 1");
+            assertTrue(fixedYaml.contains("max: 100"), "大小字段应添加max: 100");
         }
 
         /**
@@ -318,6 +480,86 @@ class ValidationFixerTest {
             assertNotNull(fixedYaml);
             assertTrue(fixedYaml.contains("min:"), "应添加min");
             assertTrue(fixedYaml.contains("max:"), "应添加max");
+        }
+
+        /**
+         * 测试场景：路径参数（Integer类型）添加 min=1
+         * 预期结果：修复后的 YAML 包含路径参数校验
+         * 实际结果：fixedYaml 包含 min: 1
+         */
+        @Test
+        @DisplayName("should_add_min_for_path_param_integer")
+        void shouldAddMinForPathParamInteger() throws IOException {
+            // Given
+            String yamlContent = """
+                apis:
+                  - name: getUser
+                    path: /api/users/{id}
+                    method: GET
+                    request:
+                      className: GetUserReq
+                      fields:
+                        - name: id
+                          type: Integer
+                          in: path
+                          required: true
+                          description: 用户ID
+                    response:
+                      className: GetUserRsp
+                      fields:
+                        - name: userId
+                          type: Long
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            // When
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            // Then
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("min: 1"), "路径参数应添加min: 1");
+        }
+
+        /**
+         * 测试场景：路径参数（String类型）添加 minLength=1
+         * 预期结果：修复后的 YAML 包含路径参数校验
+         * 实际结果：fixedYaml 包含 minLength: 1
+         */
+        @Test
+        @DisplayName("should_add_minLength_for_path_param_string")
+        void shouldAddMinLengthForPathParamString() throws IOException {
+            // Given
+            String yamlContent = """
+                apis:
+                  - name: getUserByCode
+                    path: /api/users/{userCode}
+                    method: GET
+                    request:
+                      className: GetUserByCodeReq
+                      fields:
+                        - name: userCode
+                          type: String
+                          in: path
+                          required: true
+                          description: 用户编码
+                    response:
+                      className: GetUserByCodeRsp
+                      fields:
+                        - name: userId
+                          type: Long
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            // When
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            // Then
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("minLength: 1"), "路径参数应添加minLength: 1");
         }
     }
 

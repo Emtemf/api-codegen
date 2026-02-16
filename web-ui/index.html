@@ -1634,10 +1634,12 @@ paths:
                 var apiName = api.name || api.summary || api.operationId || fixedPath.replace(/\//g, '').replace(/\{|\}/g, '') || 'api';
                 var annotations = api.annotations || [];
                 var params = api.parameters || [];
+                var originalParams = api.originalParameters || api.parameters || [];
 
                 // 生成完整的 Java 方法代码（带语法高亮）
+                // 修复后使用修复后的参数（带校验注解），修复前使用原始参数（不带校验注解）
                 var javaCode = generateJavaControllerCode(fixedPath, method, apiName, annotations, api.description, params);
-                var originalJavaCode = generateJavaControllerCode(originalPath, method, apiName, annotations, api.description, params);
+                var originalJavaCode = generateJavaControllerCode(originalPath, method, apiName, annotations, api.description, originalParams);
 
                 if (api.type === 'added') {
                     // 新增的接口 - 只在右边显示
@@ -1751,6 +1753,8 @@ paths:
             var hasRequestBody = false;
             var pathParams = [];
             var queryParams = [];
+            var headerParams = [];
+            var cookieParams = [];
 
             if (params && params.length > 0) {
                 params.forEach(function(param) {
@@ -1758,6 +1762,10 @@ paths:
                         pathParams.push(param);  // 保存完整对象
                     } else if (param.in === 'query') {
                         queryParams.push(param);  // 保存完整对象
+                    } else if (param.in === 'header') {
+                        headerParams.push(param);  // 保存完整对象
+                    } else if (param.in === 'cookie') {
+                        cookieParams.push(param);  // 保存完整对象
                     } else if (param.in === 'body' || param.name === 'body') {
                         hasRequestBody = true;
                     }
@@ -1766,6 +1774,35 @@ paths:
                 // 添加PathParam注解和参数
                 pathParams.forEach(function(p) {
                     var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
+                    // 检查是否有数值范围限制 minimum/maximum（支持 param 或 schema）
+                    var rangeAnnot = '';
+                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
+                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    if (minimum !== undefined || maximum !== undefined) {
+                        var minVal = minimum !== undefined ? minimum : '';
+                        var maxVal = maximum !== undefined ? maximum : '';
+                        if (minVal !== '' || maxVal !== '') {
+                            rangeAnnot += '<span class="syntax-annotation">@Min</span>(' + (minVal !== '' ? minVal : '0') + ') ';
+                            if (maxVal !== '') {
+                                rangeAnnot += '<span class="syntax-annotation">@Max</span>(' + maxVal + ') ';
+                            }
+                        }
+                    }
+                    // 检查是否有长度限制
+                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
+                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    if (minLength !== undefined || maxLength !== undefined) {
+                        var min = minLength !== undefined ? minLength : 0;
+                        var max = maxLength !== undefined ? maxLength : '';
+                        rangeAnnot += '<span class="syntax-annotation">@Size</span>(';
+                        var parts = [];
+                        if (min > 0) parts.push('min=' + min);
+                        if (max) parts.push('max=' + max);
+                        rangeAnnot += parts.join(', ') + ') ';
+                    }
+                    if (rangeAnnot) {
+                        code += '    ' + rangeAnnot + '\n';
+                    }
                     var paramAnnot = '    <span class="syntax-annotation">@PathParam("' + p.name + '")</span>\n';
                     var paramDecl = '<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>';
                     code += paramAnnot;
@@ -1804,6 +1841,80 @@ paths:
                     }
                     // @QueryParam只生成注解
                     var paramAnnot = '    <span class="syntax-annotation">@QueryParam("' + p.name + '")</span>\n';
+                    code += paramAnnot;
+                });
+
+                // 添加HeaderParam注解和参数
+                headerParams.forEach(function(p) {
+                    var paramType = p.type || (p.schema && p.schema.type);
+                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
+                    // 检查是否有长度限制
+                    var sizeAnnot = '';
+                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
+                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    if (minLength !== undefined || maxLength !== undefined) {
+                        var min = minLength !== undefined ? minLength : 0;
+                        var max = maxLength !== undefined ? maxLength : '';
+                        sizeAnnot = '<span class="syntax-annotation">@Size</span>(';
+                        var parts = [];
+                        if (min > 0) parts.push('min=' + min);
+                        if (max) parts.push('max=' + max);
+                        sizeAnnot += parts.join(', ') + ') ';
+                    }
+                    // 检查数值范围
+                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
+                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    if (minimum !== undefined || maximum !== undefined) {
+                        var minVal = minimum !== undefined ? minimum : '';
+                        var maxVal = maximum !== undefined ? maximum : '';
+                        if (minVal !== '' || maxVal !== '') {
+                            sizeAnnot += '<span class="syntax-annotation">@Min</span>(' + (minVal !== '' ? minVal : '0') + ') ';
+                            if (maxVal !== '') {
+                                sizeAnnot += '<span class="syntax-annotation">@Max</span>(' + maxVal + ') ';
+                            }
+                        }
+                    }
+                    if (sizeAnnot) {
+                        code += '    ' + sizeAnnot + '\n';
+                    }
+                    var paramAnnot = '    <span class="syntax-annotation">@HeaderParam("' + p.name + '")</span>\n';
+                    code += paramAnnot;
+                });
+
+                // 添加CookieParam注解和参数
+                cookieParams.forEach(function(p) {
+                    var paramType = p.type || (p.schema && p.schema.type);
+                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
+                    // 检查是否有长度限制
+                    var sizeAnnot = '';
+                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
+                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    if (minLength !== undefined || maxLength !== undefined) {
+                        var min = minLength !== undefined ? minLength : 0;
+                        var max = maxLength !== undefined ? maxLength : '';
+                        sizeAnnot = '<span class="syntax-annotation">@Size</span>(';
+                        var parts = [];
+                        if (min > 0) parts.push('min=' + min);
+                        if (max) parts.push('max=' + max);
+                        sizeAnnot += parts.join(', ') + ') ';
+                    }
+                    // 检查数值范围
+                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
+                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    if (minimum !== undefined || maximum !== undefined) {
+                        var minVal = minimum !== undefined ? minimum : '';
+                        var maxVal = maximum !== undefined ? maximum : '';
+                        if (minVal !== '' || maxVal !== '') {
+                            sizeAnnot += '<span class="syntax-annotation">@Min</span>(' + (minVal !== '' ? minVal : '0') + ') ';
+                            if (maxVal !== '') {
+                                sizeAnnot += '<span class="syntax-annotation">@Max</span>(' + maxVal + ') ';
+                            }
+                        }
+                    }
+                    if (sizeAnnot) {
+                        code += '    ' + sizeAnnot + '\n';
+                    }
+                    var paramAnnot = '    <span class="syntax-annotation">@CookieParam("' + p.name + '")</span>\n';
                     code += paramAnnot;
                 });
             }
@@ -2194,6 +2305,7 @@ paths:
                         } else if (originalPath !== path) {
                             // Path was fixed (//users -> /users or users -> /users)
                             var afterOpFixed = afterPath[Object.keys(afterPath)[0]];
+                            var beforeOpFixed = beforePath[originalPath] || {};
                             result.apis.push({
                                 path: path,
                                 originalPath: originalPath,
@@ -2202,6 +2314,7 @@ paths:
                                 summary: afterOpFixed.summary || '',
                                 operationId: afterOpFixed.operationId || '',
                                 parameters: afterOpFixed.parameters || [],
+                                originalParameters: beforeOpFixed.parameters || [],
                                 type: 'modified',
                                 changes: [{ prop: 'path', before: originalPath, after: path }]
                             });
@@ -2289,6 +2402,7 @@ paths:
                             // Only add to result if there are actual changes
                             if (hasActualChange) {
                                 var firstAfterMethod = afterPath[Object.keys(afterPath)[0]];
+                                var firstBeforeMethod = beforePath[Object.keys(beforePath)[0]] || {};
                                 result.apis.push({
                                     path: path,
                                     originalPath: originalPath,
@@ -2297,6 +2411,7 @@ paths:
                                     summary: firstAfterMethod.summary || '',
                                     operationId: firstAfterMethod.operationId || '',
                                     parameters: firstAfterMethod.parameters || [],
+                                    originalParameters: firstBeforeMethod.parameters || [],
                                     type: (originalPath !== path || pathChanges.some(function(c) { return c.prop === 'path'; })) ? 'modified' : 'modified',
                                     changes: pathChanges
                                 });

@@ -688,6 +688,112 @@ test('边界情况', 'YAML 解析错误应捕获',
 );
 
 // ============================================
+// 路径参数校验测试
+// ============================================
+
+// 测试路径参数（数值类型）自动添加最小值校验
+test('自动修复', 'Swagger 路径参数（Integer）→ 添加 minimum=1',
+`
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users/{id}:
+    get:
+      summary: Get user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+      responses:
+        200:
+          description: Success
+`,
+{ fixedValue: (parsed) => {
+    const param = parsed.paths['/users/{id}'].get.parameters[0];
+    return param.minimum === 1;
+}}
+);
+
+// 测试路径参数（字符串类型）自动添加最小长度校验
+test('自动修复', 'Swagger 路径参数（String）→ 添加 minLength=1',
+`
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users/{userCode}:
+    get:
+      summary: Get user by code
+      parameters:
+        - name: userCode
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: Success
+`,
+{ fixedValue: (parsed) => {
+    const param = parsed.paths['/users/{userCode}'].get.parameters[0];
+    return param.minLength === 1;
+}}
+);
+
+// 测试查询参数（page）自动添加范围校验
+test('自动修复', 'Swagger 查询参数（page）→ 添加 min=1, max=2147483647',
+`
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      summary: Query users
+      parameters:
+        - name: page
+          in: query
+          type: integer
+      responses:
+        200:
+          description: Success
+`,
+{ fixedValue: (parsed) => {
+    const param = parsed.paths['/users'].get.parameters[0];
+    return param.minimum === 1 && param.maximum === 2147483647;
+}}
+);
+
+// 测试查询参数（pageSize）自动添加范围校验
+test('自动修复', 'Swagger 查询参数（pageSize）→ 添加 min=1, max=100',
+`
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      summary: Query users
+      parameters:
+        - name: pageSize
+          in: query
+          type: integer
+      responses:
+        200:
+          description: Success
+`,
+{ fixedValue: (parsed) => {
+    const param = parsed.paths['/users'].get.parameters[0];
+    return param.minimum === 1 && param.maximum === 100;
+}}
+);
+
+// ============================================
 // 测试报告
 // ============================================
 console.log('\n' + '='.repeat(70));

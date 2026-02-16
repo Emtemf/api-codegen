@@ -31,6 +31,20 @@ npx serve -l 8080
 
 或直接用浏览器打开 `web-ui/index.html`
 
+### Web UI 界面预览
+
+**Swagger 2.0 示例**
+![Swagger Demo](docs/images/01-swagger-demo.png)
+
+**OpenAPI 3.0 示例**
+![OpenAPI Demo](docs/images/02-openapi-demo.png)
+
+**路径错误自动修复**
+![Path Error](docs/images/03-path-error-analysis.png)
+
+**自动修复预览对比**
+![Auto-fix Preview](docs/images/04-autofix-preview.png)
+
 ### Maven 插件
 
 ```bash
@@ -129,6 +143,10 @@ java -jar api-codegen.jar <yaml文件> [选项]
 | 邮箱字段 | email: true |
 | 电话字段 | pattern: ^(\\+86\|86)?1[3-9]\\d{9}$ |
 | required 参数 | @NotNull |
+| page/pageNum | min: 1, max: 2147483647 |
+| pageSize/limit/size | min: 1, max: 100 |
+| 路径参数（数值） | min: 1 |
+| 路径参数（字符串） | minLength: 1 |
 
 ## 示例文件
 

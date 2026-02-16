@@ -724,6 +724,26 @@ class ApiYamlAnalyzer {
                     }
                 }
 
+                // 路径参数添加默认校验规则
+                if (param.in === 'path') {
+                    var pathParamType = param.type || (param.schema && param.schema.type);
+                    if (pathParamType === 'integer' || pathParamType === 'number') {
+                        // 路径参数是数值类型，添加范围校验
+                        if (!param.minimum && !(param.schema && param.schema.minimum)) {
+                            param.minimum = 1;
+                            if (param.schema) param.schema.minimum = 1;
+                            this.addInfoMessage(`修复路径参数 ${param.name}: 添加最小值校验 (minimum=1)`);
+                        }
+                    } else if (pathParamType === 'string') {
+                        // 路径参数是字符串类型，添加长度校验（默认非空）
+                        if (!param.minLength && !(param.schema && param.schema.minLength)) {
+                            param.minLength = 1;
+                            if (param.schema) param.schema.minLength = 1;
+                            this.addInfoMessage(`修复路径参数 ${param.name}: 添加最小长度校验 (minLength=1)`);
+                        }
+                    }
+                }
+
                 // 添加 validation 校验规则（根据字段名推断）
                 const fieldName = (param.name || '').toLowerCase();
                 var paramType = param.type || (param.schema && param.schema.type);

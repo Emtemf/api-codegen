@@ -175,19 +175,45 @@ public class ValidationAnalyzer {
         } else if (field.isPrimitiveType()) {
             // 基本类型（不包括 List）
             String cleanType = getCleanType(fieldType);
-            switch (cleanType) {
-                case "String":
-                    analyzeStringField(apiName, location, className, fieldName, fieldType, validation, items);
-                    break;
-                case "Integer":
-                case "Long":
-                case "Double":
-                    analyzeNumericField(apiName, location, className, fieldName, fieldType, validation, items);
-                    break;
-                case "LocalDate":
-                case "LocalDateTime":
-                    analyzeDateField(apiName, location, className, fieldName, fieldType, validation, items);
-                    break;
+
+            // 检查是否是路径参数
+            if (field.isPathParam()) {
+                if ("Integer".equals(cleanType) || "Long".equals(cleanType) || "Double".equals(cleanType)) {
+                    // 路径参数是数值类型
+                    if (validation == null || validation.getMin() == null) {
+                        items.add(new AnalysisItem(
+                                apiName, location, className, fieldName, fieldType,
+                                "路径参数缺少最小值校验",
+                                "建议添加 validation.min=1",
+                                AnalysisItem.Severity.WARNING
+                        ));
+                    }
+                } else if ("String".equals(cleanType)) {
+                    // 路径参数是字符串类型
+                    if (validation == null || validation.getMinLength() == null) {
+                        items.add(new AnalysisItem(
+                                apiName, location, className, fieldName, fieldType,
+                                "路径参数缺少最小长度校验",
+                                "建议添加 validation.minLength=1",
+                                AnalysisItem.Severity.WARNING
+                        ));
+                    }
+                }
+            } else {
+                switch (cleanType) {
+                    case "String":
+                        analyzeStringField(apiName, location, className, fieldName, fieldType, validation, items);
+                        break;
+                    case "Integer":
+                    case "Long":
+                    case "Double":
+                        analyzeNumericField(apiName, location, className, fieldName, fieldType, validation, items);
+                        break;
+                    case "LocalDate":
+                    case "LocalDateTime":
+                        analyzeDateField(apiName, location, className, fieldName, fieldType, validation, items);
+                        break;
+                }
             }
         }
 
@@ -305,6 +331,18 @@ public class ValidationAnalyzer {
     private void analyzeNumericField(String apiName, String location, String className,
                                     String fieldName, String fieldType,
                                     ValidationConfig validation, List<AnalysisItem> items) {
+        // 特殊规则：page/pageNum 字段
+        if ("page".equalsIgnoreCase(fieldName) || "pageNum".equalsIgnoreCase(fieldName)) {
+            analyzePageField(apiName, location, className, fieldName, fieldType, validation, items);
+            return;
+        }
+
+        // 特殊规则：pageSize/limit/size 字段
+        if ("pageSize".equalsIgnoreCase(fieldName) || fieldName.toLowerCase().contains("size") || fieldName.toLowerCase().contains("limit")) {
+            analyzePageSizeField(apiName, location, className, fieldName, fieldType, validation, items);
+            return;
+        }
+
         if (validation == null) {
             // 没有校验配置
             items.add(new AnalysisItem(
@@ -357,6 +395,66 @@ public class ValidationAnalyzer {
                     apiName, location, className, fieldName, fieldType,
                     "数值字段 min 建议 >= 0",
                     "对于非负数，validation.min 建议设置为 0",
+                    AnalysisItem.Severity.INFO
+            ));
+        }
+    }
+
+    /**
+     * 分析页码字段（page/pageNum）
+     */
+    private void analyzePageField(String apiName, String location, String className,
+                                 String fieldName, String fieldType,
+                                 ValidationConfig validation, List<AnalysisItem> items) {
+        if (validation == null || validation.getMin() == null || validation.getMax() == null) {
+            items.add(new AnalysisItem(
+                    apiName, location, className, fieldName, fieldType,
+                    "页码字段缺少范围校验",
+                    "建议添加 validation.min=1 和 validation.max=2147483647",
+                    AnalysisItem.Severity.WARNING
+            ));
+        } else if (validation.getMin() == null) {
+            items.add(new AnalysisItem(
+                    apiName, location, className, fieldName, fieldType,
+                    "页码字段缺少 min 校验",
+                    "建议添加 validation.min=1",
+                    AnalysisItem.Severity.INFO
+            ));
+        } else if (validation.getMax() == null) {
+            items.add(new AnalysisItem(
+                    apiName, location, className, fieldName, fieldType,
+                    "页码字段缺少 max 校验",
+                    "建议添加 validation.max=2147483647",
+                    AnalysisItem.Severity.INFO
+            ));
+        }
+    }
+
+    /**
+     * 分析每页数量字段（pageSize/size/limit）
+     */
+    private void analyzePageSizeField(String apiName, String location, String className,
+                                     String fieldName, String fieldType,
+                                     ValidationConfig validation, List<AnalysisItem> items) {
+        if (validation == null || validation.getMin() == null || validation.getMax() == null) {
+            items.add(new AnalysisItem(
+                    apiName, location, className, fieldName, fieldType,
+                    "每页数量字段缺少范围校验",
+                    "建议添加 validation.min=1 和 validation.max=100",
+                    AnalysisItem.Severity.WARNING
+            ));
+        } else if (validation.getMin() == null) {
+            items.add(new AnalysisItem(
+                    apiName, location, className, fieldName, fieldType,
+                    "每页数量字段缺少 min 校验",
+                    "建议添加 validation.min=1",
+                    AnalysisItem.Severity.INFO
+            ));
+        } else if (validation.getMax() == null) {
+            items.add(new AnalysisItem(
+                    apiName, location, className, fieldName, fieldType,
+                    "每页数量字段缺少 max 校验",
+                    "建议添加 validation.max=100",
                     AnalysisItem.Severity.INFO
             ));
         }

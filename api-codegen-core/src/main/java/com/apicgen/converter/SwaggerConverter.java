@@ -141,6 +141,10 @@ public class SwaggerConverter {
                 if (param.has("description")) {
                     field.setDescription(param.get("description").asText(""));
                 }
+                // 设置参数位置类型（path/query/header/cookie）
+                if (param.has("in")) {
+                    field.setIn(param.get("in").asText("query"));
+                }
                 fields.add(field);
             }
         }
@@ -150,7 +154,12 @@ public class SwaggerConverter {
             JsonNode content = operation.get("requestBody").get("content");
             if (content.has("application/json") && content.get("application/json").has("schema")) {
                 JsonNode schema = content.get("application/json").get("schema");
-                fields.addAll(extractFieldsFromSchema(schema, root, "body"));
+                List<FieldDefinition> bodyFields = extractFieldsFromSchema(schema, root, "body");
+                // 设置 in 为 body
+                for (FieldDefinition field : bodyFields) {
+                    field.setIn("body");
+                }
+                fields.addAll(bodyFields);
             }
         }
 

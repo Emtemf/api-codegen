@@ -47,6 +47,12 @@ public class FieldDefinition {
      */
     private List<Object> enumValues;
 
+    /**
+     * 参数位置类型（path/query/header/cookie/body）
+     * 对应 Swagger/OpenAPI 中的 parameters.in 字段
+     */
+    private String in;
+
     public FieldDefinition() {
     }
 
@@ -135,5 +141,45 @@ public class FieldDefinition {
     @JsonIgnore
     public boolean isObjectType() {
         return !isPrimitiveType() && !isEnumType() && !isListType();
+    }
+
+    /**
+     * 是否是路径参数
+     */
+    @JsonIgnore
+    public boolean isPathParam() {
+        return "path".equalsIgnoreCase(in);
+    }
+
+    /**
+     * 是否是查询参数
+     */
+    @JsonIgnore
+    public boolean isQueryParam() {
+        return "query".equalsIgnoreCase(in);
+    }
+
+    /**
+     * 是否是请求头参数
+     */
+    @JsonIgnore
+    public boolean isHeaderParam() {
+        return "header".equalsIgnoreCase(in);
+    }
+
+    /**
+     * 是否是 Cookie 参数
+     */
+    @JsonIgnore
+    public boolean isCookieParam() {
+        return "cookie".equalsIgnoreCase(in);
+    }
+
+    /**
+     * 是否是请求体
+     */
+    @JsonIgnore
+    public boolean isRequestBody() {
+        return "body".equalsIgnoreCase(in);
     }
 }

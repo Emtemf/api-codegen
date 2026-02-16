@@ -127,13 +127,10 @@ public class CxfCodeGenerator implements CodeGenerator {
         sb.append("    @Produces(MediaType.APPLICATION_JSON)\n");
 
         String responseType = api.getResponse() != null ? api.getResponse().getClassName() : "Void";
-        String requestType = api.getRequest() != null ? api.getRequest().getClassName() : "Void";
 
-        if ("Void".equals(requestType)) {
-            sb.append("    public ").append(responseType).append(" ").append(getMethodName(api)).append("() {\n");
-        } else {
-            sb.append("    public ").append(responseType).append(" ").append(getMethodName(api)).append("(@Valid ").append(requestType).append(" req) {\n");
-        }
+        // 根据参数风格生成参数
+        String params = generateMethodParameters(api, config);
+        sb.append("    public ").append(responseType).append(" ").append(getMethodName(api)).append("(").append(params).append(") {\n");
         sb.append("        // TODO: 实现业务逻辑\n");
         sb.append("        return null;\n");
         sb.append("    }\n");
@@ -141,6 +138,164 @@ public class CxfCodeGenerator implements CodeGenerator {
         sb.append("}\n");
 
         return sb.toString();
+    }
+
+    /**
+     * 生成方法参数
+     */
+    private String generateMethodParameters(Api api, CodegenConfig config) {
+        StringBuilder sb = new StringBuilder();
+
+        // 展开模式：参数分开写
+        boolean hasParams = false;
+
+            // 添加 JAX-RS 参数注解
+            if (api.getRequest() != null && api.getRequest().getFields() != null) {
+                for (FieldDefinition field : api.getRequest().getFields()) {
+                    if (sb.length() > 0) {
+                        sb.append(", ");
+                    }
+
+                    // 生成参数注解和校验注解
+                    sb.append(generateFieldParameterAnnotation(field));
+
+                    // 参数类型
+                    String paramType = convertToJavaType(field.getType());
+                    sb.append(paramType).append(" ").append(field.getName());
+                    hasParams = true;
+                }
+            }
+
+            // 添加 Request 对象（如果有非参数字段）
+            if (api.getRequest() != null) {
+                boolean hasRequestBody = false;
+                for (FieldDefinition field : api.getRequest().getFields()) {
+                    if (field.isRequestBody()) {
+                        hasRequestBody = true;
+                        break;
+                    }
+                }
+                if (hasRequestBody) {
+                    if (sb.length() > 0) {
+                        sb.append(", ");
+                    }
+                    sb.append("@Valid ").append(api.getRequest().getClassName()).append(" req");
+                }
+            }
+
+            if (!hasParams && (api.getRequest() == null || api.getRequest().getFields() == null || api.getRequest().getFields().isEmpty())) {
+                // 无参数
+                return "";
+            }
+
+        return sb.toString();
+    }
+
+    /**
+     * 生成字段参数注解（用于展开模式）
+     */
+    private String generateFieldParameterAnnotation(FieldDefinition field) {
+        StringBuilder sb = new StringBuilder();
+
+        // 根据参数位置添加对应的注解
+        if (field.isPathParam()) {
+            sb.append("@PathParam(\"").append(field.getName()).append("\") ");
+        } else if (field.isQueryParam()) {
+            sb.append("@QueryParam(\"").append(field.getName()).append("\") ");
+        } else if (field.isHeaderParam()) {
+            sb.append("@HeaderParam(\"").append(field.getName()).append("\") ");
+        } else if (field.isCookieParam()) {
+            sb.append("@CookieParam(\"").append(field.getName()).append("\") ");
+        }
+
+        // 添加校验注解
+        sb.append(generateValidationAnnotations(field));
+
+        return sb.toString();
+    }
+
+    /**
+     * 生成校验注解
+     */
+    private String generateValidationAnnotations(FieldDefinition field) {
+        StringBuilder sb = new StringBuilder();
+        ValidationConfig v = field.getValidation();
+
+        if (v == null) {
+            return "";
+        }
+
+        // @NotNull / @NotBlank
+        if (field.isRequired()) {
+            if ("String".equals(field.getType())) {
+                sb.append("@NotBlank ");
+            } else {
+                sb.append("@NotNull ");
+            }
+        }
+
+        // @Size (String 类型)
+        if ("String".equals(field.getType())) {
+            if (v.getMinLength() != null || v.getMaxLength() != null) {
+                sb.append("@Size(");
+                boolean hasMin = false;
+                if (v.getMinLength() != null && v.getMinLength() > 0) {
+                    sb.append("min=").append(v.getMinLength());
+                    hasMin = true;
+                }
+                if (v.getMaxLength() != null) {
+                    if (hasMin) sb.append(", ");
+                    sb.append("max=").append(v.getMaxLength());
+                }
+                sb.append(") ");
+            }
+        }
+
+        // @Min / @Max (数值类型)
+        if ("Integer".equals(field.getType()) || "Long".equals(field.getType()) || "Double".equals(field.getType())) {
+            if (v.getMin() != null) {
+                sb.append("@Min(").append(v.getMin().intValue()).append(") ");
+            }
+            if (v.getMax() != null) {
+                sb.append("@Max(").append(v.getMax().intValue()).append(") ");
+            }
+        }
+
+        // @Pattern (正则)
+        if (v.getPattern() != null && !v.getPattern().isEmpty()) {
+            sb.append("@Pattern(regexp=\"").append(v.getPattern()).append("\") ");
+        }
+
+        // @Email
+        if (v.getEmail() != null && v.getEmail()) {
+            sb.append("@Email ");
+        }
+
+        // @Past / @Future (日期)
+        if ("LocalDate".equals(field.getType()) || "LocalDateTime".equals(field.getType())) {
+            if (v.getPast() != null && v.getPast()) {
+                sb.append("@Past ");
+            }
+            if (v.getFuture() != null && v.getFuture()) {
+                sb.append("@Future ");
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * 转换类型为 Java 类型
+     */
+    private String convertToJavaType(String type) {
+        if (type == null) return "String";
+        switch (type) {
+            case "integer": return "Integer";
+            case "number": return "Double";
+            case "boolean": return "Boolean";
+            case "string": return "String";
+            default: return type;
+        }
     }
 
     private String generateClassContent(ClassDefinition classDef, String classTypeDesc,

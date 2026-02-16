@@ -176,6 +176,39 @@ public class ValidationFixer {
                 validation.setMin(0.0);
                 break;
 
+            // 路径参数修复
+            case "路径参数缺少最小值校验":
+                validation.setMin(1.0);
+                break;
+
+            case "路径参数缺少最小长度校验":
+                validation.setMinLength(1);
+                break;
+
+            // 页码字段修复
+            case "页码字段缺少范围校验":
+            case "页码字段缺少 min 校验":
+                validation.setMin(1.0);
+                validation.setMax(2147483647.0);
+                break;
+
+            case "页码字段缺少 max 校验":
+                validation.setMin(1.0);
+                validation.setMax(2147483647.0);
+                break;
+
+            // 每页数量字段修复
+            case "每页数量字段缺少范围校验":
+            case "每页数量字段缺少 min 校验":
+                validation.setMin(1.0);
+                validation.setMax(100.0);
+                break;
+
+            case "每页数量字段缺少 max 校验":
+                validation.setMin(1.0);
+                validation.setMax(100.0);
+                break;
+
             // List 字段修复
             case "List 字段缺少大小校验":
                 validation.setMinSize(1);
