@@ -33,6 +33,8 @@ npx serve -l 8080
 
 ### Web UI 界面预览
 
+> 注意：如果图片未正常显示，请尝试强制刷新浏览器 (Ctrl+F5)
+
 **Swagger 2.0 示例**
 ![Swagger Demo](docs/images/01-swagger-demo.png)
 
