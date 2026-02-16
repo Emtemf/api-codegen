@@ -113,8 +113,11 @@
 | YAML 解析 | 支持 API、Request、Response、ClassDefinition、FieldDefinition、ValidationConfig |
 | 代码生成 | Controller、Request/Response 类，带完整 JSR-303 校验注解 |
 | 校验 | 空值、长度、范围、格式、邮箱、枚举、循环引用检测 |
+| 参数类型 | 支持 @PathParam、@QueryParam、@HeaderParam、@CookieParam、@RequestBody |
 | 框架扩展 | CodeGenerator 接口，预留 Spring MVC 支持 |
 | Maven 插件 | 集成到 Maven 构建流程 |
+| Web UI | 可视化编辑，实时预览，Diff 对比 |
+| 校验分析 | DFX 规则代码，自动修复建议 |
 
 ---
 
@@ -160,9 +163,36 @@
 
 > DFX（Design For X）规范是华为公司的设计标准，用于保障代码的健壮性和可维护性。
 
+### DFX 规则代码
+
+| DFX代码 | 规则名称 | 说明 |
+|---------|----------|------|
+| DFX-001 | 路径规范 | 不能包含重复斜杠 |
+| DFX-002 | 路径规范 | 必须以 / 开头 |
+| DFX-003 | 必填校验 | required=true 必须添加 notNull/notBlank |
+| DFX-004 | 字符串校验 | String 类型需添加长度或格式校验 |
+| DFX-005 | 邮箱校验 | email 类型字段需添加 @Email |
+| DFX-006 | 电话校验 | 电话字段需添加正则 ^1[3-9]\d{9}$ |
+| DFX-007 | 数值校验 | 数值类型需添加 min/max 范围 |
+| DFX-008 | 集合校验 | List 类型需添加 minSize/maxSize |
+| DFX-009 | 校验规则 | minLength 不能超过 maxLength |
+| DFX-010 | 校验规则 | minSize 不能超过 maxSize |
+| DFX-011 | 分页校验 | page/pageNum 需添加 min:1,max:2147483647 |
+| DFX-012 | 分页校验 | pageSize/limit/size 需添加 min:1,max:100 |
+| DFX-014 | 路径校验 | 路径参数需添加 min:1 或 minLength:1 |
+
 ### Swagger/OpenAPI 自动修复规则
 
 当输入为 Swagger 2.0 或 OpenAPI 3.0 格式时，系统会自动转换并补充校验规则：
+
+**参数类型支持：**
+| 参数位置 | in 值 | 生成的注解 |
+|----------|-------|-----------|
+| 路径参数 | `path` | `@PathParam` |
+| 查询参数 | `query` | `@QueryParam` |
+| 请求头 | `header` | `@HeaderParam` |
+| Cookie | `cookie` | `@CookieParam` |
+| 请求体 | `body` | `@RequestBody` |
 
 **String 类型参数：**
 | 字段特征 | 自动添加的校验 |
@@ -180,10 +210,17 @@
 | 包含 `age` | `minimum=0, maximum=150` |
 | 包含 `score`, `rate` | `minimum=0, maximum=100` |
 | 包含 `price`, `amount`, `total` | `minimum=0` |
+| 路径参数 | `minimum=1` |
 | 其他非id字段 | `minimum=0, maximum=2147483647` |
 
+**必填参数注解：**
+| 参数类型 | 注解 |
+|----------|------|
+| String 必填 | `@NotBlank` |
+| 其他类型必填 | `@NotNull` |
+
 **其他自动修复：**
-- `required=true` 参数 → 添加 `@NotNull` 注解
+- `required=true` 参数 → 添加 `@NotNull` / `@NotBlank` 注解
 - 路径包含 `//` → 删除重复斜杠
 - 路径以 `/XXX/` 开头 → 删除占位符前缀
 - 缺少 `description` → 根据字段名自动生成

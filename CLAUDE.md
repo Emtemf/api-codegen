@@ -315,6 +315,15 @@ paths:
 
 The analyzer automatically adds validation rules for Swagger/OpenAPI parameters:
 
+### Parameter Types
+| Location | Swagger `in` value | Generated Annotation |
+|----------|-------------------|---------------------|
+| Path | `path` | `@PathParam` |
+| Query | `query` | `@QueryParam` |
+| Header | `header` | `@HeaderParam` |
+| Cookie | `cookie` | `@CookieParam` |
+| Body | `body` | `@RequestBody` |
+
 ### String Parameters
 | Field Pattern | Validation Added |
 |--------------|-----------------|
@@ -331,14 +340,36 @@ The analyzer automatically adds validation rules for Swagger/OpenAPI parameters:
 | Contains `age` | `minimum=0, maximum=150` |
 | Contains `score`, `rate` | `minimum=0, maximum=100` |
 | Contains `price`, `amount`, `total` | `minimum=0` |
+| Path parameters | `minimum=1` |
 | Default (not id) | `minimum=0, maximum=2147483647` |
 
+### Required Parameters
+| Parameter Type | Annotation |
+|---------------|------------|
+| String required | `@NotBlank` |
+| Other required | `@NotNull` |
+
 ### Other Auto-Fixes
-- `required=true` parameters → adds `@NotNull` annotation
+- `required=true` parameters → adds `@NotNull` / `@NotBlank` annotation
 - Path with `//` → removes duplicate slashes
 - Path with `/XXX/` prefix → removes placeholder prefix
 - Missing `description` → adds description from field name
 - Missing `operationId` → generates from summary
+
+### DFX Rule Codes
+| Code | Rule | Description |
+|------|------|-------------|
+| DFX-001 | Path规范 | Cannot contain duplicate slashes |
+| DFX-002 | Path规范 | Must start with / |
+| DFX-003 | 必填校验 | required=true must add notNull/notBlank |
+| DFX-004 | 字符串校验 | String type needs length or format validation |
+| DFX-005 | 邮箱校验 | email format needs @Email |
+| DFX-006 | 电话校验 | phone field needs regex |
+| DFX-007 | 数值校验 | Numeric type needs min/max range |
+| DFX-008 | 集合校验 | List type needs minSize/maxSize |
+| DFX-011 | 分页校验 | page/pageNum needs min:1,max:2147483647 |
+| DFX-012 | 分页校验 | pageSize/limit/size needs min:1,max:100 |
+| DFX-014 | 路径校验 | Path parameter needs min:1 or minLength:1 |
 
 ## Configuration File (`codegen-config.yaml`)
 
