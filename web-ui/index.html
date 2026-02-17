@@ -47,6 +47,20 @@
             font-weight: 500;
             transition: all 0.2s;
         }
+        .framework-select {
+            background: #1a1a2e;
+            color: #eee;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        .framework-select:focus {
+            outline: none;
+            border-color: #e94560;
+        }
         .btn-primary { background: #e94560; color: white; }
         .btn-secondary { background: #0f3460; color: #eee; }
         .btn-success { background: #27ae60; color: white; }
@@ -867,6 +881,10 @@
                 <button class="nav-btn active">API + Config</button>
             </nav>
             <div class="actions">
+                <select id="framework-select" class="framework-select" onchange="onFrameworkChange()">
+                    <option value="cxf">CXF (JAX-RS)</option>
+                    <option value="spring">Spring MVC</option>
+                </select>
                 <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
                 <button class="btn btn-secondary" onclick="saveFile()">保存</button>
                 <button class="btn btn-primary" onclick="analyze()">分析</button>
@@ -1112,6 +1130,7 @@ paths:
 
         // 存储用户的原始 YAML（用于预览对比）
         var originalYaml = defaultYaml;
+        var currentFramework = 'cxf'; // 默认 CXF
 
         // 示例数据定义 - 从外部 YAML 文件加载
         var exampleFiles = {
@@ -1303,6 +1322,17 @@ paths:
                         setMessage('加载失败，请检查网络或文件是否存在');
                     }
                 });
+            }
+        }
+
+        // Framework selection change handler
+        function onFrameworkChange() {
+            var select = document.getElementById('framework-select');
+            currentFramework = select.value;
+            setMessage('已切换到 ' + (currentFramework === 'spring' ? 'Spring MVC' : 'CXF') + ' 框架');
+            // Re-run analysis to update preview
+            if (yamlEditor.getValue()) {
+                analyze();
             }
         }
 
@@ -1661,13 +1691,28 @@ paths:
                 });
             }
 
+            // 根据框架选择注解
+            var httpMethodAnnotation = currentFramework === 'spring' ? httpMethod.toUpperCase() : httpMethod.toUpperCase();
+            var pathAnnotation = currentFramework === 'spring' ? '@GetMapping' : '@' + httpMethod.toUpperCase();
+            var pathAnnotationValue = currentFramework === 'spring' ? '("' + path + '")' : '("' + path + '")';
+            var classAnnotation = currentFramework === 'spring' ? '@RestController' : '@Path("' + path + '")';
+            var producesAnnotation = currentFramework === 'spring' ? '@GetMapping' : '@Produces';
+
             // 生成完整的方法代码（带语法高亮）
             var code = '';
             if (customAnnotationsHtml) {
                 code += customAnnotationsHtml;
             }
-            code += '    <span class="syntax-annotation">@' + httpMethod.toUpperCase() + '</span>\n';
-            code += '    <span class="syntax-annotation">@Path("' + path + '")</span>\n';
+
+            // Spring 使用 @GetMapping/@PostMapping 等，CXF 使用 @GET/@POST + @Path
+            if (currentFramework === 'spring') {
+                // Spring: @GetMapping("/path"), @PostMapping("/path") 等
+                code += '    <span class="syntax-annotation">@' + httpMethodAnnotation + 'Mapping' + pathAnnotationValue + '</span>\n';
+            } else {
+                // CXF: @GET, @Path
+                code += '    <span class="syntax-annotation">@' + httpMethod.toUpperCase() + '</span>\n';
+                code += '    <span class="syntax-annotation">@Path("' + path + '")</span>\n';
+            }
 
             // 处理参数
             var hasRequestBody = false;
@@ -1698,7 +1743,16 @@ paths:
             if (hasRequestBody) {
                 code += '    <span class="syntax-annotation">@Consumes</span>(<span class="syntax-string">MediaType.APPLICATION_JSON</span>)\n';
             }
-            code += '    <span class="syntax-annotation">@Produces</span>(<span class="syntax-string">MediaType.APPLICATION_JSON</span>)\n';
+            // Spring 使用 @ProducesMediaType.APPLICATION_JSON_JSON，CXF 使用 @Produces
+            if (currentFramework === 'spring') {
+                // Spring: @PostMapping 等已经包含了 produces，不需要单独加
+            } else {
+                // CXF: 需要 @Produces
+                if (hasRequestBody) {
+                    code += '    <span class="syntax-annotation">@Consumes</span>(<span class="syntax-string">MediaType.APPLICATION_JSON</span>)\n';
+                }
+                code += '    <span class="syntax-annotation">@Produces</span>(<span class="syntax-string">MediaType.APPLICATION_JSON</span>)\n';
+            }
 
             // 生成方法签名 - @Size放在参数前面
             var paramStr = '()';
@@ -1707,7 +1761,15 @@ paths:
             } else if (pathParams.length > 0 || queryParams.length > 0 || headerParams.length > 0 || cookieParams.length > 0) {
                 var methodParams = [];
 
-                // 处理路径参数 - 包含校验注解和@PathParam
+                // CXF vs Spring annotation mapping
+                var paramAnnotationMap = {
+                    'path': currentFramework === 'spring' ? 'PathVariable' : 'PathParam',
+                    'query': currentFramework === 'spring' ? 'RequestParam' : 'QueryParam',
+                    'header': currentFramework === 'spring' ? 'RequestHeader' : 'HeaderParam',
+                    'cookie': currentFramework === 'spring' ? 'CookieValue' : 'CookieParam'
+                };
+
+                // 处理路径参数
                 pathParams.forEach(function(p) {
                     var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
                     var annots = '';
@@ -1731,7 +1793,7 @@ paths:
                         if (maxLength !== undefined) parts.push('max=' + maxLength);
                         if (parts.length > 0) annots += '<span class="syntax-annotation">@Size</span>(' + parts.join(', ') + ') ';
                     }
-                    annots += '<span class="syntax-annotation">@PathParam("' + p.name + '")</span> ';
+                    annots += '<span class="syntax-annotation">@' + paramAnnotationMap['path'] + '("' + p.name + '")</span> ';
                     methodParams.push(annots + '<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
                 });
 
@@ -1761,7 +1823,7 @@ paths:
                         if (minimum !== undefined) annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         if (maximum !== undefined) annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
                     }
-                    annots += '<span class="syntax-annotation">@QueryParam("' + p.name + '")</span> ';
+                    annots += '<span class="syntax-annotation">@' + paramAnnotationMap['query'] + '("' + p.name + '")</span> ';
                     methodParams.push(annots + '<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
                 });
 
@@ -1790,7 +1852,7 @@ paths:
                         if (minimum !== undefined) annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         if (maximum !== undefined) annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
                     }
-                    annots += '<span class="syntax-annotation">@HeaderParam("' + p.name + '")</span> ';
+                    annots += '<span class="syntax-annotation">@' + paramAnnotationMap['header'] + '("' + p.name + '")</span> ';
                     methodParams.push(annots + '<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
                 });
 
@@ -1819,7 +1881,7 @@ paths:
                         if (minimum !== undefined) annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         if (maximum !== undefined) annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
                     }
-                    annots += '<span class="syntax-annotation">@CookieParam("' + p.name + '")</span> ';
+                    annots += '<span class="syntax-annotation">@' + paramAnnotationMap['cookie'] + '("' + p.name + '")</span> ';
                     methodParams.push(annots + '<span class="syntax-type">' + paramType + '</span> <span class="syntax-field">' + p.name + '</span>');
                 });
 
