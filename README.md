@@ -142,9 +142,11 @@ java -jar api-codegen.jar <yaml文件> [选项]
 
 | 场景 | 规则 | DFX代码 |
 |------|------|---------|
-| String 字段缺少长度校验 | minLength: 1, maxLength: 255 | DFX-004 |
+| 路径包含 `//` | 删除重复斜杠 | DFX-001 |
+| 路径不以 `/` 开头 | 自动添加前缀 | DFX-002 |
 | 必填字段缺少 @NotNull | required=true | DFX-003 |
 | String 必填使用 @NotBlank | required=true 且 type=String | DFX-003 |
+| String 字段缺少长度校验 | minLength: 1, maxLength: 255 | DFX-004 |
 | 邮箱字段缺少格式校验 | format: email | DFX-005 |
 | 电话字段缺少正则校验 | 包含 phone/mobile | DFX-006 |
 | 数值字段缺少范围 | Integer/Long/Double | DFX-007 |
