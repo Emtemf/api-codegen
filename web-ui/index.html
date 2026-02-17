@@ -1113,329 +1113,79 @@ paths:
         // 存储用户的原始 YAML（用于预览对比）
         var originalYaml = defaultYaml;
 
-        // 示例数据定义
+        // 示例数据定义 - 从外部 YAML 文件加载
+        var exampleFiles = {
+            'swagger': '../swagger2-example.yaml',
+            'openapi': '../openapi3-example.yaml'
+        };
+
+        // 异步加载外部 YAML 文件
+        function loadYamlFromFile(filePath) {
+            return fetch(filePath)
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('无法加载文件: ' + filePath);
+                    }
+                    return response.text();
+                })
+                .catch(function(err) {
+                    console.error('加载文件失败:', err);
+                    return null;
+                });
+        }
+
+        // 缓存已加载的示例
+        var examplesCache = {};
+
+        // 预加载所有示例文件
+        Object.keys(exampleFiles).forEach(function(key) {
+            loadYamlFromFile(exampleFiles[key]).then(function(yaml) {
+                if (yaml) {
+                    examplesCache[key] = yaml;
+                }
+            });
+        });
+
+        // 示例数据定义（使用缓存）
         var examples = {
             'swagger': {
-                name: 'Swagger 2.0',
-                yaml: `swagger: "2.0"
-info:
-  title: 用户管理API
-  version: "1.0"
-basePath: /api
-paths:
-  /users:
-    get:
-      summary: 查询用户列表
-      operationId: queryUserList
-      description: 支持分页查询，可按关键词搜索
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-        - name: pageSize
-          in: query
-          schema:
-            type: integer
-        - name: keyword
-          in: query
-          description: 搜索关键词
-          required: false
-          schema:
-            type: string
-        - name: limit
-          in: query
-      responses:
-        200:
-          description: 成功
-  /users/{id}:
-    get:
-      summary: 根据ID获取用户
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          description: 用户ID
-          required: true
-          schema:
-            type: integer
-        - name: X-Token
-          in: header
-          description: 认证令牌
-          required: true
-          schema:
-            type: string
-        - name: JSESSIONID
-          in: cookie
-          description: 会话ID
-          required: false
-          schema:
-            type: string
-      responses:
-        200:
-          description: 成功
-  /users/{userCode}:
-    get:
-      summary: 根据编码获取用户
-      operationId: getUserByCode
-      parameters:
-        - name: userCode
-          in: path
-          description: 用户编码
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: 成功
-    post:
-      summary: 创建用户
-      operationId: createUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - username
-                - email
-                - phone
-              properties:
-                username:
-                  type: string
-                  description: 用户名
-                  minLength: 4
-                  maxLength: 20
-                email:
-                  type: string
-                  format: email
-                  description: 邮箱
-                phone:
-                  type: string
-                  description: 手机号
-                age:
-                  type: integer
-                  description: 年龄
-                score:
-                  type: number
-                  description: 评分
-                price:
-                  type: number
-                  description: 价格
-                balance:
-                  type: number
-                  description: 账户余额
-                tags:
-                  type: array
-                  description: 标签列表
-                  items:
-                    type: string
-                birthday:
-                  type: string
-                  format: date
-                  description: 生日
-                enabled:
-                  type: boolean
-                  description: 是否启用
-      responses:
-        201:
-          description: 创建成功
-  /users/batch:
-    post:
-      summary: 批量创建用户
-      operationId: batchCreateUsers
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                users:
-                  type: array
-                  description: 用户列表
-                  items:
-                    type: object
-                    properties:
-                      username:
-                        type: string
-                      email:
-                        type: string
-      responses:
-        201:
-          description: 创建成功`,
+                name: 'Swagger 2.0 (swagger2-example.yaml)',
+                yaml: null,  // 异步加载
                 config: defaultConfig
             },
             'openapi': {
-                name: 'OpenAPI 3.0',
-                yaml: `openapi: "3.0.0"
-info:
-  title: 用户管理API
-  version: "1.0.0"
-servers:
-  - url: /api
-paths:
-  /users:
-    get:
-      summary: 查询用户列表
-      operationId: queryUserList
-      description: 支持分页查询，可按关键词搜索
-      parameters:
-        - name: page
-          in: query
-          schema:
-            type: integer
-        - name: pageSize
-          in: query
-          schema:
-            type: integer
-        - name: keyword
-          in: query
-          description: 搜索关键词
-          required: false
-          schema:
-            type: string
-        - name: limit
-          in: query
-      responses:
-        200:
-          description: 成功
-  /users/{id}:
-    get:
-      summary: 根据ID获取用户
-      operationId: getUserById
-      parameters:
-        - name: id
-          in: path
-          description: 用户ID
-          required: true
-          schema:
-            type: integer
-        - name: X-Token
-          in: header
-          description: 认证令牌
-          required: true
-          schema:
-            type: string
-        - name: JSESSIONID
-          in: cookie
-          description: 会话ID
-          required: false
-          schema:
-            type: string
-      responses:
-        200:
-          description: 成功
-  /users/{userCode}:
-    get:
-      summary: 根据编码获取用户
-      operationId: getUserByCode
-      parameters:
-        - name: userCode
-          in: path
-          description: 用户编码
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: 成功
-    post:
-      summary: 创建用户
-      operationId: createUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - username
-                - email
-                - phone
-              properties:
-                username:
-                  type: string
-                  description: 用户名
-                  minLength: 4
-                  maxLength: 20
-                email:
-                  type: string
-                  format: email
-                  description: 邮箱
-                phone:
-                  type: string
-                  description: 手机号
-                age:
-                  type: integer
-                  description: 年龄
-                score:
-                  type: number
-                  description: 评分
-                price:
-                  type: number
-                  description: 价格
-                balance:
-                  type: number
-                  description: 账户余额
-                tags:
-                  type: array
-                  description: 标签列表
-                  items:
-                    type: string
-                birthday:
-                  type: string
-                  format: date
-                  description: 生日
-                enabled:
-                  type: boolean
-                  description: 是否启用
-      responses:
-        201:
-          description: 创建成功
-  /users/batch:
-    post:
-      summary: 批量创建用户
-      operationId: batchCreateUsers
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                users:
-                  type: array
-                  description: 用户列表
-                  items:
-                    type: object
-                    properties:
-                      username:
-                        type: string
-                      email:
-                        type: string
-      responses:
-        201:
-          description: 创建成功`,
+                name: 'OpenAPI 3.0 (openapi3-example.yaml)',
+                yaml: null,  // 异步加载
                 config: defaultConfig
             }
         };
 
+        // 异步加载示例（从URL参数）
         function loadExampleFromUrl() {
             var params = new URLSearchParams(window.location.search);
             var demo = params.get('demo');
             if (demo && examples[demo]) {
                 var example = examples[demo];
                 document.getElementById('yaml-info').textContent = example.name + ' (URL参数)';
-                return example.yaml;
+                // 异步加载外部文件
+                var filePath = exampleFiles[demo];
+                if (filePath) {
+                    loadYamlFromFile(filePath).then(function(yaml) {
+                        if (yaml) {
+                            yamlEditor.setValue(yaml);
+                            originalYaml = yaml;
+                            updateStatus();
+                        }
+                    });
+                }
+                return ''; // 返回空字符串，稍后异步加载
             }
             return null;
         }
 
         function init() {
-            // 尝试从URL参数加载示例
-            var urlYaml = loadExampleFromUrl();
+            // 尝试从URL参数加载示例（异步）
+            loadExampleFromUrl();
 
             // Initialize YAML editor
             yamlEditor = CodeMirror.fromTextArea(document.getElementById('yaml-editor'), {
@@ -1457,8 +1207,8 @@ paths:
                 tabSize: 2
             });
 
-            // Set default content (use URL example if provided)
-            var currentYaml = urlYaml || defaultYaml;
+            // Set default content (URL example will be loaded async)
+            var currentYaml = defaultYaml;
             var currentConfig = defaultConfig;
             yamlEditor.setValue(currentYaml);
             configEditor.setValue(currentConfig);
@@ -1531,18 +1281,29 @@ paths:
             }
 
             var example = examples[exampleKey];
-            originalYaml = example.yaml;
-            yamlEditor.setValue(example.yaml);
-            configEditor.setValue(example.config || defaultConfig);
-            yamlEditor.refresh();
-            configEditor.refresh();
-            updateStatus();
-            document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
-            document.getElementById('issue-count').textContent = '0';
-            document.getElementById('issue-count').className = 'issue-count';
-            document.getElementById('yaml-info').textContent = example.name;
-            document.getElementById('config-info').textContent = example.name;
-            setMessage('已加载: ' + example.name);
+            var filePath = exampleFiles[exampleKey];
+
+            // 异步加载外部 YAML 文件
+            if (filePath) {
+                loadYamlFromFile(filePath).then(function(yaml) {
+                    if (yaml) {
+                        originalYaml = yaml;
+                        yamlEditor.setValue(yaml);
+                        configEditor.setValue(example.config || defaultConfig);
+                        yamlEditor.refresh();
+                        configEditor.refresh();
+                        updateStatus();
+                        document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
+                        document.getElementById('issue-count').textContent = '0';
+                        document.getElementById('issue-count').className = 'issue-count';
+                        document.getElementById('yaml-info').textContent = example.name;
+                        document.getElementById('config-info').textContent = example.name;
+                        setMessage('已加载: ' + example.name);
+                    } else {
+                        setMessage('加载失败，请检查网络或文件是否存在');
+                    }
+                });
+            }
         }
 
         // Load API YAML file

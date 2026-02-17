@@ -20,10 +20,19 @@ const server = http.createServer((req, res) => {
     let urlPath = req.url.split('?')[0];
     if (urlPath === '/') urlPath = '/index.html';
 
-    let filePath = path.join(__dirname, 'web-ui', urlPath);
+    let filePath;
+    let baseDir = __dirname;
+
+    // Special handling for YAML example files in parent directory
+    if (urlPath === '/swagger2-example.yaml' || urlPath === '/openapi3-example.yaml') {
+        filePath = path.join(baseDir, urlPath);
+    } else {
+        filePath = path.join(baseDir, 'web-ui', urlPath);
+    }
 
     // Security check
-    if (!filePath.startsWith(path.join(__dirname, 'web-ui'))) {
+    const allowedBase = path.join(baseDir, 'web-ui');
+    if (!filePath.startsWith(allowedBase) && !filePath.startsWith(baseDir)) {
         res.writeHead(403);
         res.end('Forbidden');
         return;
