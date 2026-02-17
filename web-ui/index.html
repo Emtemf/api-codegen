@@ -2201,6 +2201,7 @@ paths:
                                     }
 
                                     // Check parameters - compare by name
+                                    // 注意：需要比较 param 和 param.schema 两层的校验规则
                                     if (afterMethod.parameters && afterMethod.parameters.length > 0) {
                                         var beforeParamMap = {};
                                         if (beforeMethod.parameters) {
@@ -2215,28 +2216,53 @@ paths:
                                                 if (!beforeParam.description && param.description) {
                                                     changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
                                                 }
-                                                // 检查type变化
-                                                if (!beforeParam.type && param.type) {
-                                                    changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: param.type });
+                                                // 检查type变化（支持 param.type 和 param.schema.type）
+                                                var beforeType = beforeParam.type || (beforeParam.schema && beforeParam.schema.type);
+                                                var afterType = param.type || (param.schema && param.schema.type);
+                                                if (!beforeType && afterType) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: afterType });
                                                 }
-                                                // 检查校验规则变化
-                                                if (!beforeParam.required && param.required === true) {
+                                                // 检查校验规则变化 - 需要检查 param 和 schema 两层
+                                                var beforeRequired = beforeParam.required || (beforeParam.schema && beforeParam.schema.required);
+                                                var afterRequired = param.required || (param.schema && param.schema.required);
+                                                if (!beforeRequired && afterRequired === true) {
                                                     changes.push({ prop: '参数 ' + param.name + ' required', before: '(无)', after: true });
                                                 }
-                                                if (!beforeParam.minLength && param.minLength !== undefined) {
-                                                    changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: param.minLength });
+                                                // 检查 minLength
+                                                var beforeMinLength = beforeParam.minLength || (beforeParam.schema && beforeParam.schema.minLength);
+                                                var afterMinLength = param.minLength || (param.schema && param.schema.minLength);
+                                                if (!beforeMinLength && afterMinLength !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: afterMinLength });
                                                 }
-                                                if (!beforeParam.maxLength && param.maxLength !== undefined) {
-                                                    changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: param.maxLength });
+                                                // 检查 maxLength
+                                                var beforeMaxLength = beforeParam.maxLength || (beforeParam.schema && beforeParam.schema.maxLength);
+                                                var afterMaxLength = param.maxLength || (param.schema && param.schema.maxLength);
+                                                if (!beforeMaxLength && afterMaxLength !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: afterMaxLength });
                                                 }
-                                                if (!beforeParam.minimum && param.minimum !== undefined) {
-                                                    changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: param.minimum });
+                                                // 检查 minimum
+                                                var beforeMinimum = beforeParam.minimum || (beforeParam.schema && beforeParam.schema.minimum);
+                                                var afterMinimum = param.minimum || (param.schema && param.schema.minimum);
+                                                if (!beforeMinimum && afterMinimum !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: afterMinimum });
                                                 }
-                                                if (!beforeParam.maximum && param.maximum !== undefined) {
-                                                    changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: param.maximum });
+                                                // 检查 maximum
+                                                var beforeMaximum = beforeParam.maximum || (beforeParam.schema && beforeParam.schema.maximum);
+                                                var afterMaximum = param.maximum || (param.schema && param.schema.maximum);
+                                                if (!beforeMaximum && afterMaximum !== undefined) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: afterMaximum });
                                                 }
-                                                if (!beforeParam.pattern && param.pattern) {
-                                                    changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: param.pattern });
+                                                // 检查 pattern
+                                                var beforePattern = beforeParam.pattern || (beforeParam.schema && beforeParam.schema.pattern);
+                                                var afterPattern = param.pattern || (param.schema && param.schema.pattern);
+                                                if (!beforePattern && afterPattern) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: afterPattern });
+                                                }
+                                                // 检查 format (如 email)
+                                                var beforeFormat = beforeParam.format || (beforeParam.schema && beforeParam.schema.format);
+                                                var afterFormat = param.format || (param.schema && param.schema.format);
+                                                if (!beforeFormat && afterFormat) {
+                                                    changes.push({ prop: '参数 ' + param.name + ' format', before: '(无)', after: afterFormat });
                                                 }
                                             }
                                         });
