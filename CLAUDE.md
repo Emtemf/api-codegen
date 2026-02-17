@@ -53,9 +53,70 @@ mvn test
 mvn test -Dtest=TestClassName
 ```
 
-**Requirements:**
-- JDK 21 or higher (set `JAVA_HOME` to JDK 21)
-- Maven 3.8+
+## Testing Requirements
+
+**Core Principle: Maven Backend is the Source of Truth**
+
+All business logic must be implemented in the Maven backend first. Extensions (plugin, web UI) must follow the Maven logic.
+
+### BDD Format Tests
+
+All unit tests must use **BDD (Behavior-Driven Development) format**:
+
+```java
+@DisplayName("ValidationAnalyzer 校验分析")
+class ValidationAnalyzerTest {
+
+    @Nested
+    @DisplayName("分析 String 类型字段")
+    class AnalyzeStringField {
+
+        @Test
+        @DisplayName("应检测到缺少长度校验")
+        void shouldDetectMissingLengthValidation() {
+            // given: String 字段无校验规则
+            FieldDefinition field = new FieldDefinition();
+            field.setName("username");
+            field.setType("String");
+
+            // when: 执行分析
+            List<ValidationError> errors = analyzer.analyze(api);
+
+            // then: 应报告缺少长度校验
+            assertThat(errors).anyMatch(e -> e.getCode().equals("DFX-004"));
+        }
+    }
+}
+```
+
+### Coverage Requirements
+
+| Requirement | Description |
+|-------------|-------------|
+| **All Scenarios** | Every validation rule (DFX-001 to DFX-014) must have test cases |
+| **All Branches** | All if/else, switch-case branches must be covered |
+| **Boundary Conditions** | min/max, minLength/maxLength boundaries must be tested |
+| **Positive+Negative** | Both valid and invalid inputs must be tested |
+
+### Test Matrix for DFX Rules
+
+Each DFX rule must cover:
+
+| DFX Code | Positive (No Error) | Negative (Has Error) | Boundary |
+|----------|---------------------|---------------------|----------|
+| DFX-001 | Path without // | Path with // | Multiple // |
+| DFX-002 | Path starts with / | Path doesn't start with / | Empty path |
+| DFX-003 | Required has @NotNull | Required without @NotNull | Optional + @NotNull |
+| DFX-004 | String has validation | String without validation | Only minLength |
+| DFX-005 | email has @Email | email without @Email | Wrong format |
+| DFX-006 | phone has pattern | phone without pattern | Wrong regex |
+| DFX-007 | Number has min/max | Number without range | Only min or only max |
+| DFX-008 | List has minSize | List without size | minSize > maxSize |
+| DFX-011 | page has range | page without range | boundary 1/2147483647 |
+| DFX-012 | size has range | size without range | boundary 1/100 |
+| DFX-014 | Path param has validation | Path param without validation | Mixed types |
+
+**Important:** Do not infer types from field names. Preserve user's original type definition.
 
 ## Running the Maven Plugin
 

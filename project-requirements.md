@@ -372,7 +372,139 @@ java -cp api-codegen-core/target/api-codegen-core-1.0.0.jar com.apicgen.Main api
 
 ---
 
-## 八、测试策略
+## 八、开发原则
+
+### 核心原则：Maven 后端为源
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           架构分层原则                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  ┌──────────────────────┐
+  │    Web UI (前端)     │  ← 展示和交互层
+  └──────────┬───────────┘
+             │ 调用
+  ┌──────────▼───────────┐
+  │  Maven 插件/CLI      │  ← 核心逻辑层（Maven 后端）
+  └──────────┬───────────┘
+             │ 复用
+  ┌──────────▼───────────┐
+  │    核心库 core       │  ← 业务逻辑源（校验、转换、生成）
+  └──────────────────────┘
+```
+
+**重要原则**：
+1. **所有业务逻辑必须在 Maven 后端实现**：校验规则、类型转换、代码生成等核心逻辑必须先在 Maven 后端（api-codegen-core）实现
+2. **前端/Web UI 复用后端逻辑**：Web UI 通过 HTTP 调用或复用 analyzer.js（与后端逻辑一致）实现预览
+3. **不修改用户原始定义**：自动修复只添加校验注解，不改变用户定义的字段类型、名称等业务含义
+4. **参数类型推断**：不根据参数名推断类型，保留用户原始 type 定义（Swagger 规范默认 string）
+
+---
+
+## 九、测试要求
+
+### BDD 格式测试规范
+
+所有单元测试必须使用 **BDD（Behavior-Driven Development）格式**，确保测试可读性和可维护性：
+
+```java
+@DisplayName("ValidationAnalyzer 校验分析")
+class ValidationAnalyzerTest {
+
+    @Nested
+    @DisplayName("分析 String 类型字段")
+    class AnalyzeStringField {
+
+        @Test
+        @DisplayName("应检测到缺少长度校验")
+        void shouldDetectMissingLengthValidation() {
+            // given: String 字段无校验规则
+            FieldDefinition field = new FieldDefinition();
+            field.setName("username");
+            field.setType("String");
+
+            // when: 执行分析
+            List<ValidationError> errors = analyzer.analyze(api);
+
+            // then: 应报告缺少长度校验
+            assertThat(errors).anyMatch(e -> e.getCode().equals("DFX-004"));
+        }
+    }
+}
+```
+
+### 测试覆盖率要求
+
+| 要求 | 说明 |
+|------|------|
+| **所有场景覆盖** | 每个校验规则（DFX-001 到 DFX-014）必须有对应测试用例 |
+| **所有分支覆盖** | if/else、switch-case 等分支必须覆盖 true/false 路径 |
+| **边界条件覆盖** | min/max、minLength/maxLength 等边界值必须测试 |
+| **正向+反向测试** | 合法输入和非法输入都必须测试 |
+
+### 测试文件组织
+
+```
+api-codegen-core/src/test/
+├── java/com/apicgen/
+│   ├── parser/
+│   │   └── YamlParserTest.java           # YAML 解析测试
+│   ├── validator/
+│   │   ├── ApiValidatorTest.java         # API 校验测试
+│   │   ├── ValidationAnalyzerTest.java   # 分析器测试（所有 DFX 规则）
+│   │   ├── ValidationFixerTest.java      # 自动修复测试
+│   │   └── ValidationErrorTest.java      # 错误定义测试
+│   ├── converter/
+│   │   └── SwaggerConverterTest.java     # Swagger 转换测试
+│   ├── generator/
+│   │   └── cxf/
+│   │       └── CxfCodeGeneratorTest.java  # 代码生成测试
+│   └── util/
+│       └── CodeGenUtilTest.java          # 工具类测试
+└── resources/yaml/
+    ├── valid-all-types.yaml              # 合法类型示例
+    ├── invalid-dfx-errors.yaml           # 包含 DFX 错误的示例
+    └── validation-demo.yaml              # 校验规则演示
+```
+
+### DFX 规则测试矩阵
+
+每个 DFX 规则必须覆盖以下场景：
+
+| DFX 规则 | 正向测试（无错误） | 反向测试（有错误） | 边界条件 |
+|----------|-------------------|-------------------|----------|
+| DFX-001 | 路径无 // | 路径有 // | 多个 // |
+| DFX-002 | 路径以 / 开头 | 路径不以 / 开头 | 空路径 |
+| DFX-003 | 必填有 @NotNull | 必填无 @NotNull | 可选 + @NotNull |
+| DFX-004 | String 有校验 | String 无校验 | 仅 minLength |
+| DFX-005 | email 有 @Email | email 无 @Email | 错误格式 |
+| DFX-006 | phone 有 pattern | phone 无 pattern | 错误正则 |
+| DFX-007 | 数值有 min/max | 数值无范围 | 仅 min 或仅 max |
+| DFX-008 | List 有 minSize | List 无大小 | minSize > maxSize |
+| DFX-011 | page 有范围 | page 无范围 | boundary 1/2147483647 |
+| DFX-012 | size 有范围 | size 无范围 | boundary 1/100 |
+| DFX-014 | 路径参数有校验 | 路径参数无校验 | 混合类型 |
+
+### 运行测试
+
+```bash
+# 运行所有测试
+mvn test
+
+# 运行单个测试类
+mvn test -Dtest=ValidationAnalyzerTest
+
+# 运行单个测试方法
+mvn test -Dtest=ValidationAnalyzerTest#shouldDetectMissingLengthValidation
+
+# 生成覆盖率报告
+mvn test -Dcoverage=true
+```
+
+---
+
+## 十、测试策略
 
 ### 测试分层
 

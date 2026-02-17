@@ -195,6 +195,22 @@ public Response getUserById(
 mvn test
 ```
 
+### 测试要求
+
+**核心原则：Maven 后端为源**
+
+所有业务逻辑必须在 Maven 后端实现。前端/插件必须复用后端逻辑。
+
+**BDD 格式**：所有测试使用 Given-When-Then 结构，确保可读性。
+
+**覆盖率要求**：
+- 所有场景覆盖（每个 DFX 规则都有测试）
+- 所有分支覆盖（if/else 都要覆盖 true/false）
+- 边界条件覆盖（min/max 边界值）
+- 正向+反向测试（合法和非法输入）
+
+**重要**：不根据参数名推断类型，保留用户原始定义。
+
 ## License
 
 Apache-2.0
