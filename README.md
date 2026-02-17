@@ -1,10 +1,12 @@
 # API Codegen
 
-基于 YAML 定义自动生成 Java API 代码，支持 CXF (JAX-RS) 框架。
+基于 YAML 定义自动生成 Java API 代码，默认支持 Spring MVC 注解，同时兼容 CXF (JAX-RS)。
 
 ## 特性
 
 - 支持 **Swagger 2.0** 和 **OpenAPI 3.0** YAML 格式
+- 默认使用 **Spring MVC** 注解 (@PathVariable, @RequestParam, @RequestHeader, @CookieValue)
+- 支持通过 **x-framework** 字段为每个 API 指定不同框架
 - 自动校验分析和修复建议（DFX 规则代码）
 - 生成 Controller、Request、Response 类
 - 支持类和方法级别自定义注解
@@ -67,9 +69,9 @@ java -jar api-codegen-core/target/api-codegen.jar api.yaml
 在项目根目录创建 `codegen-config.yaml`：
 
 ```yaml
-# 框架类型: cxf（支持 cxf）
+# 框架类型: spring（默认）或 cxf
 framework:
-  type: cxf
+  type: spring
 
 # 版权声明（直接塞到文件顶部）
 copyright: "Copyright (c) 2024 MyCompany. All rights reserved."
@@ -96,7 +98,7 @@ customAnnotations:
 
 | 配置项 | 说明 |
 |--------|------|
-| `framework.type` | 框架类型，目前仅支持 `cxf` |
+| `framework.type` | 框架类型：`spring`（默认）或 `cxf` |
 | `copyright` | 版权声明，直接放到文件顶部，为空则不添加 |
 | `output.controller.path` | 生成的 Controller 类输出路径 |
 | `output.request.path` | 生成的 Request 类输出路径 |

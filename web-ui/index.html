@@ -47,20 +47,6 @@
             font-weight: 500;
             transition: all 0.2s;
         }
-        .framework-select {
-            background: #1a1a2e;
-            color: #eee;
-            border: 1px solid #333;
-            border-radius: 4px;
-            padding: 8px 12px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-right: 8px;
-        }
-        .framework-select:focus {
-            outline: none;
-            border-color: #e94560;
-        }
         .btn-primary { background: #e94560; color: white; }
         .btn-secondary { background: #0f3460; color: #eee; }
         .btn-success { background: #27ae60; color: white; }
@@ -881,10 +867,6 @@
                 <button class="nav-btn active">API + Config</button>
             </nav>
             <div class="actions">
-                <select id="framework-select" class="framework-select" onchange="onFrameworkChange()">
-                    <option value="cxf">CXF (JAX-RS)</option>
-                    <option value="spring">Spring MVC</option>
-                </select>
                 <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
                 <button class="btn btn-secondary" onclick="saveFile()">保存</button>
                 <button class="btn btn-primary" onclick="analyze()">分析</button>
@@ -1130,7 +1112,7 @@ paths:
 
         // 存储用户的原始 YAML（用于预览对比）
         var originalYaml = defaultYaml;
-        var currentFramework = 'cxf'; // 默认 CXF
+        var currentFramework = 'spring'; // 默认 Spring MVC
 
         // 示例数据定义 - 从外部 YAML 文件加载
         var exampleFiles = {
@@ -1322,17 +1304,6 @@ paths:
                         setMessage('加载失败，请检查网络或文件是否存在');
                     }
                 });
-            }
-        }
-
-        // Framework selection change handler
-        function onFrameworkChange() {
-            var select = document.getElementById('framework-select');
-            currentFramework = select.value;
-            setMessage('已切换到 ' + (currentFramework === 'spring' ? 'Spring MVC' : 'CXF') + ' 框架');
-            // Re-run analysis to update preview
-            if (yamlEditor.getValue()) {
-                analyze();
             }
         }
 

@@ -59,6 +59,38 @@ mvn test -Dtest=TestClassName
 
 All business logic must be implemented in the Maven backend first. Extensions (plugin, web UI) must follow the Maven logic.
 
+### Running All Tests
+
+```bash
+# Windows
+run-all-tests.bat
+
+# Linux/Mac
+bash run-all-tests.sh
+```
+
+### Test Coverage
+
+| Module | Test File | Tests |
+|--------|-----------|-------|
+| Maven Backend | api-codegen-core/src/test/ | 130 tests |
+| Web UI Analyzer | web-ui/test/analyzer-test.js | 41 tests |
+| Web UI Diff | web-ui/test/diff-test.js | 13 tests |
+| Web UI Render | web-ui/test/render-test.js | 16 tests |
+
+### Git Pre-commit Hook (Optional)
+
+To enable automatic testing before each commit:
+
+```bash
+# Install hook
+cp git-hooks/pre-commit .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+
+# Remove hook
+rm .git/hooks/pre-commit
+```
+
 ### BDD Format Tests
 
 All unit tests must use **BDD (Behavior-Driven Development) format**:
@@ -270,9 +302,9 @@ Multi-module Maven project with two modules:
 - **validator/**: Validates YAML definitions (`ApiValidator` enforces DFX rules, circular references)
 - **generator/**: Code generation framework
   - `CodeGenerator` interface: `generateController()`, `generateRequest()`, `generateResponse()`
-  - `CodeGeneratorFactory`: Returns CXF or Spring generator based on config
-  - `cxf/CxfCodeGenerator`: JAX-RS implementation using JavaPoet
-  - `spring/SpringCodeGenerator`: Placeholder (not implemented - requires v2.0.x)
+  - `CodeGeneratorFactory`: Returns Spring or CXF generator based on config
+  - `spring/SpringCodeGenerator`: Spring MVC implementation (@PathVariable, @RequestParam, etc.)
+  - `cxf/CxfCodeGenerator`: JAX-RS implementation (@PathParam, @QueryParam, etc.)
 - **config/**: Configuration loaded from `codegen-config.yaml`
 - **util/**: `CodeGenUtil` with utility methods
 
@@ -436,7 +468,7 @@ The analyzer automatically adds validation rules for Swagger/OpenAPI parameters:
 
 ```yaml
 framework:
-  type: cxf              # cxf or spring
+  type: spring              # spring (default) or cxf
 
 copyright:
   company: ""            # Company name (empty to omit from copyright header)
@@ -461,29 +493,41 @@ output:
 
 2. **Output Strategy**: Controllers go to `generated/api/` (user copies manually), Request/Response classes go to `src/main/java/req/` and `src/main/java/rsp/` (auto-overwrite, no manual edits)
 
-3. **Custom Annotations**: Configure in `codegen-config.yaml`:
+3. **Framework Support**:
+   - **Default**: Spring MVC annotations (@PathVariable, @RequestParam, @RequestHeader, @CookieValue)
+   - **Compatibility**: CXF (JAX-RS) annotations supported via x-framework field
+   - **Per-API Override**: Use `x-framework` extension field in API definition to specify different framework:
+     ```yaml
+     apis:
+       - name: getUser
+         path: /users/{id}
+         method: GET
+         x-framework: cxf    # Use CXF annotations for this API
+     ```
+
+4. **Custom Annotations**: Configure in `codegen-config.yaml`:
    ```yaml
    customAnnotations:
      classAnnotations: ["@Secured", "@AuditLog"]
      methodAnnotations: ["@Permission(\"default\")"]
    ```
 
-4. **DFX Principles**: Validator enforces defensive rules:
+5. **DFX Principles**: Validator enforces defensive rules:
    - `maxSize` must be > 0 (error)
    - `min` should be >= 0 (warning)
    - `minLength` cannot exceed `maxLength`
    - `minSize` cannot exceed `maxSize`
 
-5. **Circular Reference Detection**: `CodeGenUtil.hasCircularReference()` uses visited set tracking
+6. **Circular Reference Detection**: `CodeGenUtil.hasCircularReference()` uses visited set tracking
 
-6. **Controller Naming Convention**: Based on API name prefix:
+7. **Controller Naming Convention**: Based on API name prefix:
    - `create*` → `CreateController`
    - `update*` → `UpdateController`
    - `delete*` → `DeleteController`
    - `query*`, `get*` → `QueryController`
    - otherwise → `{CapitalizedName}Controller`
 
-7. **Enum Handling**: `type: Enum` generates a `String` field with `enumValues` as documentation
+8. **Enum Handling**: `type: Enum` generates a `String` field with `enumValues` as documentation
 
 ## Web UI (`web-ui/`)
 
@@ -544,18 +588,6 @@ api-codegen-intellij-standalone/
 - JavaPoet 1.13.0 (code generation)
 - Lombok 1.18.34
 - JUnit 5.11.0
-
-## MCP Server (`mcp-server/`)
-
-Custom MCP server for browser automation and screenshots.
-
-```bash
-cd mcp-server && npm install
-node server.js   # Start MCP server
-node screenshot.js  # Screenshot utility
-```
-
-**Dependencies:** puppeteer-core (browser automation)
 
 ## Claude Code Configuration
 

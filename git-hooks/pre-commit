@@ -1,0 +1,27 @@
+#!/bin/bash
+# =============================================================================
+# Git pre-commit hook for API Codegen
+# =============================================================================
+# 此脚本会在每次 git commit 前自动运行测试
+# 安装方法: cp git-hooks/pre-commit .git/hooks/pre-commit
+# =============================================================================
+
+# 切换到项目根目录
+cd "$(git rev-parse --show-toplevel)"
+
+# 检查是否有测试脚本
+if [ -f "./run-all-tests.sh" ]; then
+    echo "Running API Codegen tests before commit..."
+    bash ./run-all-tests.sh
+
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "=========================================="
+        echo "测试失败，commit 已取消"
+        echo "请修复测试问题后重试"
+        echo "=========================================="
+        exit 1
+    fi
+else
+    echo "警告: run-all-tests.sh 不存在，跳过测试"
+fi

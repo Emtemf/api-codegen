@@ -264,34 +264,22 @@ public class ApiCodegenMojo extends AbstractMojo {
             config.setBasePackage(basePackage);
         }
 
+        // 构建版权声明字符串
+        String copyright = "";
         if (company != null && !company.isBlank()) {
-            if (config.getCopyright() == null) {
-                config.setCopyright(new CodegenConfig.CopyrightConfig());
-            }
-            config.getCopyright().setCompany(company);
+            String year = startYear != null && !startYear.isBlank() ? startYear : String.valueOf(Year.now().getValue());
+            copyright = "Copyright (c) " + year + " " + company + ". All rights reserved.";
+        } else if (startYear != null && !startYear.isBlank()) {
+            copyright = "Copyright (c) " + startYear + ". All rights reserved.";
         }
-        if (startYear != null && !startYear.isBlank()) {
-            if (config.getCopyright() == null) {
-                config.setCopyright(new CodegenConfig.CopyrightConfig());
-            }
-            try {
-                config.getCopyright().setStartYear(Integer.parseInt(startYear));
-            } catch (NumberFormatException e) {
-                logWarning("startYear 解析失败: " + startYear + ", 使用当前年份");
-                config.getCopyright().setStartYear(Year.now().getValue());
-            }
+        if (!copyright.isBlank()) {
+            config.setCopyright(copyright);
         }
+
         if (config.getOpenApi() == null) {
             config.setOpenApi(new CodegenConfig.OpenApiConfig());
         }
         config.getOpenApi().setEnabled(openapi);
-
-        // 默认版权配置（公司名为空）
-        if (config.getCopyright() == null) {
-            config.setCopyright(new CodegenConfig.CopyrightConfig());
-            config.getCopyright().setCompany("");
-            config.getCopyright().setStartYear(Year.now().getValue());
-        }
 
         // 默认输出配置
         if (config.getOutput() == null) {

@@ -41,7 +41,7 @@ public class SpringCodeGenerator implements CodeGenerator {
         return files;
     }
 
-    @Override
+    @SuppressWarnings("unused")
     public Map<String, String> generateControllers(ApiDefinition apiDefinition, CodegenConfig config) {
         Map<String, String> files = new LinkedHashMap<>();
 
@@ -100,7 +100,7 @@ public class SpringCodeGenerator implements CodeGenerator {
         sb.append("@RequestMapping(\"").append(api.getPath()).append("\")\n");
         sb.append("public class ").append(getControllerClassName(api.getName())).append(" {\n\n");
 
-        sb.append("    @").append(capitalize(api.getMethod()));
+        sb.append("    @").append(getSpringHttpMethodAnnotation(api.getMethod()));
         sb.append("(\"").append(api.getPath()).append("\")\n");
         sb.append("    public ResponseEntity<?> ").append(api.getName()).append("(");
 
@@ -156,7 +156,7 @@ public class SpringCodeGenerator implements CodeGenerator {
         }
 
         // HTTP 方法注解
-        sb.append("    @").append(capitalize(api.getMethod()));
+        sb.append("    @").append(getSpringHttpMethodAnnotation(api.getMethod()));
         sb.append("(\"").append(apiPath).append("\")\n");
 
         // 生成方法签名
@@ -468,6 +468,17 @@ public class SpringCodeGenerator implements CodeGenerator {
     private String capitalize(String s) {
         if (s == null || s.isEmpty()) return s;
         return s.substring(0, 1).toUpperCase() + s.substring(1);
+    }
+
+    private String getSpringHttpMethodAnnotation(Api.HttpMethod method) {
+        switch (method) {
+            case GET: return "GetMapping";
+            case POST: return "PostMapping";
+            case PUT: return "PutMapping";
+            case DELETE: return "DeleteMapping";
+            case PATCH: return "PatchMapping";
+            default: return "PostMapping";
+        }
     }
 
     private String getFileHeader(CodegenConfig config) {

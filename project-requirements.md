@@ -4,9 +4,9 @@
 
 **API 代码生成器** - 根据 YAML 定义自动生成 Java API 代码，减少重复劳动，保障设计与代码一致。
 
-- 当前版本：v1.0.0（CXF 支持）
+- 当前版本：v1.1.0（Spring MVC + CXF 兼容）
 - Java 版本：21
-- 目标框架：CXF（JAX-RS）、Spring MVC（预留）
+- 目标框架：Spring MVC（默认），CXF 兼容
 
 ---
 
@@ -247,10 +247,10 @@ Java 21
 
 | 功能 | 状态 | 说明 |
 |------|------|------|
-| CXF 代码生成 | 开发中 | JAX-RS 风格 Controller + Req/Rsp |
-| Spring 代码生成 | 待开发 | v2.0.x |
+| Spring MVC 代码生成 | ✅ 完成 | 默认框架，Spring MVC 注解 |
+| CXF 代码生成 | ✅ 完成 | 兼容支持，通过 x-framework 指定 |
 | Maven 插件 | ✅ | 基础功能完成 |
-| 单元测试 | 待补充 | 保护核心逻辑 |
+| 单元测试 | ✅ | 保护核心逻辑 |
 | IDEA 插件 | 待开发 | 未来规划 |
 | 浏览器插件 | 待开发 | 未来规划，与公司平台集成 |
 | 测试用例生成 | 待开发 | 未来规划 |
@@ -262,7 +262,8 @@ Java 21
 1. **核心功能可用**：
    - YAML 解析 ✅
    - 校验器（DFX 规范）✅
-   - CXF 代码生成 ⚠️ 有 bug 待修复
+   - Spring MVC 代码生成 ✅（默认）
+   - CXF 兼容支持 ✅（通过 x-framework）
    - Maven 插件 ✅
 
 2. **可运行、可测试**：
@@ -323,7 +324,7 @@ D:\idea\workSpace\api-codegen\
 | yamlFile | `${basedir}/src/main/resources/api.yaml` | YAML 文件路径 |
 | outputDir | `${basedir}/src/main/java` | 输出目录 |
 | basePackage | `com.apicgen` | 基础包名 |
-| framework | `cxf` | 框架类型 |
+| framework | `spring` | 框架类型（spring/cxf） |
 | force | `false` | 是否强制覆盖 |
 | configFile | `${basedir}/codegen-config.yaml` | 配置文件路径 |
 
@@ -331,7 +332,7 @@ D:\idea\workSpace\api-codegen\
 
 ```yaml
 framework:
-  type: cxf
+  type: spring
 
 copyright:
   company: ""              # Company name (empty to omit from copyright header)
@@ -768,18 +769,20 @@ CodeReview 发现问题后：
 
 ## 九、下一步工作
 
-### 短期（v1.0.x）
+### 短期（v1.1.x）
 
 - [x] YAML 解析和校验
-- [x] CXF 代码生成
+- [x] Spring MVC 代码生成（默认）
+- [x] CXF 兼容支持（通过 x-framework）
 - [x] Maven 插件集成
-- [ ] 补充单元测试
+- [x] 单元测试覆盖
 - [ ] 完善错误提示
 
 ### 中期（v2.0.x）
 
-- [ ] Spring MVC 支持
+- [x] Spring MVC 支持（v1.1.0 完成）
 - [x] Swagger/OpenAPI 注解支持（自动转换）
+- [ ] IDEA 插件
 - [ ] 浏览器插件（SE 可视化编辑）
 
 ### 长期（Claude Skills 流水线）
@@ -913,6 +916,5 @@ v1.0.x（当前）                    v1.1.x                    v2.0.x
 | 版本 | 日期 | 变更 |
 |------|------|------|
 | v1.0.0 | 2024 | 初始版本，CXF 支持 |
-| v1.0.1 | - | 修复代码生成 bug，补充单元测试（本次） |
-| v1.1.0 | - | 完善接口文档、Postman 导出 |
-| v2.0.0 | - | Spring 支持、OpenAPI 注解 |
+| v1.1.0 | 2025 | Spring MVC 默认框架 + CXF 兼容，x-framework 扩展支持 |
+| v2.0.0 | - | OpenAPI 注解、IDEA 插件 |
