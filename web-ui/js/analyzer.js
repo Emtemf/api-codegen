@@ -703,25 +703,13 @@ class ApiYamlAnalyzer {
                     this.addInfoMessage(`修复参数 ${param.name}: 必填参数添加 @NotNull 校验`);
                 }
 
-                // 添加 type（如果没有 schema）
+                // 添加 type（如果没有 schema，默认使用 string）
                 // 注意：Swagger参数类型可能在 param.type 或 param.schema.type
+                // 不根据参数名推断类型，保留用户的原始定义
                 var paramType = param.type || (param.schema && param.schema.type);
                 if (!paramType && !param.schema) {
-                    // 根据参数名推断类型
-                    const name = param.name.toLowerCase();
-                    if (name.includes('id') || name === 'page' || name === 'size' || name === 'count' || name === 'age' || name === 'quantity') {
-                        param.type = 'integer';
-                        if (param.schema) param.schema.type = 'integer';
-                    } else if (name.includes('price') || name === 'amount' || name === 'total') {
-                        param.type = 'number';
-                        if (param.schema) param.schema.type = 'number';
-                    } else if (name.includes('flag') || name === 'enabled' || name === 'active' || name === 'status') {
-                        param.type = 'boolean';
-                        if (param.schema) param.schema.type = 'boolean';
-                    } else {
-                        param.type = 'string';
-                        if (param.schema) param.schema.type = 'string';
-                    }
+                    // Swagger规范默认类型是string，保留原始定义不修改
+                    // 不再根据参数名推断类型
                 }
 
                 // 路径参数添加默认校验规则
