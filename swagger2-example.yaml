@@ -366,3 +366,37 @@ paths:
       responses:
         '201':
           description: 创建成功
+
+  # ========== 混合框架示例 ==========
+  # 使用 x-framework 为每个 API 指定框架类型
+  # 可选值: cxf (默认), spring
+
+  # 示例1: 使用 Spring MVC
+  /spring/users:
+    get:
+      summary: Spring MVC 用户列表
+      operationId: springGetUsers
+      x-framework: spring  # 指定使用 Spring MVC
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success
+
+  # 示例2: 使用 CXF (默认)
+  /cxf/users:
+    get:
+      summary: CXF 用户列表
+      operationId: cxfGetUsers
+      # 不指定 x-framework，默认使用 CXF
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Success

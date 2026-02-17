@@ -46,6 +46,12 @@ public class Api {
     private List<String> annotations;
 
     /**
+     * 框架类型: cxf 或 spring
+     * 如果未指定，则使用全局配置
+     */
+    private String framework;
+
+    /**
      * HTTP 方法枚举
      */
     public enum HttpMethod {
