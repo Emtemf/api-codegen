@@ -35,17 +35,20 @@ npx serve -l 8080
 
 > 注意：如果图片未正常显示，请尝试强制刷新浏览器 (Ctrl+F5)
 
-**Swagger 2.0 示例** - 自动分析校验规则
-![Swagger Demo](docs/images/01-swagger-demo.png)
+**1. 初始状态** - 加载 Swagger YAML 示例
+![Initial State](docs/images/05-initial-state.png)
 
-**OpenAPI 3.0 示例**
-![OpenAPI Demo](docs/images/02-openapi-demo.png)
+**2. 点击分析** - 检测校验问题
+![Swagger Analyze](docs/images/05-swagger-analyze.png)
 
-**路径错误自动修复**
-![Path Error](docs/images/03-path-error-analysis.png)
+**3. 校验结果** - 显示所有 DFX 规则问题
+![Validation Results](docs/images/06-validation-results.png)
 
-**自动修复预览对比**
-![Auto-fix Preview](docs/images/04-autofix-preview.png)
+**4. 自动修复预览** - 对比修复前后差异
+![Auto-fix Preview](docs/images/07-after-fix.png)
+
+**5. OpenAPI 3.0 示例** - 同样支持
+![OpenAPI Demo](docs/images/09-openapi-initial.png)
 
 ### Maven 插件
 
@@ -210,6 +213,48 @@ mvn test
 - 正向+反向测试（合法和非法输入）
 
 **重要**：不根据参数名推断类型，保留用户原始定义。
+
+### 端到端测试场景
+
+```bash
+# Web UI 单元测试
+cd web-ui && node test/diff-test.js
+
+# Web UI 自动化测试
+node test-ui-diff.js
+```
+
+**测试覆盖的 DFX 规则**：
+
+| DFX 规则 | 测试场景 |
+|----------|---------|
+| DFX-001 | 路径包含 `//` → 自动删除重复斜杠 |
+| DFX-002 | 路径不以 `/` 开头 → 自动添加前缀 |
+| DFX-003 | 必填参数缺少 `@NotNull` → 自动添加 |
+| DFX-004 | String 字段缺少长度校验 → 自动添加 `@Size` |
+| DFX-005 | email 字段缺少格式校验 → 自动添加 `@Email` |
+| DFX-006 | phone 字段缺少正则校验 → 自动添加 pattern |
+| DFX-007 | 数值字段缺少范围校验 → 自动添加 `@Min`/`@Max` |
+| DFX-008 | List 字段缺少大小校验 → 自动添加 `@Size` |
+| DFX-011 | page 参数缺少范围 → 自动添加 `min:1, max:2147483647` |
+| DFX-012 | pageSize 参数缺少范围 → 自动添加 `min:1, max:100` |
+| DFX-014 | 路径参数缺少校验 → 自动添加 `min:1` 或 `minLength:1` |
+
+**架构分层**：
+
+```
+┌─────────────────────────────────────┐
+│        Web UI (前端展示)            │
+└──────────────┬──────────────────────┘
+               │ HTTP/文件
+┌──────────────▼──────────────────────┐
+│    Maven 插件 / CLI (业务逻辑)       │ ← 核心实现
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│       api-codegen-core (核心库)      │ ← 校验/转换/生成
+└─────────────────────────────────────┘
+```
 
 ## License
 
