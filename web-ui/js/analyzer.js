@@ -129,14 +129,127 @@ class ApiYamlAnalyzer {
      * 分析 Swagger parameter
      */
     analyzeSwaggerParameter(param, path, method, index) {
+        const paramPath = `${method} ${path} parameters[${index}]`;
+
         // 检查必需参数是否有描述
         if (param.required && !param.description) {
-            this.addIssue('warn', `必填参数 ${param.name} 缺少 description`, 0, null, `${method} ${path} parameters[${index}]`);
+            this.addIssue('warn', `必填参数 ${param.name} 缺少 description`, 0, null, paramPath);
         }
 
         // 检查参数类型
-        if (!param.type && !param.schema) {
-            this.addIssue('warn', `参数 ${param.name} 缺少类型定义`, 0, null, `${method} ${path} parameters[${index}]`);
+        const paramType = param.type || (param.schema && param.schema.type);
+        if (!paramType && !param.schema) {
+            this.addIssue('warn', `参数 ${param.name} 缺少类型定义`, 0, null, paramPath);
+        }
+
+        // 获取参数的实际类型和校验规则
+        const fieldName = (param.name || '').toLowerCase();
+
+        // 检查必填参数的校验（@NotNull/@NotBlank）
+        if (param.required) {
+            const hasRequiredValidation = param.minNotNull ||
+                param.minimum !== undefined ||
+                param.minLength !== undefined ||
+                (param.schema && (param.schema.minimum !== undefined || param.schema.minLength !== undefined));
+            if (!hasRequiredValidation) {
+                this.addIssue('warn', `必填参数 ${param.name} 缺少 @NotNull 校验`, 0, null, paramPath);
+            }
+        }
+
+        // 检查 String 类型的校验规则
+        if (paramType === 'string') {
+            const hasStringValidation =
+                param.minLength !== undefined ||
+                param.maxLength !== undefined ||
+                param.pattern !== undefined ||
+                (param.schema && (param.schema.minLength !== undefined || param.schema.maxLength !== undefined || param.schema.pattern !== undefined));
+
+            if (!hasStringValidation) {
+                // 检查是否是邮箱字段
+                if (fieldName.includes('email') || fieldName.includes('mail')) {
+                    this.addIssue('warn', `邮箱字段 ${param.name} 缺少 @Email 校验`, 0, null, paramPath);
+                }
+                // 检查是否是电话字段
+                else if (fieldName.includes('phone') || fieldName.includes('mobile')) {
+                    this.addIssue('warn', `电话字段 ${param.name} 缺少正则校验`, 0, null, paramPath);
+                }
+                // 普通 String 字段
+                else {
+                    this.addIssue('warn', `String 字段 ${param.name} 缺少长度校验`, 0, null, paramPath);
+                }
+            }
+
+            // 检查 minLength > maxLength
+            const minLen = param.minLength || (param.schema && param.schema.minLength);
+            const maxLen = param.maxLength || (param.schema && param.schema.maxLength);
+            if (minLen !== undefined && maxLen !== undefined && minLen > maxLen) {
+                this.addIssue('error', `参数 ${param.name} 的 minLength 不能大于 maxLength`, 0, null, paramPath);
+            }
+        }
+
+        // 检查数值类型的校验规则
+        if (paramType === 'integer' || paramType === 'number') {
+            const hasNumericValidation =
+                param.minimum !== undefined ||
+                param.maximum !== undefined ||
+                (param.schema && (param.schema.minimum !== undefined || param.schema.maximum !== undefined));
+
+            if (!hasNumericValidation) {
+                // 检查是否是分页参数
+                if (fieldName === 'page' || fieldName === 'pageNum') {
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:1, max:2147483647)`, 0, null, paramPath);
+                }
+                // 检查是否是分页大小参数
+                else if (fieldName.includes('size') || fieldName.includes('limit') || fieldName === 'pageSize') {
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:1, max:100)`, 0, null, paramPath);
+                }
+                // 检查是否是年龄参数
+                else if (fieldName.includes('age')) {
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0, max:150)`, 0, null, paramPath);
+                }
+                // 检查是否是评分参数
+                else if (fieldName.includes('score') || fieldName.includes('rate')) {
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0, max:100)`, 0, null, paramPath);
+                }
+                // 检查是否是金额参数
+                else if (fieldName.includes('price') || fieldName.includes('amount') || fieldName.includes('total') || fieldName.includes('balance')) {
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0)`, 0, null, paramPath);
+                }
+                // 检查是否是路径参数
+                else if (param.in === 'path') {
+                    this.addIssue('warn', `路径参数 ${param.name} 缺少最小值校验 (建议 minimum:1)`, 0, null, paramPath);
+                }
+                // 普通数值参数
+                else if (!fieldName.includes('id')) {
+                    this.addIssue('warn', `数值字段 ${param.name} 缺少范围校验`, 0, null, paramPath);
+                }
+            }
+
+            // 检查 min > max
+            const minVal = param.minimum !== undefined ? param.minimum : (param.schema && param.schema.minimum);
+            const maxVal = param.maximum !== undefined ? param.maximum : (param.schema && param.schema.maximum);
+            if (minVal !== undefined && maxVal !== undefined && minVal > maxVal) {
+                this.addIssue('error', `参数 ${param.name} 的 minimum 不能大于 maximum`, 0, null, paramPath);
+            }
+        }
+
+        // 检查 List/Array 类型的校验规则
+        if (paramType === 'array' || (param.schema && param.schema.type === 'array')) {
+            const hasArrayValidation =
+                param.minItems !== undefined ||
+                param.maxItems !== undefined ||
+                (param.schema && (param.schema.minItems !== undefined || param.schema.maxItems !== undefined));
+
+            if (!hasArrayValidation) {
+                this.addIssue('warn', `List 字段 ${param.name} 缺少大小校验`, 0, null, paramPath);
+            }
+
+            // 检查 minItems > maxItems
+            const minItems = param.minItems || (param.schema && param.schema.minItems);
+            const maxItems = param.maxItems || (param.schema && param.schema.maxItems);
+            if (minItems !== undefined && maxItems !== undefined && minItems > maxItems) {
+                this.addIssue('error', `参数 ${param.name} 的 minItems 不能大于 maxItems`, 0, null, paramPath);
+            }
         }
     }
 
