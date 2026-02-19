@@ -697,8 +697,14 @@ class ApiYamlAnalyzer {
                 }
 
                 // 处理 required 参数：添加 @NotNull 注解（通过设置 minimum 来标记）
-                // Swagger参数没有专门的校验注解字段，我们用 minNotNull 来标记
-                if (param.required === true) {
+                // 检查是否已有校验规则，避免重复添加
+                const hasRequiredValidation = param.required === true &&
+                    !param.minNotNull &&
+                    !param.minimum &&
+                    !param.minLength &&
+                    !(param.schema && (param.schema.minimum || param.schema.minLength || param.schema.required === true));
+
+                if (hasRequiredValidation) {
                     param.minNotNull = true;
                     this.addInfoMessage(`修复参数 ${param.name}: 必填参数添加 @NotNull 校验`);
                 }
@@ -716,15 +722,17 @@ class ApiYamlAnalyzer {
                 if (param.in === 'path') {
                     var pathParamType = param.type || (param.schema && param.schema.type);
                     if (pathParamType === 'integer' || pathParamType === 'number') {
-                        // 路径参数是数值类型，添加范围校验
-                        if (!param.minimum && !(param.schema && param.schema.minimum)) {
+                        // 路径参数是数值类型，添加范围校验（仅当不存在时）
+                        const hasMinValidation = param.minimum || (param.schema && param.schema.minimum);
+                        if (!hasMinValidation) {
                             param.minimum = 1;
                             if (param.schema) param.schema.minimum = 1;
                             this.addInfoMessage(`修复路径参数 ${param.name}: 添加最小值校验 (minimum=1)`);
                         }
                     } else if (pathParamType === 'string') {
-                        // 路径参数是字符串类型，添加长度校验（默认非空）
-                        if (!param.minLength && !(param.schema && param.schema.minLength)) {
+                        // 路径参数是字符串类型，添加长度校验（默认非空，仅当不存在时）
+                        const hasMinLengthValidation = param.minLength || (param.schema && param.schema.minLength);
+                        if (!hasMinLengthValidation) {
                             param.minLength = 1;
                             if (param.schema) param.schema.minLength = 1;
                             this.addInfoMessage(`修复路径参数 ${param.name}: 添加最小长度校验 (minLength=1)`);
@@ -736,8 +744,11 @@ class ApiYamlAnalyzer {
                 const fieldName = (param.name || '').toLowerCase();
                 var paramType = param.type || (param.schema && param.schema.type);
 
-                // String类型添加长度校验
-                if (paramType === 'string' && !param.minLength && !param.maxLength && !param.pattern && !(param.schema && param.schema.minLength) && !(param.schema && param.schema.maxLength) && !(param.schema && param.schema.pattern)) {
+                // String类型添加长度校验（仅当不存在任何校验时）
+                const hasStringValidation = param.minLength || param.maxLength || param.pattern ||
+                    (param.schema && (param.schema.minLength || param.schema.maxLength || param.schema.pattern));
+
+                if (paramType === 'string' && !hasStringValidation) {
                     if (fieldName.includes('email') || fieldName.includes('mail')) {
                         param.pattern = '^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$';
                         if (param.schema) param.schema.pattern = param.pattern;
@@ -762,8 +773,11 @@ class ApiYamlAnalyzer {
                     }
                 }
 
-                // Integer/Number类型添加范围校验
-                if ((paramType === 'integer' || paramType === 'number') && !param.minimum && !param.maximum && !(param.schema && param.schema.minimum) && !(param.schema && param.schema.maximum)) {
+                // Integer/Number类型添加范围校验（仅当不存在任何校验时）
+                const hasNumericValidation = param.minimum || param.maximum ||
+                    (param.schema && (param.schema.minimum || param.schema.maximum));
+
+                if ((paramType === 'integer' || paramType === 'number') && !hasNumericValidation) {
                     if (fieldName === 'page' || fieldName === 'pageNum') {
                         // 页码从1开始，添加默认最大值
                         param.minimum = 1;
