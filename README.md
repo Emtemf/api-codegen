@@ -36,17 +36,17 @@ npx serve -l 8080
 
 > 注意：如果图片未正常显示，请尝试强制刷新浏览器 (Ctrl+F5)
 
-**1. 初始状态** - 加载 Swagger YAML 示例
+**1. 初始状态** - 空白编辑器
 ![Initial State](docs/images/05-initial-state.png)
 
-**2. 点击分析** - 检测校验问题
+**2. 点击"加载示例"** - 选择 Swagger 或 OpenAPI 示例
+![Load Example](docs/images/05-load-example.png)
+
+**3. 点击"分析"** - 检测校验问题
 ![Swagger Analyze](docs/images/05-swagger-analyze.png)
 
-**3. 校验结果** - 显示所有 DFX 规则问题
+**4. 校验结果** - 显示所有 DFX 规则问题
 ![Validation Results](docs/images/06-validation-results.png)
-
-**4. 自动修复预览** - 对比修复前后差异
-![Auto-fix Preview](docs/images/07-after-fix.png)
 
 **5. OpenAPI 3.0 示例** - 同样支持
 ![OpenAPI Demo](docs/images/09-openapi-initial.png)
