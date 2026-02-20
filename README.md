@@ -142,8 +142,6 @@ java -jar api-codegen.jar <yaml文件> [选项]
 
 系统会自动检测字段并添加校验规则：
 
-> **注意**: DFX 编号历史原因存在间隙 (009, 010, 013)，这是正常的。
-
 ### 路径规范
 
 | 场景 | 规则 | DFX代码 |
@@ -171,6 +169,31 @@ java -jar api-codegen.jar <yaml文件> [选项]
 | 电话字段缺少正则校验 | 包含 phone/mobile | DFX-006 |
 | 数值字段缺少范围 | Integer/Long/Double | DFX-007 |
 | List 字段缺少大小 | minSize: 1, maxSize: 100 | DFX-008 |
+
+### 校验规则
+
+| 场景 | 规则 | DFX代码 |
+|------|------|---------|
+| minLength 超过 maxLength | 报错 | DFX-009 |
+| min 超过 max | 报错 | DFX-010 |
+| minSize 超过 maxSize | 报错 | DFX-011 |
+
+### 接口规范
+
+| 场景 | 规则 | DFX代码 |
+|------|------|---------|
+| 缺少 operationId | 自动生成 | DFX-012 |
+| 缺少成功响应 2xx | 警告 | DFX-013 |
+| 缺少 API 名称 | 报错 | DFX-015 |
+| 缺少 API 路径 | 报错 | DFX-016 |
+| 缺少 HTTP 方法 | 报错 | DFX-017 |
+
+### YAML 语法
+
+| 场景 | 规则 | DFX代码 |
+|------|------|---------|
+| 重复的键 | 报错 | DFX-018 |
+| YAML 格式错误 | 报错 | DFX-019 |
 
 ### 支持的参数类型
 

@@ -1092,11 +1092,12 @@ class ApiYamlAnalyzer {
         if (message.includes('minSize 不能大于 maxSize')) return 'DFX-011: 校验规则 - minSize 不能超过 maxSize';
         if (message.includes('缺少 operationId')) return 'DFX-012: 接口规范 - operationId 用于唯一标识接口';
         if (message.includes('缺少成功响应')) return 'DFX-013: 接口规范 - 需定义 2xx 成功响应';
-        if (message.includes('缺少 API 名称')) return 'DFX-014: 接口规范 - 必须指定 API 名称';
-        if (message.includes('缺少 API 路径')) return 'DFX-015: 接口规范 - 必须指定 API 路径';
-        if (message.includes('缺少 HTTP 方法')) return 'DFX-016: 接口规范 - 必须指定 HTTP 方法';
-        if (message.includes('重复的')) return 'DFX-017: YAML 语法 - 检测到重复的键';
-        if (message.includes('解析错误')) return 'DFX-018: YAML 语法 - YAML 格式解析失败';
+        if (message.includes('路径参数') && message.includes('缺少最小值校验')) return 'DFX-014: 路径校验 - 路径参数需添加最小值校验';
+        if (message.includes('缺少 API 名称')) return 'DFX-015: 接口规范 - 必须指定 API 名称';
+        if (message.includes('缺少 API 路径')) return 'DFX-016: 接口规范 - 必须指定 API 路径';
+        if (message.includes('缺少 HTTP 方法')) return 'DFX-017: 接口规范 - 必须指定 HTTP 方法';
+        if (message.includes('重复的')) return 'DFX-018: YAML 语法 - 检测到重复的键';
+        if (message.includes('解析错误')) return 'DFX-019: YAML 语法 - YAML 格式解析失败';
         if (severity === 'error') return '规则验证失败';
         return '建议优化';
     }
