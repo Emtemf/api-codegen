@@ -106,11 +106,6 @@ public class SwaggerConverter {
             api.setDescription(operation.get("summary").asText(""));
         }
 
-        // 支持 x-framework 扩展字段，允许每个 API 指定框架
-        if (operation.has("x-framework")) {
-            api.setFramework(operation.get("x-framework").asText("cxf"));
-        }
-
         // 转换 Request
         ClassDefinition requestDef = convertRequest(operation, root);
         if (requestDef != null) {
