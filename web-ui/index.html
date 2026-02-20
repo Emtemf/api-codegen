@@ -425,6 +425,16 @@
             line-height: 22px;
             position: relative;
         }
+        .diff-prefix {
+            display: inline-block;
+            width: 16px;
+            text-align: center;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .diff-line.add .diff-prefix { color: #3fb950; }
+        .diff-line.remove .diff-prefix { color: #f85149; }
+        .diff-line-empty .diff-prefix { color: #3fb950; }
         .diff-line.add {
             background: rgba(46, 160, 67, 0.1);
         }
@@ -447,15 +457,19 @@
             background: rgba(248, 81, 73, 0.08);
             color: #f85149;
         }
-        /* Empty line for alignment */
+        /* Empty line for alignment - GitHub style */
         .diff-line-empty {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(46, 160, 67, 0.05);
+        }
+        .diff-line-empty:hover {
+            background: rgba(46, 160, 67, 0.08);
         }
         .diff-line-empty .diff-line-content {
             color: #484f58;
         }
         .diff-line-empty .diff-line-num {
             color: #3a3a3a;
+            background: rgba(46, 160, 67, 0.05);
         }
 
         .diff-footer {
@@ -1129,6 +1143,10 @@ paths:
                     }
                     return response.text();
                 })
+                .then(function(yaml) {
+                    // 自动去掉注释
+                    return stripYamlComments(yaml);
+                })
                 .catch(function(err) {
                     console.error('加载文件失败:', err);
                     return null;
@@ -1478,8 +1496,9 @@ paths:
         }
 
         function autoFix() {
-            // 使用原始内容作为对比基础
-            var content = originalYaml || yamlEditor.getValue();
+            // 使用原始内容作为对比基础，先去掉注释
+            var rawContent = originalYaml || yamlEditor.getValue();
+            var content = stripYamlComments(rawContent);
             var analyzer = new ApiYamlAnalyzer();
 
             // Get selected issues and compute selective fix
@@ -1488,7 +1507,7 @@ paths:
 
             var fixed = analyzer.fixSelective(content, selectedIndices);
 
-            // Show diff preview - 使用原始内容作为修复前
+            // Show diff preview - 使用去掉注释后的内容作为修复前
             showDiffPreview(content, fixed);
             setMessage('点击"应用修复"确认更改');
         }
@@ -1592,6 +1611,30 @@ paths:
                             } else if (change.prop.startsWith('参数 ') && change.prop.includes(' type')) {
                                 var paramName = change.prop.replace('参数 ', '').replace(' type', '').trim();
                                 changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加类型');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('minimum')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' minimum', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加 @Min 校验');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('maximum')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' maximum', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加 @Max 校验');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('minLength')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' minLength', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加最小长度校验');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('maxLength')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' maxLength', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加最大长度校验');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('pattern')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' pattern', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加正则校验');
+                                hasImportantChange = true;
+                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('required')) {
+                                var paramName = change.prop.replace('参数 ', '').replace(' required', '').trim();
+                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加必填校验');
                                 hasImportantChange = true;
                             }
                         });
@@ -1742,7 +1785,9 @@ paths:
 
                 // 处理路径参数
                 pathParams.forEach(function(p) {
-                    var paramType = p.type === 'integer' ? 'Integer' : (p.type === 'number' ? 'Double' : 'String');
+                    // 支持 param.type 或 param.schema.type
+                    var paramType = p.type || (p.schema && p.schema.type);
+                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
                     var annots = '';
                     // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true) {
@@ -2190,6 +2235,53 @@ paths:
                             // Path was fixed (//users -> /users or users -> /users)
                             var afterOpFixed = afterPath[Object.keys(afterPath)[0]];
                             var beforeOpFixed = beforePath[originalPath] || {};
+                            var changes = [{ prop: 'path', before: originalPath, after: path }];
+
+                            // 比较参数变化
+                            if (afterOpFixed.parameters && afterOpFixed.parameters.length > 0) {
+                                var beforeParamMap = {};
+                                if (beforeOpFixed.parameters) {
+                                    beforeOpFixed.parameters.forEach(function(p) { beforeParamMap[p.name] = p; });
+                                }
+                                afterOpFixed.parameters.forEach(function(param) {
+                                    var beforeParam = beforeParamMap[param.name];
+                                    if (!beforeParam) {
+                                        changes.push({ prop: '参数 ' + param.name, before: '(无)', after: '新增' });
+                                    } else {
+                                        // 检查description变化
+                                        if (!beforeParam.description && param.description) {
+                                            changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
+                                        }
+                                        // 检查校验规则变化
+                                        var beforeMinLength = beforeParam.minLength || (beforeParam.schema && beforeParam.schema.minLength);
+                                        var afterMinLength = param.minLength || (param.schema && param.schema.minLength);
+                                        if (!beforeMinLength && afterMinLength !== undefined) {
+                                            changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: afterMinLength });
+                                        }
+                                        var beforeMaxLength = beforeParam.maxLength || (beforeParam.schema && beforeParam.schema.maxLength);
+                                        var afterMaxLength = param.maxLength || (param.schema && param.schema.maxLength);
+                                        if (!beforeMaxLength && afterMaxLength !== undefined) {
+                                            changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: afterMaxLength });
+                                        }
+                                        var beforeMinimum = beforeParam.minimum || (beforeParam.schema && beforeParam.schema.minimum);
+                                        var afterMinimum = param.minimum || (param.schema && param.schema.minimum);
+                                        if (!beforeMinimum && afterMinimum !== undefined) {
+                                            changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: afterMinimum });
+                                        }
+                                        var beforeMaximum = beforeParam.maximum || (beforeParam.schema && beforeParam.schema.maximum);
+                                        var afterMaximum = param.maximum || (param.schema && param.schema.maximum);
+                                        if (!beforeMaximum && afterMaximum !== undefined) {
+                                            changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: afterMaximum });
+                                        }
+                                        var beforePattern = beforeParam.pattern || (beforeParam.schema && beforeParam.schema.pattern);
+                                        var afterPattern = param.pattern || (param.schema && param.schema.pattern);
+                                        if (!beforePattern && afterPattern) {
+                                            changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: afterPattern });
+                                        }
+                                    }
+                                });
+                            }
+
                             result.apis.push({
                                 path: path,
                                 originalPath: originalPath,
@@ -2200,7 +2292,7 @@ paths:
                                 parameters: afterOpFixed.parameters || [],
                                 originalParameters: beforeOpFixed.parameters || [],
                                 type: 'modified',
-                                changes: [{ prop: 'path', before: originalPath, after: path }]
+                                changes: changes
                             });
                         } else {
                             // Check if methods changed - only add if there are actual changes
@@ -2895,14 +2987,19 @@ paths:
         function renderDiffLine(content, lineNum, type) {
             var lineClass = '';
             var showNum = true;
+            var prefix = ' ';  // 默认空格
 
             if (type === 'add') {
                 lineClass = 'add';
+                prefix = '+';
             } else if (type === 'remove') {
                 lineClass = 'remove';
+                prefix = '-';
             } else if (type === 'empty') {
                 lineClass = 'diff-line-empty';
                 showNum = false;
+                // 空行显示 + 符号表示这是新增行对应的位置
+                prefix = '+';
             }
 
             var numHtml = showNum ?
@@ -2911,7 +3008,7 @@ paths:
 
             return '<div class="diff-line ' + lineClass + '">' +
                 numHtml +
-                '<div class="diff-line-content">' + escapeHtml(content || '') + '</div>' +
+                '<div class="diff-line-content"><span class="diff-prefix">' + prefix + '</span>' + escapeHtml(content || '') + '</div>' +
                 '</div>';
         }
 

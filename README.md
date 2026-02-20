@@ -142,21 +142,35 @@ java -jar api-codegen.jar <yaml文件> [选项]
 
 系统会自动检测字段并添加校验规则：
 
+> **注意**: DFX 编号历史原因存在间隙 (009, 010, 013)，这是正常的。
+
+### 路径规范
+
 | 场景 | 规则 | DFX代码 |
 |------|------|---------|
 | 路径包含 `//` | 删除重复斜杠 | DFX-001 |
 | 路径不以 `/` 开头 | 自动添加前缀 | DFX-002 |
+
+### 参数校验
+
+| 场景 | 规则 | DFX代码 |
+|------|------|---------|
 | 必填字段缺少 @NotNull | required=true | DFX-003 |
 | String 必填使用 @NotBlank | required=true 且 type=String | DFX-003 |
+| page/pageNum 分页参数 | min: 1, max: 2147483647 | DFX-011 |
+| pageSize/limit/size | min: 1, max: 100 | DFX-012 |
+| 路径参数（数值） | min: 1 | DFX-014 |
+| 路径参数（字符串） | minLength: 1 | DFX-014 |
+
+### 字段校验
+
+| 场景 | 规则 | DFX代码 |
+|------|------|---------|
 | String 字段缺少长度校验 | minLength: 1, maxLength: 255 | DFX-004 |
 | 邮箱字段缺少格式校验 | format: email | DFX-005 |
 | 电话字段缺少正则校验 | 包含 phone/mobile | DFX-006 |
 | 数值字段缺少范围 | Integer/Long/Double | DFX-007 |
 | List 字段缺少大小 | minSize: 1, maxSize: 100 | DFX-008 |
-| page/pageNum 分页参数 | min: 1, max: 2147483647 | DFX-011 |
-| pageSize/limit/size | min: 1, max: 100 | DFX-012 |
-| 路径参数（数值） | min: 1 | DFX-014 |
-| 路径参数（字符串） | minLength: 1 | DFX-014 |
 
 ### 支持的参数类型
 
@@ -232,17 +246,20 @@ node test-ui-diff.js
 
 | DFX 规则 | 测试场景 |
 |----------|---------|
+| **路径规范** |
 | DFX-001 | 路径包含 `//` → 自动删除重复斜杠 |
 | DFX-002 | 路径不以 `/` 开头 → 自动添加前缀 |
+| **参数校验** |
 | DFX-003 | 必填参数缺少 `@NotNull` → 自动添加 |
+| DFX-011 | page 参数缺少范围 → 自动添加 `min:1, max:2147483647` |
+| DFX-012 | pageSize 参数缺少范围 → 自动添加 `min:1, max:100` |
+| DFX-014 | 路径参数缺少校验 → 自动添加 `min:1` 或 `minLength:1` |
+| **字段校验** |
 | DFX-004 | String 字段缺少长度校验 → 自动添加 `@Size` |
 | DFX-005 | email 字段缺少格式校验 → 自动添加 `@Email` |
 | DFX-006 | phone 字段缺少正则校验 → 自动添加 pattern |
 | DFX-007 | 数值字段缺少范围校验 → 自动添加 `@Min`/`@Max` |
 | DFX-008 | List 字段缺少大小校验 → 自动添加 `@Size` |
-| DFX-011 | page 参数缺少范围 → 自动添加 `min:1, max:2147483647` |
-| DFX-012 | pageSize 参数缺少范围 → 自动添加 `min:1, max:100` |
-| DFX-014 | 路径参数缺少校验 → 自动添加 `min:1` 或 `minLength:1` |
 
 **架构分层**：
 

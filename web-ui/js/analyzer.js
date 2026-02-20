@@ -130,16 +130,17 @@ class ApiYamlAnalyzer {
      */
     analyzeSwaggerParameter(param, path, method, index) {
         const paramPath = `${method} ${path} parameters[${index}]`;
+        const apiIdentifier = `${method.toUpperCase()} ${path}`;
 
         // 检查必需参数是否有描述
         if (param.required && !param.description) {
-            this.addIssue('warn', `必填参数 ${param.name} 缺少 description`, 0, null, paramPath);
+            this.addIssue('warn', `必填参数 ${param.name} 缺少 description`, 0, apiIdentifier, paramPath);
         }
 
         // 检查参数类型
         const paramType = param.type || (param.schema && param.schema.type);
         if (!paramType && !param.schema) {
-            this.addIssue('warn', `参数 ${param.name} 缺少类型定义`, 0, null, paramPath);
+            this.addIssue('warn', `参数 ${param.name} 缺少类型定义`, 0, apiIdentifier, paramPath);
         }
 
         // 获取参数的实际类型和校验规则
@@ -152,7 +153,7 @@ class ApiYamlAnalyzer {
                 param.minLength !== undefined ||
                 (param.schema && (param.schema.minimum !== undefined || param.schema.minLength !== undefined));
             if (!hasRequiredValidation) {
-                this.addIssue('warn', `必填参数 ${param.name} 缺少 @NotNull 校验`, 0, null, paramPath);
+                this.addIssue('warn', `必填参数 ${param.name} 缺少 @NotNull 校验`, 0, apiIdentifier, paramPath);
             }
         }
 
@@ -167,15 +168,15 @@ class ApiYamlAnalyzer {
             if (!hasStringValidation) {
                 // 检查是否是邮箱字段
                 if (fieldName.includes('email') || fieldName.includes('mail')) {
-                    this.addIssue('warn', `邮箱字段 ${param.name} 缺少 @Email 校验`, 0, null, paramPath);
+                    this.addIssue('warn', `邮箱字段 ${param.name} 缺少 @Email 校验`, 0, apiIdentifier, paramPath);
                 }
                 // 检查是否是电话字段
                 else if (fieldName.includes('phone') || fieldName.includes('mobile')) {
-                    this.addIssue('warn', `电话字段 ${param.name} 缺少正则校验`, 0, null, paramPath);
+                    this.addIssue('warn', `电话字段 ${param.name} 缺少正则校验`, 0, apiIdentifier, paramPath);
                 }
                 // 普通 String 字段
                 else {
-                    this.addIssue('warn', `String 字段 ${param.name} 缺少长度校验`, 0, null, paramPath);
+                    this.addIssue('warn', `String 字段 ${param.name} 缺少长度校验`, 0, apiIdentifier, paramPath);
                 }
             }
 
@@ -183,7 +184,7 @@ class ApiYamlAnalyzer {
             const minLen = param.minLength || (param.schema && param.schema.minLength);
             const maxLen = param.maxLength || (param.schema && param.schema.maxLength);
             if (minLen !== undefined && maxLen !== undefined && minLen > maxLen) {
-                this.addIssue('error', `参数 ${param.name} 的 minLength 不能大于 maxLength`, 0, null, paramPath);
+                this.addIssue('error', `参数 ${param.name} 的 minLength 不能大于 maxLength`, 0, apiIdentifier, paramPath);
             }
         }
 
@@ -197,31 +198,31 @@ class ApiYamlAnalyzer {
             if (!hasNumericValidation) {
                 // 检查是否是分页参数
                 if (fieldName === 'page' || fieldName === 'pageNum') {
-                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:1, max:2147483647)`, 0, null, paramPath);
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:1, max:2147483647)`, 0, apiIdentifier, paramPath);
                 }
                 // 检查是否是分页大小参数
                 else if (fieldName.includes('size') || fieldName.includes('limit') || fieldName === 'pageSize') {
-                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:1, max:100)`, 0, null, paramPath);
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:1, max:100)`, 0, apiIdentifier, paramPath);
                 }
                 // 检查是否是年龄参数
                 else if (fieldName.includes('age')) {
-                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0, max:150)`, 0, null, paramPath);
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0, max:150)`, 0, apiIdentifier, paramPath);
                 }
                 // 检查是否是评分参数
                 else if (fieldName.includes('score') || fieldName.includes('rate')) {
-                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0, max:100)`, 0, null, paramPath);
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0, max:100)`, 0, apiIdentifier, paramPath);
                 }
                 // 检查是否是金额参数
                 else if (fieldName.includes('price') || fieldName.includes('amount') || fieldName.includes('total') || fieldName.includes('balance')) {
-                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0)`, 0, null, paramPath);
+                    this.addIssue('warn', `参数 ${param.name} 缺少范围校验 (建议 min:0)`, 0, apiIdentifier, paramPath);
                 }
                 // 检查是否是路径参数
                 else if (param.in === 'path') {
-                    this.addIssue('warn', `路径参数 ${param.name} 缺少最小值校验 (建议 minimum:1)`, 0, null, paramPath);
+                    this.addIssue('warn', `路径参数 ${param.name} 缺少最小值校验 (建议 minimum:1)`, 0, apiIdentifier, paramPath);
                 }
                 // 普通数值参数
                 else if (!fieldName.includes('id')) {
-                    this.addIssue('warn', `数值字段 ${param.name} 缺少范围校验`, 0, null, paramPath);
+                    this.addIssue('warn', `数值字段 ${param.name} 缺少范围校验`, 0, apiIdentifier, paramPath);
                 }
             }
 
@@ -229,7 +230,7 @@ class ApiYamlAnalyzer {
             const minVal = param.minimum !== undefined ? param.minimum : (param.schema && param.schema.minimum);
             const maxVal = param.maximum !== undefined ? param.maximum : (param.schema && param.schema.maximum);
             if (minVal !== undefined && maxVal !== undefined && minVal > maxVal) {
-                this.addIssue('error', `参数 ${param.name} 的 minimum 不能大于 maximum`, 0, null, paramPath);
+                this.addIssue('error', `参数 ${param.name} 的 minimum 不能大于 maximum`, 0, apiIdentifier, paramPath);
             }
         }
 
@@ -241,14 +242,14 @@ class ApiYamlAnalyzer {
                 (param.schema && (param.schema.minItems !== undefined || param.schema.maxItems !== undefined));
 
             if (!hasArrayValidation) {
-                this.addIssue('warn', `List 字段 ${param.name} 缺少大小校验`, 0, null, paramPath);
+                this.addIssue('warn', `List 字段 ${param.name} 缺少大小校验`, 0, apiIdentifier, paramPath);
             }
 
             // 检查 minItems > maxItems
             const minItems = param.minItems || (param.schema && param.schema.minItems);
             const maxItems = param.maxItems || (param.schema && param.schema.maxItems);
             if (minItems !== undefined && maxItems !== undefined && minItems > maxItems) {
-                this.addIssue('error', `参数 ${param.name} 的 minItems 不能大于 maxItems`, 0, null, paramPath);
+                this.addIssue('error', `参数 ${param.name} 的 minItems 不能大于 maxItems`, 0, apiIdentifier, paramPath);
             }
         }
     }
@@ -257,9 +258,10 @@ class ApiYamlAnalyzer {
      * 分析 requestBody
      */
     analyzeRequestBody(requestBody, path, method) {
+        const apiIdentifier = `${method} ${path}`;
         // 检查必需的 requestBody 是否有 description
         if (requestBody.required && !requestBody.description) {
-            this.addIssue('warn', `requestBody 缺少 description`, 0, null, `${method} ${path}`);
+            this.addIssue('warn', `requestBody 缺少 description`, 0, apiIdentifier, 'requestBody');
         }
     }
 
@@ -267,10 +269,11 @@ class ApiYamlAnalyzer {
      * 分析 responses
      */
     analyzeResponses(responses, path, method) {
+        const apiIdentifier = `${method} ${path}`;
         // 检查是否有成功的响应
         const hasSuccessResponse = ['200', '201', '204'].some(code => responses[code]);
         if (!hasSuccessResponse) {
-            this.addIssue('warn', `API ${method} ${path} 缺少成功响应 (2xx)`, 0);
+            this.addIssue('warn', `API ${method} ${path} 缺少成功响应 (2xx)`, 0, apiIdentifier, 'responses');
         }
     }
 
@@ -624,13 +627,24 @@ class ApiYamlAnalyzer {
         const paths = parsed.paths || {};
 
         for (const [path, methods] of Object.entries(paths)) {
+            let fixedPath = path;
+            let hasChanges = false;
+
             // 修复路径包含 // 的问题
-            if (path.includes('//')) {
-                const fixedPath = path.replace(/\/+/g, '/');
+            if (fixedPath.includes('//')) {
+                fixedPath = fixedPath.replace(/\/+/g, '/');
+                hasChanges = true;
+            }
+
+            // 修复 /XXX/ 前缀（如 /XXX/users -> /users）
+            if (fixedPath.match(/^\/[A-Z][A-Z0-9_]*\//i)) {
+                fixedPath = fixedPath.replace(/^\/[A-Z][A-Z0-9_]*/, '');
+                hasChanges = true;
+            }
+
+            if (hasChanges && fixedPath !== path) {
                 paths[fixedPath] = methods;
-                if (fixedPath !== path) {
-                    delete paths[path];
-                }
+                delete paths[path];
             }
         }
     }

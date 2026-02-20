@@ -136,17 +136,20 @@ Each DFX rule must cover:
 
 | DFX Code | Positive (No Error) | Negative (Has Error) | Boundary |
 |----------|---------------------|---------------------|----------|
+| **Path** |
 | DFX-001 | Path without // | Path with // | Multiple // |
 | DFX-002 | Path starts with / | Path doesn't start with / | Empty path |
+| **Parameters** |
 | DFX-003 | Required has @NotNull | Required without @NotNull | Optional + @NotNull |
+| DFX-011 | page has range | page without range | boundary 1/2147483647 |
+| DFX-012 | size has range | size without range | boundary 1/100 |
+| DFX-014 | Path param has validation | Path param without validation | Mixed types |
+| **Fields** |
 | DFX-004 | String has validation | String without validation | Only minLength |
 | DFX-005 | email has @Email | email without @Email | Wrong format |
 | DFX-006 | phone has pattern | phone without pattern | Wrong regex |
 | DFX-007 | Number has min/max | Number without range | Only min or only max |
 | DFX-008 | List has minSize | List without size | minSize > maxSize |
-| DFX-011 | page has range | page without range | boundary 1/2147483647 |
-| DFX-012 | size has range | size without range | boundary 1/100 |
-| DFX-014 | Path param has validation | Path param without validation | Mixed types |
 
 **Important:** Do not infer types from field names. Preserve user's original type definition.
 
@@ -452,17 +455,20 @@ The analyzer automatically adds validation rules for Swagger/OpenAPI parameters:
 ### DFX Rule Codes
 | Code | Rule | Description |
 |------|------|-------------|
+| **Path** |
 | DFX-001 | Path规范 | Cannot contain duplicate slashes |
 | DFX-002 | Path规范 | Must start with / |
+| **Parameters** |
 | DFX-003 | 必填校验 | required=true must add notNull/notBlank |
+| DFX-011 | 分页校验 | page/pageNum needs min:1,max:2147483647 |
+| DFX-012 | 分页校验 | pageSize/limit/size needs min:1,max:100 |
+| DFX-014 | 路径校验 | Path parameter needs min:1 or minLength:1 |
+| **Fields** |
 | DFX-004 | 字符串校验 | String type needs length or format validation |
 | DFX-005 | 邮箱校验 | email format needs @Email |
 | DFX-006 | 电话校验 | phone field needs regex |
 | DFX-007 | 数值校验 | Numeric type needs min/max range |
 | DFX-008 | 集合校验 | List type needs minSize/maxSize |
-| DFX-011 | 分页校验 | page/pageNum needs min:1,max:2147483647 |
-| DFX-012 | 分页校验 | pageSize/limit/size needs min:1,max:100 |
-| DFX-014 | 路径校验 | Path parameter needs min:1 or minLength:1 |
 
 ## Configuration File (`codegen-config.yaml`)
 

@@ -15,6 +15,7 @@
 # - DFX-011: page参数缺少范围校验 (已包含)
 # - DFX-012: pageSize参数缺少范围校验 (已包含)
 # - DFX-014: 路径参数缺少最小值校验 (已包含)
+# - 字段变更: 使用 definitions 触发字段级别变更检测 (新增)
 
 swagger: '2.0'
 info:
@@ -26,6 +27,34 @@ info:
     email: support@example.com
 
 basePath: /api/v1
+
+# ========== definitions - 用于测试字段级别变更 ==========
+# 注意：这里的字段故意缺少校验规则，用于测试"字段变更"功能
+definitions:
+  UserModel:
+    type: object
+    description: 用户模型
+    properties:
+      id:
+        type: integer
+        description: 用户ID
+      username:
+        type: string
+        description: 用户名
+      email:
+        type: string
+        description: 邮箱
+      phone:
+        type: string
+        description: 手机号
+      age:
+        type: integer
+        description: 年龄
+      tags:
+        type: array
+        items:
+          type: string
+        description: 标签
 
 paths:
   # ========== 正常API - 作为对比 ==========
@@ -400,3 +429,30 @@ paths:
       responses:
         '200':
           description: Success
+
+  # ========== 使用 definitions 的示例 - 测试字段变更 ==========
+  # 此 API 使用 $ref 引用 definitions 中的模型
+  # 用于测试"字段变更"功能的检测
+  /model/user:
+    get:
+      summary: 获取用户模型信息
+      operationId: getUserModel
+      responses:
+        '200':
+          description: 成功
+          schema:
+            $ref: '#/definitions/UserModel'
+
+  /model/users:
+    post:
+      summary: 创建用户模型
+      operationId: createUserModel
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/UserModel'
+      responses:
+        '200':
+          description: 成功

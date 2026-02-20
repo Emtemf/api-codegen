@@ -139,8 +139,10 @@ function computeImpact(before, after) {
             // Normalize path: ensure it starts with /
             function normalizePath(path) {
                 if (!path) return path;
+                // Remove duplicate slashes
                 var normalized = path.replace(/\/+/g, '/');
-                normalized = normalized.replace(/^\/XXX\//, '/');
+                // Remove /XXX/ prefix (placeholder path) - support any uppercase prefix
+                normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//i, '/');
                 if (!normalized.startsWith('/')) {
                     normalized = '/' + normalized;
                 }
@@ -157,11 +159,12 @@ function computeImpact(before, after) {
             // Compare each path in after
             for (var path in afterPaths) {
                 var np = normalizePath(path);
+                var originalPath = path;
                 var beforePath = beforePaths[path];
                 var afterPath = afterPaths[path];
-                var originalPath = path;
 
-                if (normalizedBeforePaths[np]) {
+                // 先检查规范化路径是否匹配
+                if (!beforePath && normalizedBeforePaths[np]) {
                     originalPath = normalizedBeforePaths[np];
                     beforePath = beforePaths[originalPath];
                 }
@@ -188,6 +191,49 @@ function computeImpact(before, after) {
                     // Path was fixed
                     var afterOpFixed = afterPath[Object.keys(afterPath)[0]];
                     var beforeOpFixed = beforePath[originalPath] || {};
+                    var changes = [{ prop: 'path', before: originalPath, after: path }];
+
+                    // 比较参数变化
+                    if (afterOpFixed.parameters && afterOpFixed.parameters.length > 0) {
+                        var beforeParamMap = {};
+                        if (beforeOpFixed.parameters) {
+                            beforeOpFixed.parameters.forEach(function(p) { beforeParamMap[p.name] = p; });
+                        }
+                        afterOpFixed.parameters.forEach(function(param) {
+                            var beforeParam = beforeParamMap[param.name];
+                            if (!beforeParam) {
+                                changes.push({ prop: '参数 ' + param.name, before: '(无)', after: '新增' });
+                            } else {
+                                // 检查校验规则变化
+                                var beforeMinLength = beforeParam.minLength || (beforeParam.schema && beforeParam.schema.minLength);
+                                var afterMinLength = param.minLength || (param.schema && param.schema.minLength);
+                                if (!beforeMinLength && afterMinLength !== undefined) {
+                                    changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: afterMinLength });
+                                }
+                                var beforeMaxLength = beforeParam.maxLength || (beforeParam.schema && beforeParam.schema.maxLength);
+                                var afterMaxLength = param.maxLength || (param.schema && param.schema.maxLength);
+                                if (!beforeMaxLength && afterMaxLength !== undefined) {
+                                    changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: afterMaxLength });
+                                }
+                                var beforeMinimum = beforeParam.minimum || (beforeParam.schema && beforeParam.schema.minimum);
+                                var afterMinimum = param.minimum || (param.schema && param.schema.minimum);
+                                if (!beforeMinimum && afterMinimum !== undefined) {
+                                    changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: afterMinimum });
+                                }
+                                var beforeMaximum = beforeParam.maximum || (beforeParam.schema && beforeParam.schema.maximum);
+                                var afterMaximum = param.maximum || (param.schema && param.schema.maximum);
+                                if (!beforeMaximum && afterMaximum !== undefined) {
+                                    changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: afterMaximum });
+                                }
+                                var beforePattern = beforeParam.pattern || (beforeParam.schema && beforeParam.schema.pattern);
+                                var afterPattern = param.pattern || (param.schema && param.schema.pattern);
+                                if (!beforePattern && afterPattern) {
+                                    changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: afterPattern });
+                                }
+                            }
+                        });
+                    }
+
                     result.apis.push({
                         path: path,
                         originalPath: originalPath,
@@ -198,7 +244,7 @@ function computeImpact(before, after) {
                         parameters: afterOpFixed.parameters || [],
                         originalParameters: beforeOpFixed.parameters || [],
                         type: 'modified',
-                        changes: [{ prop: 'path', before: originalPath, after: path }]
+                        changes: changes
                     });
                 } else {
                     var hasActualChange = false;
@@ -616,6 +662,78 @@ paths:
 
     // 参数完全相同，不应有变更
     assertEqual(impact.apis.length, 0, '相同参数不应该有变更');
+});
+
+test('computeImpact: 路径修复时检测为修改', () => {
+    // 这个测试验证路径修复应该被检测到
+    const before = `
+swagger: '2.0'
+paths:
+  /XXX/users/detail:
+    get:
+      operationId: getUserDetail
+`;
+    const after = `
+swagger: '2.0'
+paths:
+  /users/detail:
+    get:
+      operationId: getUserDetail
+      description: 用户详情
+`;
+    const impact = computeImpact(before, after);
+
+    // 路径修复应该被检测到
+    assertEqual(impact.apis.length, 1, '应该有1个API变更');
+    const api = impact.apis[0];
+    assertEqual(api.path, '/users/detail', '路径应该是修复后的');
+});
+
+test('computeImpact: /XXX/ 前缀修复时检测', () => {
+    const before = `
+swagger: '2.0'
+paths:
+  /TEST/users:
+    get:
+      operationId: listUsers
+`;
+    const after = `
+swagger: '2.0'
+paths:
+  /users:
+    get:
+      operationId: listUsers
+`;
+    const impact = computeImpact(before, after);
+
+    // 应该检测到路径修复
+    assertEqual(impact.apis.length, 1, '应该有1个API变更');
+    const api = impact.apis[0];
+    assertEqual(api.path, '/users', '修复后路径应为 /users');
+    assertEqual(api.type, 'modified', '应该是修改类型');
+});
+
+test('computeImpact: 路径不以/开头修复', () => {
+    const before = `
+swagger: '2.0'
+paths:
+  users/profile:
+    get:
+      operationId: getProfile
+`;
+    const after = `
+swagger: '2.0'
+paths:
+  /users/profile:
+    get:
+      operationId: getProfile
+`;
+    const impact = computeImpact(before, after);
+
+    // 应该检测到路径修复
+    assertEqual(impact.apis.length, 1, '应该有1个API变更');
+    const api = impact.apis[0];
+    assertEqual(api.path, '/users/profile', '路径应该以/开头');
 });
 
 // ============================================

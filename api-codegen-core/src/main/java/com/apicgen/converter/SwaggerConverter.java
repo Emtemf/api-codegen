@@ -97,7 +97,9 @@ public class SwaggerConverter {
             api.setName(generateApiName(method, path));
         }
 
-        api.setPath(basePath + path);
+        // 规范化路径：修复 // 和 /XXX/ 前缀
+        String normalizedPath = normalizePath(basePath + path);
+        api.setPath(normalizedPath);
         api.setMethod(Api.HttpMethod.valueOf(method));
 
         if (operation.has("summary")) {
@@ -431,5 +433,22 @@ public class SwaggerConverter {
             name = "root";
         }
         return method.toLowerCase() + Character.toUpperCase(name.charAt(0)) + name.substring(1);
+    }
+
+    /**
+     * 规范化路径：修复 // 和 /XXX/ 前缀
+     */
+    private String normalizePath(String path) {
+        // 修复路径包含 // 的问题
+        if (path.contains("//")) {
+            path = path.replaceAll("/+", "/");
+        }
+
+        // 修复 /XXX/ 前缀（如 /XXX/users -> /users）
+        if (path.matches("^/[A-Z][A-Z0-9_]*[/].*")) {
+            path = path.replaceFirst("^/[A-Z][A-Z0-9_]*", "");
+        }
+
+        return path;
     }
 }
