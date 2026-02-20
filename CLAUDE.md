@@ -239,9 +239,6 @@ apis:
 ### Step 2: Configure (codegen-config.yaml)
 
 ```yaml
-framework:
-  type: cxf
-
 copyright:
   company: ""
   startYear: 2024
@@ -305,7 +302,7 @@ Multi-module Maven project with two modules:
 - **validator/**: Validates YAML definitions (`ApiValidator` enforces DFX rules, circular references)
 - **generator/**: Code generation framework
   - `CodeGenerator` interface: `generateController()`, `generateRequest()`, `generateResponse()`
-  - `CodeGeneratorFactory`: Returns Spring or CXF generator based on config
+  - `CodeGeneratorFactory`: Factory for code generators
   - `spring/SpringCodeGenerator`: Spring MVC implementation (@PathVariable, @RequestParam, etc.)
   - `cxf/CxfCodeGenerator`: JAX-RS implementation (@PathParam, @QueryParam, etc.)
 - **config/**: Configuration loaded from `codegen-config.yaml`
@@ -314,7 +311,7 @@ Multi-module Maven project with two modules:
 ### `api-codegen-maven-plugin` (Maven Plugin)
 
 - `ApiCodegenMojo`: Executes at `GENERATE_SOURCES` phase
-- Parameters: `yamlFile`, `outputDir`, `basePackage`, `framework`, `company`, `startYear`, `openapi`, `force`, `configFile`
+- Parameters: `yamlFile`, `outputDir`, `basePackage`, `company`, `startYear`, `openapi`, `force`, `configFile`
 - Configuration file `codegen-config.yaml` can be overridden by CLI parameters
 
 ## YAML Schema
@@ -473,9 +470,6 @@ The analyzer automatically adds validation rules for Swagger/OpenAPI parameters:
 ## Configuration File (`codegen-config.yaml`)
 
 ```yaml
-framework:
-  type: spring              # spring (default) or cxf
-
 copyright:
   company: ""            # Company name (empty to omit from copyright header)
   startYear: 2024
@@ -500,16 +494,8 @@ output:
 2. **Output Strategy**: Controllers go to `generated/api/` (user copies manually), Request/Response classes go to `src/main/java/req/` and `src/main/java/rsp/` (auto-overwrite, no manual edits)
 
 3. **Framework Support**:
-   - **Default**: Spring MVC annotations (@PathVariable, @RequestParam, @RequestHeader, @CookieValue)
-   - **Compatibility**: CXF (JAX-RS) annotations supported via x-framework field
-   - **Per-API Override**: Use `x-framework` extension field in API definition to specify different framework:
-     ```yaml
-     apis:
-       - name: getUser
-         path: /users/{id}
-         method: GET
-         x-framework: cxf    # Use CXF annotations for this API
-     ```
+   - Code generator supports both Spring MVC and JAX-RS (CXF) annotations by default
+   - No need to configure framework type, the output works with both frameworks
 
 4. **Custom Annotations**: Configure in `codegen-config.yaml`:
    ```yaml

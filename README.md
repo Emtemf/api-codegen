@@ -69,12 +69,22 @@ java -jar api-codegen-core/target/api-codegen.jar api.yaml
 在项目根目录创建 `codegen-config.yaml`：
 
 ```yaml
-# 框架类型: spring（默认）或 cxf
-framework:
-  type: spring
+# 版权声明（生成代码时添加到文件顶部）
+# 例如: Copyright (c) 2024 MyCompany. All rights reserved.
+copyright: ""
 
-# 版权声明（直接塞到文件顶部）
-copyright: "Copyright (c) 2024 MyCompany. All rights reserved."
+# OpenAPI 配置
+openApi:
+  enabled: false
+  version: "3.0"
+
+# 自定义注解（可选）
+customAnnotations:
+  classAnnotations:
+    - "@Secured"
+    - "@AuditLog"
+  methodAnnotations:
+    - "@Permission(\"default\")"
 
 # 输出路径配置
 output:
@@ -84,26 +94,19 @@ output:
     path: src/main/java/req/  # Request 输出目录
   response:
     path: src/main/java/rsp/  # Response 类出目录
-
-# 自定义注解（可选）
-customAnnotations:
-  classAnnotations:
-    - "@Secured"
-    - "@AuditLog"
-  methodAnnotations:
-    - "@Permission(\"default\")"
 ```
 
 ### 配置说明
 
 | 配置项 | 说明 |
 |--------|------|
-| `framework.type` | 框架类型：`spring`（默认）或 `cxf` |
 | `copyright` | 版权声明，直接放到文件顶部，为空则不添加 |
 | `output.controller.path` | 生成的 Controller 类输出路径 |
 | `output.request.path` | 生成的 Request 类输出路径 |
 | `output.response.path` | 生成的 Response 类输出路径 |
 | `customAnnotations` | 可选，自定义注解配置 |
+
+> **注意**: 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
 
 ### 自定义注解示例
 

@@ -1,7 +1,5 @@
 # API 代码生成配置
 
-framework: CXF
-
 # 版权声明（生成代码时添加到文件顶部）
 # 例如: Copyright (c) 2024 MyCompany. All rights reserved.
 copyright: ""
