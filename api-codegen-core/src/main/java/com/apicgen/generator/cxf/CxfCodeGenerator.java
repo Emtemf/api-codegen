@@ -263,7 +263,7 @@ public class CxfCodeGenerator implements CodeGenerator {
 
         // @Pattern (正则)
         if (v.getPattern() != null && !v.getPattern().isEmpty()) {
-            sb.append("@Pattern(regexp=\"").append(v.getPattern()).append("\") ");
+            sb.append("@Pattern(regexp=\"").append(escapeRegex(v.getPattern())).append("\") ");
         }
 
         // @Email
@@ -371,7 +371,7 @@ public class CxfCodeGenerator implements CodeGenerator {
                 sb.append("    @Email\n");
             }
             if (v.getPattern() != null && !v.getPattern().isEmpty()) {
-                sb.append("    @Pattern(regexp = \"").append(v.getPattern()).append("\")\n");
+                sb.append("    @Pattern(regexp = \"").append(escapeRegex(v.getPattern())).append("\")\n");
             }
             if (Boolean.TRUE.equals(v.getPast())) {
                 sb.append("    @Past\n");
@@ -603,5 +603,22 @@ public class CxfCodeGenerator implements CodeGenerator {
             return fullPath;
         }
         return "/" + fullPath;
+    }
+
+    /**
+     * Escape special characters in regex pattern to prevent injection.
+     * This ensures the pattern is treated as a literal string within the generated code.
+     */
+    private static String escapeRegex(String pattern) {
+        if (pattern == null) {
+            return "";
+        }
+        // Escape characters that could break out of the string literal in Java
+        return pattern
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
 }

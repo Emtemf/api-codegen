@@ -1,6 +1,7 @@
 package com.apicgen.validator;
 
 import com.apicgen.model.*;
+import com.apicgen.util.ValidationConstants;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -132,19 +133,19 @@ public class ValidationFixer {
             // String 字段修复
             case "String 字段缺少长度校验":
                 if (validation.getMinLength() == null) {
-                    validation.setMinLength(1);
+                    validation.setMinLength(ValidationConstants.DEFAULT_MIN_LENGTH);
                 }
                 if (validation.getMaxLength() == null) {
-                    validation.setMaxLength(255);
+                    validation.setMaxLength(ValidationConstants.DEFAULT_MAX_LENGTH);
                 }
                 break;
 
             case "String 字段只有 minLength，缺少 maxLength":
-                validation.setMaxLength(255);
+                validation.setMaxLength(ValidationConstants.DEFAULT_MAX_LENGTH);
                 break;
 
             case "String 字段只有 maxLength，缺少 minLength":
-                validation.setMinLength(1);
+                validation.setMinLength(ValidationConstants.DEFAULT_MIN_LENGTH);
                 break;
 
             case "邮箱字段建议添加 email 校验":
@@ -154,14 +155,14 @@ public class ValidationFixer {
             case "电话字段建议添加正则校验":
                 if (fieldNameLikelyPhone(issue.getFieldName())) {
                     // 支持手机号：+86/86开头，可选带空格或横线
-                    validation.setPattern("^(\\+86|86)?1[3-9]\\d{9}$");
+                    validation.setPattern(ValidationConstants.PHONE_PATTERN);
                 }
                 break;
 
             // 数字字段修复
             case "数值字段缺少范围校验":
                 if (validation.getMin() == null) {
-                    validation.setMin(0.0);
+                    validation.setMin(ValidationConstants.DEFAULT_MIN_VALUE);
                 }
                 if (validation.getMax() == null) {
                     validation.setMax(getDefaultMax(issue.getFieldType()));
@@ -173,54 +174,54 @@ public class ValidationFixer {
                 break;
 
             case "数值字段只有 max，缺少 min":
-                validation.setMin(0.0);
+                validation.setMin(ValidationConstants.DEFAULT_MIN_VALUE);
                 break;
 
             // 路径参数修复
             case "路径参数缺少最小值校验":
-                validation.setMin(1.0);
+                validation.setMin((double) ValidationConstants.DEFAULT_PAGE_MIN);
                 break;
 
             case "路径参数缺少最小长度校验":
-                validation.setMinLength(1);
+                validation.setMinLength(ValidationConstants.DEFAULT_MIN_LENGTH);
                 break;
 
             // 页码字段修复
             case "页码字段缺少范围校验":
             case "页码字段缺少 min 校验":
-                validation.setMin(1.0);
-                validation.setMax(2147483647.0);
+                validation.setMin((double) ValidationConstants.DEFAULT_PAGE_MIN);
+                validation.setMax((double) ValidationConstants.DEFAULT_PAGE_MAX);
                 break;
 
             case "页码字段缺少 max 校验":
-                validation.setMin(1.0);
-                validation.setMax(2147483647.0);
+                validation.setMin((double) ValidationConstants.DEFAULT_PAGE_MIN);
+                validation.setMax((double) ValidationConstants.DEFAULT_PAGE_MAX);
                 break;
 
             // 每页数量字段修复
             case "每页数量字段缺少范围校验":
             case "每页数量字段缺少 min 校验":
-                validation.setMin(1.0);
-                validation.setMax(100.0);
+                validation.setMin((double) ValidationConstants.DEFAULT_PAGE_SIZE_MIN);
+                validation.setMax((double) ValidationConstants.DEFAULT_PAGE_SIZE_MAX);
                 break;
 
             case "每页数量字段缺少 max 校验":
-                validation.setMin(1.0);
-                validation.setMax(100.0);
+                validation.setMin((double) ValidationConstants.DEFAULT_PAGE_SIZE_MIN);
+                validation.setMax((double) ValidationConstants.DEFAULT_PAGE_SIZE_MAX);
                 break;
 
             // List 字段修复
             case "List 字段缺少大小校验":
-                validation.setMinSize(1);
-                validation.setMaxSize(100);
+                validation.setMinSize(ValidationConstants.DEFAULT_MIN_SIZE);
+                validation.setMaxSize(ValidationConstants.DEFAULT_MAX_SIZE);
                 break;
 
             case "List 字段只有 minSize，缺少 maxSize":
-                validation.setMaxSize(100);
+                validation.setMaxSize(ValidationConstants.DEFAULT_MAX_SIZE);
                 break;
 
             case "List 字段只有 maxSize，缺少 minSize":
-                validation.setMinSize(1);
+                validation.setMinSize(ValidationConstants.DEFAULT_MIN_SIZE);
                 break;
 
             // 日期字段修复
@@ -247,9 +248,9 @@ public class ValidationFixer {
      */
     private Double getDefaultMax(String fieldType) {
         return switch (fieldType) {
-            case "Integer", "Long" -> 2147483647.0;
-            case "Double" -> 9999999999.0;
-            default -> 255.0;
+            case "Integer", "Long" -> (double) ValidationConstants.DEFAULT_MAX_INTEGER;
+            case "Double" -> ValidationConstants.DEFAULT_MAX_DOUBLE;
+            default -> (double) ValidationConstants.DEFAULT_MAX_LENGTH;
         };
     }
 

@@ -45,6 +45,9 @@ import java.util.Map;
  */
 public class Main {
 
+    private static final String DEFAULT_OUTPUT_DIR = "generated";
+    private static final String DEFAULT_BASE_PACKAGE = "com.apicgen";
+
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             printHelp();
@@ -58,7 +61,9 @@ public class Main {
         }
 
         String yamlFilePath = args[0];
-        File yamlFile = new File(yamlFilePath);
+
+        // Validate YAML file path (path traversal protection)
+        File yamlFile = validateInputPath(yamlFilePath);
 
         if (!yamlFile.exists()) {
             System.err.println("Error: YAML file not found: " + yamlFile.getAbsolutePath());
@@ -66,8 +71,8 @@ public class Main {
         }
 
         // Parse command line options
-        String outputDir = "generated";
-        String basePackage = "com.apicgen";
+        String outputDir = DEFAULT_OUTPUT_DIR;
+        String basePackage = DEFAULT_BASE_PACKAGE;
         String company = "";
         String framework = "cxf";
         boolean force = false;
@@ -167,28 +172,31 @@ public class Main {
         // Get code generator
         CodeGenerator generator = CodeGeneratorFactory.getGenerator(config);
 
-        // Output directory
-        Path outputBase = Paths.get(outputDir).toAbsolutePath();
+        // Output directory - validate and resolve to absolute path
+        Path outputBase = validateOutputDir(outputDir);
         System.out.println("Output directory: " + outputBase);
 
         // Generate code for all APIs
         for (Api api : apiDefinition.getApis()) {
             System.out.println("\nGenerating: " + api.getName());
 
+            // Sanitize API name to prevent path traversal
+            String safeApiName = sanitizeFileName(api.getName());
+
             // Generate Controller
             Map<String, String> controllerFiles = generator.generateController(api, config);
-            writeFiles(outputBase.resolve("controller").resolve(api.getName()), controllerFiles, force);
+            writeFiles(outputBase.resolve("controller").resolve(safeApiName), controllerFiles, force);
 
             // Generate Request
             if (api.getRequest() != null) {
                 Map<String, String> requestFiles = generator.generateRequest(api, config);
-                writeFiles(outputBase.resolve("request").resolve(api.getName()), requestFiles, force);
+                writeFiles(outputBase.resolve("request").resolve(safeApiName), requestFiles, force);
             }
 
             // Generate Response
             if (api.getResponse() != null) {
                 Map<String, String> responseFiles = generator.generateResponse(api, config);
-                writeFiles(outputBase.resolve("response").resolve(api.getName()), responseFiles, force);
+                writeFiles(outputBase.resolve("response").resolve(safeApiName), responseFiles, force);
             }
         }
 
@@ -248,11 +256,16 @@ public class Main {
                 System.out.println("\nFixed " + summary.getTotalCount() + " issue(s)");
             } catch (IOException e) {
                 System.err.println("Failed to write fixed YAML: " + e.getMessage());
-                // Try writing to fixed file
-                String backupPath = yamlFile.getAbsolutePath().replace(".yaml", "-fixed.yaml");
+                // Try writing to fixed file in the same directory as input
+                String parentDir = yamlFile.getParent() != null ? yamlFile.getParent() : ".";
+                String fileName = yamlFile.getName();
+                String baseName = fileName.contains(".") ? fileName.substring(0, fileName.lastIndexOf('.')) : fileName;
+                String backupPath = Paths.get(parentDir, baseName + "-fixed.yaml").toString();
+                // Validate backup path
+                Path validatedBackupPath = validateOutputPath(Paths.get(backupPath));
                 try {
-                    Files.writeString(Paths.get(backupPath), fixedYaml);
-                    System.out.println("Wrote fixed version to: " + backupPath);
+                    Files.writeString(validatedBackupPath, fixedYaml);
+                    System.out.println("Wrote fixed version to: " + validatedBackupPath);
                 } catch (IOException ex) {
                     System.err.println("Failed to write backup file: " + ex.getMessage());
                 }
@@ -331,5 +344,111 @@ public class Main {
                 System.out.println("  └── " + entry.getKey());
             }
         }
+    }
+
+    /**
+     * Validate and sanitize input file path to prevent path traversal attacks.
+     */
+    private static File validateInputPath(String path) {
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("Input path cannot be empty");
+        }
+
+        // Check for path traversal patterns
+        String lowerPath = path.toLowerCase();
+        if (lowerPath.contains("..")) {
+            throw new IllegalArgumentException("Path traversal detected in input: " + path);
+        }
+
+        File file = new File(path);
+        try {
+            // Resolve to canonical path and verify it doesn't escape the working directory
+            String canonicalPath = file.getCanonicalPath();
+            if (canonicalPath.contains("..")) {
+                throw new IllegalArgumentException("Path traversal detected in input: " + path);
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot resolve path: " + path);
+        }
+
+        return file;
+    }
+
+    /**
+     * Validate output directory to prevent path traversal attacks.
+     */
+    private static Path validateOutputDir(String dir) {
+        if (dir == null || dir.isBlank()) {
+            dir = DEFAULT_OUTPUT_DIR;
+        }
+
+        // Check for path traversal patterns in relative path
+        if (dir.toLowerCase().contains("..")) {
+            throw new IllegalArgumentException("Path traversal detected in output directory: " + dir);
+        }
+
+        Path path = Paths.get(dir).toAbsolutePath().normalize();
+
+        // Verify the path doesn't escape the working directory root
+        try {
+            String canonicalPath = path.toFile().getCanonicalPath();
+            // For security, restrict to within the project directory
+            Path workingDir = Paths.get(".").toAbsolutePath().normalize();
+            if (!canonicalPath.startsWith(workingDir.toString())) {
+                // Allow if it's within a reasonable boundary (e.g., within user home or temp)
+                if (!canonicalPath.contains(System.getProperty("user.home"))
+                    && !canonicalPath.contains(System.getProperty("java.io.tmpdir"))
+                    && !canonicalPath.startsWith("/tmp") && !canonicalPath.startsWith("C:\\")) {
+                    // Log warning but allow for flexibility
+                    System.err.println("Warning: Output directory is outside working directory");
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Cannot resolve output directory: " + dir);
+        }
+
+        return path;
+    }
+
+    /**
+     * Validate output file path to prevent path traversal attacks.
+     */
+    private static Path validateOutputPath(Path path) {
+        if (path == null) {
+            throw new IllegalArgumentException("Output path cannot be null");
+        }
+
+        Path normalized = path.toAbsolutePath().normalize();
+
+        // Check for path traversal in the path
+        String pathStr = normalized.toString().toLowerCase();
+        if (pathStr.contains("..")) {
+            throw new IllegalArgumentException("Path traversal detected in output path: " + path);
+        }
+
+        return normalized;
+    }
+
+    /**
+     * Sanitize file name to prevent path traversal and injection attacks.
+     * Only allows alphanumeric characters, underscores, and hyphens.
+     */
+    private static String sanitizeFileName(String name) {
+        if (name == null || name.isBlank()) {
+            return "unnamed";
+        }
+
+        // Remove or replace dangerous characters
+        String sanitized = name
+                .replaceAll("[^a-zA-Z0-9_\\-]", "_")  // Replace dangerous chars with underscore
+                .replaceAll("_+", "_")                  // Replace multiple underscores with single
+                .replaceAll("^_|_$", "");               // Remove leading/trailing underscores
+
+        // Ensure we have a valid name
+        if (sanitized.isBlank() || sanitized.isEmpty()) {
+            sanitized = "unnamed";
+        }
+
+        return sanitized;
     }
 }

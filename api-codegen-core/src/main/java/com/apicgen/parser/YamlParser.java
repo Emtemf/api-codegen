@@ -23,6 +23,10 @@ public class YamlParser {
      * 解析 YAML 文件 - 自动检测格式
      */
     public static ApiDefinition parse(File yamlFile) throws IOException {
+        if (yamlFile == null) {
+            throw new IllegalArgumentException("YAML file cannot be null");
+        }
+
         LOGGER.info("解析 YAML 文件: " + yamlFile.getAbsolutePath());
         try {
             // 读取内容检测格式
@@ -37,6 +41,15 @@ public class YamlParser {
 
             // 使用自定义格式解析
             ApiDefinition apiDefinition = YAML_MAPPER.readValue(yamlFile, ApiDefinition.class);
+
+            // Validate the parsed result
+            if (apiDefinition == null) {
+                throw new IOException("Failed to parse YAML: result is null");
+            }
+            if (apiDefinition.getApis() == null) {
+                throw new IOException("Failed to parse YAML: apis field is null");
+            }
+
             LOGGER.info("解析成功，共 " + apiDefinition.getApis().size() + " 个 API");
             return apiDefinition;
         } catch (InvalidFormatException e) {
@@ -49,6 +62,10 @@ public class YamlParser {
      * 解析 YAML 字符串 - 自动检测格式
      */
     public static ApiDefinition parse(String yamlContent) throws IOException {
+        if (yamlContent == null || yamlContent.isBlank()) {
+            throw new IllegalArgumentException("YAML content cannot be null or empty");
+        }
+
         LOGGER.info("解析 YAML 内容");
 
         // 检测是否是 Swagger/OpenAPI 格式
@@ -60,6 +77,15 @@ public class YamlParser {
 
         try {
             ApiDefinition apiDefinition = YAML_MAPPER.readValue(yamlContent, ApiDefinition.class);
+
+            // Validate the parsed result
+            if (apiDefinition == null) {
+                throw new IOException("Failed to parse YAML: result is null");
+            }
+            if (apiDefinition.getApis() == null) {
+                throw new IOException("Failed to parse YAML: apis field is null");
+            }
+
             LOGGER.info("解析成功，共 " + apiDefinition.getApis().size() + " 个 API");
             return apiDefinition;
         } catch (InvalidFormatException e) {

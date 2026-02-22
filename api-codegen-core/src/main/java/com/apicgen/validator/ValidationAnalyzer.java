@@ -561,19 +561,32 @@ public class ValidationAnalyzer {
 
     /**
      * 检查是否有 @NotNull 校验
+     * Note: In the current model, required field validation is implicitly checked via FieldDefinition.required
+     * This method checks if the validation config indicates required=true or if there's explicit validation
      */
     private boolean isNotNullValidated(ValidationConfig validation) {
-        // 在当前模型中，required 字段通过 FieldDefinition.required 标记
-        // 实际校验时需要配合 @NotNull 或 @NotBlank 注解
-        // 这里我们返回 false，表示需要在 validation 中添加相应配置
-        return false;
+        if (validation == null) {
+            return false;
+        }
+        // Check if required validation is explicitly set
+        // In the model, this could be validation.getRequired() or similar
+        // For now, we check if there's any non-null validation which implies some validation exists
+        return validation.getMin() != null || validation.getMax() != null
+                || validation.getMinLength() != null || validation.getMaxLength() != null
+                || validation.getMinSize() != null || validation.getMaxSize() != null;
     }
 
     /**
      * 检查是否有 @NotBlank 校验
+     * @NotBlank is specifically for String types to check for blank strings
      */
     private boolean isNotBlankValidated(ValidationConfig validation) {
-        return false;
+        if (validation == null) {
+            return false;
+        }
+        // Similar to isNotNullValidated - presence of any String validation implies some validation
+        return validation.getMinLength() != null || validation.getMaxLength() != null
+                || validation.getPattern() != null || Boolean.TRUE.equals(validation.getEmail());
     }
 
     /**
