@@ -9,6 +9,8 @@
   },
   "scripts": {
     "test": "node test/analyzer-test.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "serve": "echo \"Open index.html in browser or run: python -m http.server 8080\""
   },
   "keywords": [],
@@ -17,5 +19,9 @@
   "type": "commonjs",
   "dependencies": {
     "js-yaml": "^4.1.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "playwright": "^1.58.2"
   }
 }
