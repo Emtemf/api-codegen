@@ -137,10 +137,10 @@ class ApiYamlAnalyzer {
             this.addIssue('warn', `必填参数 ${param.name} 缺少 description`, 0, apiIdentifier, paramPath);
         }
 
-        // 检查参数类型
+        // 检查参数类型（Swagger默认是string，但建议明确声明）
         const paramType = param.type || (param.schema && param.schema.type);
         if (!paramType && !param.schema) {
-            this.addIssue('warn', `参数 ${param.name} 缺少类型定义`, 0, apiIdentifier, paramPath);
+            this.addIssue('warn', `参数 ${param.name} 缺少类型定义（默认视为 String）`, 0, apiIdentifier, paramPath);
         }
 
         // 获取参数的实际类型和校验规则
@@ -841,8 +841,9 @@ class ApiYamlAnalyzer {
                 // 不根据参数名推断类型，保留用户的原始定义
                 var paramType = param.type || (param.schema && param.schema.type);
                 if (!paramType && !param.schema) {
-                    // Swagger规范默认类型是string，保留原始定义不修改
-                    // 不再根据参数名推断类型
+                    // Swagger规范默认类型是string，自动添加以消除警告
+                    param.type = 'string';
+                    this.addInfoMessage(`修复参数 ${param.name}: 添加默认类型 (type=string)`);
                 }
 
                 // 路径参数添加默认校验规则
@@ -955,6 +956,20 @@ class ApiYamlAnalyzer {
                         }
                         this.addInfoMessage(`修复参数 ${param.name}: 添加数值范围校验 (min=0, max=2147483647)`);
                     }
+                }
+
+                // Array/List 类型添加大小校验（仅当不存在任何校验时）
+                const hasArrayValidation = param.minItems || param.maxItems ||
+                    (param.schema && (param.schema.minItems || param.schema.maxItems));
+
+                if ((paramType === 'array' || (param.schema && param.schema.type === 'array')) && !hasArrayValidation) {
+                    param.minItems = 1;
+                    param.maxItems = 100;
+                    if (param.schema) {
+                        param.schema.minItems = 1;
+                        param.schema.maxItems = 100;
+                    }
+                    this.addInfoMessage(`修复参数 ${param.name}: 添加数组大小校验 (minItems=1, maxItems=100)`);
                 }
             });
         }

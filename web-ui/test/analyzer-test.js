@@ -793,6 +793,58 @@ paths:
 }}
 );
 
+// 测试查询参数（Array）自动添加大小校验
+test('自动修复', 'Swagger 查询参数（Array）→ 添加 minItems=1, maxItems=100',
+`
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /tags:
+    post:
+      summary: Create tags
+      parameters:
+        - name: tags
+          in: query
+          type: array
+          items:
+            type: string
+      responses:
+        200:
+          description: Success
+`,
+{ fixedValue: (parsed) => {
+    const param = parsed.paths['/tags'].post.parameters[0];
+    return param.minItems === 1 && param.maxItems === 100;
+}}
+);
+
+// 测试参数缺少类型时自动添加默认类型 string
+test('自动修复', 'Swagger 参数缺少类型 → 添加 type=string',
+`
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users/{id}:
+    get:
+      summary: Get user
+      parameters:
+        - name: id
+          in: path
+          required: true
+      responses:
+        200:
+          description: Success
+`,
+{ fixedValue: (parsed) => {
+    const param = parsed.paths['/users/{id}'].get.parameters[0];
+    return param.type === 'string';
+}}
+);
+
 // ============================================
 // 测试报告
 // ============================================

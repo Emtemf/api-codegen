@@ -264,7 +264,7 @@
 
         textarea { display: none; }
 
-        /* Diff Preview Modal */
+        /* Diff Preview Modal - 简洁直观风格 */
         .diff-modal {
             display: none;
             position: fixed;
@@ -276,70 +276,78 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(8px);
         }
         .diff-modal.active { display: flex; }
         .diff-container {
-            background: #1e1e1e;
-            border-radius: 12px;
-            width: 96%;
-            max-width: 1600px;
-            max-height: 88vh;
+            background: #0d1117;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
             display: flex;
             flex-direction: column;
-            border: 1px solid #3a3a3a;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
             overflow: hidden;
         }
+
+        /* 头部 - 简洁风格 */
         .diff-header {
-            padding: 18px 24px;
-            border-bottom: 1px solid #3a3a3a;
+            padding: 12px 24px;
+            border-bottom: 1px solid #21262d;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: linear-gradient(180deg, #252525 0%, #1e1e1e 100%);
+            background: #161b22;
+            flex-shrink: 0;
         }
         .diff-title {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 600;
-            color: #fff;
+            color: #e6edf3;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
         .diff-title-icon {
             font-size: 20px;
         }
+
+        /* 统计 - 更柔和的颜色 */
         .diff-stats {
             display: flex;
-            gap: 20px;
-            font-size: 13px;
-            font-weight: 500;
+            gap: 12px;
         }
         .diff-stat {
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
         .diff-stat-add {
-            background: rgba(46, 160, 67, 0.2);
-            color: #57ab38;
-            border: 1px solid rgba(46, 160, 67, 0.4);
+            background: rgba(56, 139, 253, 0.15);
+            color: #58a6ff;
         }
         .diff-stat-remove {
-            background: rgba(248, 81, 73, 0.2);
+            background: rgba(248, 81, 73, 0.12);
             color: #f85149;
-            border: 1px solid rgba(248, 81, 73, 0.4);
         }
+
+        /* 主体 - 全屏高度 */
         .diff-body {
             flex: 1;
             overflow: hidden;
             display: flex;
             min-height: 0;
-            background: #0d0d0d;
+            background: #0d1117;
         }
+
+        /* 左右面板 */
         .diff-panel {
             flex: 1;
             display: flex;
@@ -348,146 +356,267 @@
             min-width: 0;
         }
         .diff-panel-left {
-            border-right: 1px solid #3a3a3a;
+            border-right: 1px solid #21262d;
         }
+
+        /* 面板头部 */
         .diff-panel-header {
-            padding: 12px 18px;
-            background: linear-gradient(180deg, #1e1e1e 0%, #181818 100%);
+            padding: 10px 20px;
+            background: #161b22;
             font-size: 12px;
             font-weight: 600;
             color: #8b949e;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 1px solid #3a3a3a;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #21262d;
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-shrink: 0;
         }
         .diff-panel-badge {
             padding: 3px 8px;
             border-radius: 4px;
-            font-size: 10px;
-            font-weight: 700;
+            font-size: 11px;
+            font-weight: 600;
             text-transform: uppercase;
         }
         .diff-panel-badge.before {
-            background: rgba(248, 81, 73, 0.2);
+            background: rgba(248, 81, 73, 0.1);
             color: #f85149;
         }
         .diff-panel-badge.after {
-            background: rgba(46, 160, 67, 0.2);
-            color: #57ab38;
+            background: rgba(56, 139, 253, 0.1);
+            color: #58a6ff;
         }
+
+        /* Diff 内容 */
         .diff-content {
             flex: 1;
             overflow-y: auto;
-            overflow-x: hidden;
+            overflow-x: auto;
             padding: 0;
-            font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            line-height: 22px;
-            scrollbar-width: thin;
-            scrollbar-color: #4a4a4a #1e1e1e;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.7;
         }
         .diff-content::-webkit-scrollbar {
-            width: 10px;
+            width: 8px;
+            height: 8px;
         }
         .diff-content::-webkit-scrollbar-track {
-            background: #1e1e1e;
+            background: #0d1117;
         }
         .diff-content::-webkit-scrollbar-thumb {
-            background: #4a4a4a;
-            border-radius: 5px;
+            background: #30363d;
+            border-radius: 4px;
         }
+
+        /* API 块样式 - 更简洁 */
+        .diff-api-block {
+            margin-bottom: 12px;
+            border: 1px solid #21262d;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .diff-api-block-header {
+            padding: 8px 14px;
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .diff-api-block-badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .diff-api-block-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #c9d1d9;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .diff-api-block .diff-line {
+            font-size: 12px;
+        }
+        /* API块内容容器 - 并排显示修改前/后 */
+        .diff-api-block-content {
+            display: flex;
+            gap: 2px;
+            background: #0d1117;
+        }
+        .diff-api-block-before,
+        .diff-api-block-after {
+            flex: 1;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        .diff-api-block-before {
+            background: rgba(248, 81, 73, 0.03);
+            border-right: 1px solid #21262d;
+        }
+        .diff-api-block-after {
+            background: rgba(56, 139, 253, 0.03);
+        }
+        .diff-api-block-label {
+            font-size: 10px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .diff-api-changes {
+            font-size: 12px;
+            color: #8b949e;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        .diff-empty {
+            padding: 40px;
+            text-align: center;
+            color: #6e7681;
+            font-size: 14px;
+        }
+
+        /* Diff 行 */
         .diff-line {
             display: flex;
             align-items: stretch;
-            min-height: 22px;
-            position: relative;
+            min-height: 20px;
         }
         .diff-line-num {
-            width: 55px;
+            width: 40px;
             flex-shrink: 0;
-            padding: 0 12px;
-            color: #6e7681;
+            padding: 0 6px;
+            color: #484f58;
             text-align: right;
             user-select: none;
-            background: #0d0d0d;
+            background: #0d1117;
             border-right: 1px solid #21262d;
-            font-size: 12px;
-            line-height: 22px;
+            font-size: 11px;
+            font-family: monospace;
         }
         .diff-line-content {
             flex: 1;
-            padding: 0 14px;
+            padding: 0 10px;
             white-space: pre;
-            overflow-x: auto;
-            line-height: 22px;
-            position: relative;
+            overflow-x: visible;
+            line-height: 20px;
         }
+
         .diff-prefix {
             display: inline-block;
-            width: 16px;
+            width: 14px;
             text-align: center;
-            font-weight: bold;
-            margin-right: 8px;
+            font-weight: 700;
+            margin-right: 6px;
+            font-family: monospace;
         }
-        .diff-line.add .diff-prefix { color: #3fb950; }
-        .diff-line.remove .diff-prefix { color: #f85149; }
-        .diff-line-empty .diff-prefix { color: #3fb950; }
+
+        /* 添加行 - 更柔和的蓝色 */
         .diff-line.add {
-            background: rgba(46, 160, 67, 0.1);
+            background: rgba(56, 139, 253, 0.08);
         }
         .diff-line.add:hover {
-            background: rgba(46, 160, 67, 0.15);
+            background: rgba(56, 139, 253, 0.15);
         }
-        .diff-line.add .diff-line-content { color: #3fb950; }
-        .diff-line.add .diff-line-num {
-            background: rgba(46, 160, 67, 0.08);
-            color: #57ab38;
-        }
+        .diff-line.add .diff-prefix { color: #58a6ff; }
+        .diff-line.add .diff-line-content { color: #79c0ff; }
+
+        /* 删除行 - 更柔和的红色 */
         .diff-line.remove {
-            background: rgba(248, 81, 73, 0.1);
+            background: rgba(248, 81, 73, 0.08);
         }
         .diff-line.remove:hover {
             background: rgba(248, 81, 73, 0.15);
         }
-        .diff-line.remove .diff-line-content { color: #f85149; }
-        .diff-line.remove .diff-line-num {
-            background: rgba(248, 81, 73, 0.08);
-            color: #f85149;
-        }
-        /* Empty line for alignment - GitHub style */
-        .diff-line-empty {
-            background: rgba(46, 160, 67, 0.05);
-        }
-        .diff-line-empty:hover {
-            background: rgba(46, 160, 67, 0.08);
-        }
-        .diff-line-empty .diff-line-content {
-            color: #484f58;
-        }
-        .diff-line-empty .diff-line-num {
-            color: #3a3a3a;
-            background: rgba(46, 160, 67, 0.05);
+        .diff-line.remove .diff-prefix { color: #f85149; }
+        .diff-line.remove .diff-line-content { color: #ffa198; }
+
+        /* 未改变 */
+        .diff-line.unchanged .diff-line-content {
+            color: #8b949e;
         }
 
+        /* ===== 词语级别高亮 ===== */
+        .diff-word-add {
+            background: rgba(46, 213, 115, 0.25);
+            color: #2ed573;
+            padding: 1px 2px;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+
+        .diff-word-remove {
+            background: rgba(255, 71, 87, 0.25);
+            color: #ff4757;
+            padding: 1px 2px;
+            border-radius: 2px;
+            text-decoration: line-through;
+            font-weight: 500;
+        }
+
+        /* ===== diff2html 样式覆盖 ===== */
+        .d2h-wrapper {
+            font-family: 'JetBrains Mono', 'Consolas', monospace !important;
+            font-size: 13px !important;
+        }
+        .d2h-file-header { display: none; }
+        .d2h-files { border: none !important; }
+        .d2h-file {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        .d2h-file-diff {
+            overflow: hidden !important;
+        }
+        .d2h-code-side-linenum {
+            width: 40px !important;
+            padding: 0 8px !important;
+        }
+        .d2h-code-side-line {
+            line-height: 20px !important;
+        }
+        .d2h-code-side {
+            font-size: 12px !important;
+        }
+        /* diff2html 深色主题 */
+        .d2h-dark .d2h-code-side-linenum { color: #5c5f66 !important; }
+        .d2h-dark .d2h-code-side-line { color: #a4b0be !important; }
+        .d2h-dark .d2h-ins { background: rgba(46, 213, 115, 0.15) !important; }
+        .d2h-dark .d2h-del { background: rgba(255, 71, 87, 0.15) !important; }
+
+        /* 空行对齐 */
+        .diff-line-empty {
+            background: transparent;
+        }
+        .diff-line-empty .diff-line-content {
+            color: transparent;
+        }
+        .diff-line-empty .diff-prefix {
+            color: #3a3d42;
+        }
+
+        /* 尾部 */
         .diff-footer {
-            padding: 16px 24px;
-            border-top: 1px solid #3a3a3a;
+            padding: 14px 24px;
+            border-top: 1px solid #3a3d42;
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            background: linear-gradient(180deg, #181818 0%, #1e1e1e 100%);
+            background: #25262b;
         }
         .diff-hint {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            gap: 16px;
             font-size: 12px;
-            color: #8b949e;
-            margin-right: auto;
+            color: #747d8c;
         }
         .diff-hint-item {
             display: flex;
@@ -497,15 +626,124 @@
         .diff-hint-dot {
             width: 10px;
             height: 10px;
-            border-radius: 50%;
+            border-radius: 2px;
+        }
+        .diff-hint-dot.add { background: #2ed573; }
+        .diff-hint-dot.remove { background: #ff4757; }
+
+        /* 右面板区域 */
+        .diff-right-panel {
+            width: 50%;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-left: 1px solid #3a3d42;
+            background: #1f2023;
+        }
+        }
+        .diff-line.add:hover {
+            background: rgba(34, 197, 94, 0.2);
+        }
+        .diff-line.add .diff-prefix {
+            color: #22c55e;
+        }
+        .diff-line.add .diff-line-content {
+            color: #4ade80;
+        }
+        .diff-line.add .diff-line-num {
+            background: rgba(34, 197, 94, 0.08);
+            color: #22c55e;
+        }
+
+        /* 删除行 - 红色 */
+        .diff-line.remove {
+            background: rgba(239, 68, 68, 0.12);
+        }
+        .diff-line.remove:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        .diff-line.remove .diff-prefix {
+            color: #ef4444;
+        }
+        .diff-line.remove .diff-line-content {
+            color: #f87171;
+        }
+        .diff-line.remove .diff-line-num {
+            background: rgba(239, 68, 68, 0.08);
+            color: #ef4444;
+        }
+
+        /* 空行对齐 - 更加低调 */
+        .diff-line-empty {
+            background: transparent;
+        }
+        .diff-line-empty:hover {
+            background: rgba(139, 148, 158, 0.03);
+        }
+        .diff-line-empty .diff-prefix {
+            color: #30363d;
+        }
+        .diff-line-empty .diff-line-content {
+            color: transparent;
+        }
+        .diff-line-empty .diff-line-num {
+            color: #21262d;
+            background: transparent;
+        }
+
+        /* 修改的行 - 黄色/橙色高亮 */
+        .diff-line.modify {
+            background: rgba(234, 179, 8, 0.1);
+        }
+        .diff-line.modify:hover {
+            background: rgba(234, 179, 8, 0.18);
+        }
+        .diff-line.modify .diff-prefix {
+            color: #eab308;
+        }
+        .diff-line.modify .diff-line-content {
+            color: #facc15;
+        }
+        .diff-line.modify .diff-line-num {
+            background: rgba(234, 179, 8, 0.08);
+            color: #eab308;
+        }
+
+        /* 尾部 */
+        .diff-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            background: #161b22;
+        }
+        .diff-hint {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .diff-hint-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .diff-hint-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
         }
         .diff-hint-dot.add {
-            background: #3fb950;
-            box-shadow: 0 0 6px rgba(63, 185, 80, 0.5);
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
         }
         .diff-hint-dot.remove {
-            background: #f85149;
-            box-shadow: 0 0 6px rgba(248, 81, 73, 0.5);
+            background: #ef4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
         }
 
         /* Right Panel: API + Field stacked */
@@ -515,6 +753,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            border-left: 2px solid #30363d;
             border-left: 1px solid #3a3a3a;
         }
         .diff-api-section {
@@ -522,9 +761,10 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border-bottom: 1px solid #3a3a3a;
+            border-bottom: 1px solid #30363d;
             min-height: 0;
         }
+        /* ===== Field 区域样式 ===== */
         .diff-field-section {
             flex: 1.5;
             display: flex;
@@ -542,12 +782,13 @@
             max-width: 45%;
         }
         .diff-panel-count {
-            background: #0f3460;
-            padding: 2px 10px;
-            border-radius: 10px;
+            background: rgba(56, 139, 253, 0.15);
+            padding: 3px 10px;
+            border-radius: 12px;
             font-size: 11px;
-            color: #79c0ff;
+            color: #58a6ff;
             margin-left: auto;
+            font-weight: 600;
         }
 
         /* API Panels with before/after */
@@ -565,21 +806,25 @@
             min-height: 0;
         }
         .diff-api-panel-left {
-            border-right: 1px solid #3a3a3a;
+            border-right: 1px solid #30363d;
         }
         .diff-api-header, .diff-field-header {
-            padding: 8px 12px;
-            background: #252525;
+            padding: 10px 14px;
+            background: #161b22;
             font-size: 11px;
+            font-weight: 600;
             color: #8b949e;
-            border-bottom: 1px solid #3a3a3a;
+            border-bottom: 1px solid #30363d;
             text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         .diff-api-list, .diff-field-list {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
+            padding: 12px;
             min-height: 0;
+            background: #0d1117;
         }
 
         /* Field Panels with before/after */
@@ -597,32 +842,49 @@
             min-height: 0;
         }
         .diff-field-panel-left {
-            border-right: 1px solid #3a3a3a;
+            border-right: 1px solid #30363d;
         }
 
-        /* API/Field item styles */
+        /* API/Field item styles - Git 风格 */
         .diff-api-item-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            background: #1a1a1a;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: #161b22;
             border-radius: 6px;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
             font-size: 12px;
+            border-left: 3px solid transparent;
+            transition: background 0.15s ease;
+        }
+        .diff-api-item-row:hover {
+            background: #1c2128;
         }
         .diff-api-item-row.added {
-            border-left: 3px solid #57ab38;
+            border-left-color: #22c55e;
+            background: rgba(34, 197, 94, 0.08);
+        }
+        .diff-api-item-row.added:hover {
+            background: rgba(34, 197, 94, 0.12);
         }
         .diff-api-item-row.removed {
-            border-left: 3px solid #f85149;
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.08);
+        }
+        .diff-api-item-row.removed:hover {
+            background: rgba(239, 68, 68, 0.12);
         }
         .diff-api-item-row.modified {
-            border-left: 3px solid #f0883e;
+            border-left-color: #eab308;
+            background: rgba(234, 179, 8, 0.08);
+        }
+        .diff-api-item-row.modified:hover {
+            background: rgba(234, 179, 8, 0.12);
         }
         .diff-api-item-row.unchanged {
-            border-left: 3px solid #3a3a3a;
+            border-left-color: #30363d;
             opacity: 0.7;
         }
         .diff-api-change-detail {
@@ -644,46 +906,68 @@
             font-family: 'JetBrains Mono', monospace;
         }
         .diff-api-compact .diff-path-old {
-            color: #f85149;
+            color: #ef4444;
             text-decoration: line-through;
+            opacity: 0.8;
             font-family: 'JetBrains Mono', monospace;
         }
         .diff-api-compact .diff-path-new {
-            color: #57ab38;
+            color: #22c55e;
             font-family: 'JetBrains Mono', monospace;
         }
+        /* ===== Tag 标签样式 ===== */
         .diff-tag-add {
-            color: #57ab38;
+            color: #22c55e;
             font-size: 10px;
+            font-weight: 600;
             margin-left: auto;
+            padding: 2px 6px;
+            background: rgba(34, 197, 94, 0.15);
+            border-radius: 3px;
         }
         .diff-tag-del {
-            color: #f85149;
+            color: #ef4444;
             font-size: 10px;
+            font-weight: 600;
             margin-left: auto;
+            padding: 2px 6px;
+            background: rgba(239, 68, 68, 0.15);
+            border-radius: 3px;
         }
         .diff-tag-mod {
-            color: #79c0ff;
+            color: #eab308;
             font-size: 10px;
+            font-weight: 600;
             margin-left: auto;
+            padding: 2px 6px;
+            background: rgba(234, 179, 8, 0.15);
+            border-radius: 3px;
         }
-        /* Java 代码风格显示 */
+        /* ===== Java 代码风格显示 - Git 风格 ===== */
         .diff-api-java {
-            padding: 8px 12px;
-            border-bottom: 1px solid #2d333b;
+            padding: 10px 14px;
+            border-bottom: 1px solid #21262d;
             font-size: 12px;
             position: relative;
+            border-left: 3px solid transparent;
         }
         .diff-api-java.diff-api-add {
-            background: rgba(46, 160, 67, 0.08);
+            background: rgba(34, 197, 94, 0.08);
+            border-left-color: #22c55e;
         }
         .diff-api-java.diff-api-del {
-            background: rgba(248, 81, 73, 0.08);
+            background: rgba(239, 68, 68, 0.08);
+            border-left-color: #ef4444;
+        }
+        .diff-api-java.diff-api-mod {
+            background: rgba(234, 179, 8, 0.08);
+            border-left-color: #eab308;
         }
         .diff-api-java.diff-api-del .diff-java-annotation,
         .diff-api-java.diff-api-del .diff-java-method {
             text-decoration: line-through;
-            opacity: 0.7;
+            opacity: 0.6;
+            color: #f87171;
         }
         .diff-java-annotation {
             color: #d2a8ff;
@@ -716,68 +1000,117 @@
         .diff-api-java .diff-tag-add,
         .diff-api-java .diff-tag-mod {
             position: absolute;
-            top: 8px;
-            right: 12px;
+            top: 10px;
+            right: 14px;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        .diff-tag-add {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        .diff-tag-del {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+        .diff-tag-mod {
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
         }
         .diff-change-prop {
             color: #79c0ff;
         }
         .diff-change-item {
-            padding: 3px 0;
+            padding: 4px 0;
             line-height: 1.4;
         }
         .diff-change-before {
-            color: #f85149;
+            color: #ef4444;
+            text-decoration: line-through;
+            opacity: 0.8;
         }
         .diff-change-after {
-            color: #57ab38;
+            color: #22c55e;
             padding-left: 12px;
+            font-weight: 500;
         }
         .diff-api-method {
-            padding: 2px 6px;
-            border-radius: 3px;
+            padding: 3px 8px;
+            border-radius: 4px;
             font-size: 10px;
-            font-weight: 600;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: #fff;
         }
-        .diff-api-method.get { background: rgba(46, 160, 67, 0.2); color: #57ab38; }
-        .diff-api-method.post { background: rgba(46, 107, 207, 0.2); color: #79c0ff; }
-        .diff-api-method.put { background: rgba(240, 136, 62, 0.2); color: #f0883e; }
-        .diff-api-method.delete { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+        .diff-api-method.get { background: #61affe; }
+        .diff-api-method.post { background: #49cc90; }
+        .diff-api-method.put { background: #fca130; }
+        .diff-api-method.delete { background: #f93e3e; }
+        .diff-api-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #e6edf3;
+        }
+        .diff-api-type {
+            font-size: 11px;
+            color: #8b949e;
+            margin-left: auto;
+        }
 
-        /* Field item styles */
+        /* Field item styles - Git 风格 */
         .diff-field-class {
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
         .diff-field-class-title {
             font-size: 12px;
             font-weight: 600;
-            color: #e94560;
-            margin-bottom: 8px;
+            color: #f472b6;
+            margin-bottom: 10px;
             padding-bottom: 6px;
-            border-bottom: 1px solid #3a3a3a;
+            border-bottom: 1px solid #30363d;
+            font-family: 'JetBrains Mono', monospace;
         }
         .diff-field-item-row {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 10px;
-            margin-bottom: 4px;
-            background: #1a1a1a;
-            border-radius: 4px;
+            gap: 10px;
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            background: #161b22;
+            border-radius: 5px;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
             font-size: 11px;
+            border-left: 3px solid transparent;
+            transition: background 0.15s ease;
+        }
+        .diff-field-item-row:hover {
+            background: #1c2128;
         }
         .diff-field-item-row.added {
-            border-left: 3px solid #57ab38;
+            border-left-color: #22c55e;
+            background: rgba(34, 197, 94, 0.08);
+        }
+        .diff-field-item-row.added:hover {
+            background: rgba(34, 197, 94, 0.12);
         }
         .diff-field-item-row.removed {
-            border-left: 3px solid #f85149;
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.08);
+        }
+        .diff-field-item-row.removed:hover {
+            background: rgba(239, 68, 68, 0.12);
         }
         .diff-field-item-row.modified {
-            border-left: 3px solid #f0883e;
+            border-left-color: #eab308;
+            background: rgba(234, 179, 8, 0.08);
+        }
+        .diff-field-item-row.modified:hover {
+            background: rgba(234, 179, 8, 0.12);
         }
         .diff-field-item-row.unchanged {
-            border-left: 3px solid #3a3a3a;
+            border-left-color: #30363d;
             opacity: 0.7;
         }
         .diff-field-type {
@@ -785,6 +1118,7 @@
         }
         .diff-field-name {
             color: #ffa657;
+            font-weight: 500;
         }
         .diff-field-annotations {
             margin-left: auto;
@@ -793,39 +1127,40 @@
             gap: 4px;
         }
         .diff-field-ann {
-            padding: 1px 6px;
-            border-radius: 3px;
+            padding: 2px 8px;
+            border-radius: 4px;
             font-size: 10px;
+            font-weight: 600;
         }
         .diff-field-ann.added {
-            background: rgba(46, 160, 67, 0.2);
-            color: #57ab38;
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
         }
         .diff-field-ann.removed {
-            background: rgba(248, 81, 73, 0.2);
-            color: #f85149;
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
         }
         .diff-field-ann.original {
-            background: rgba(240, 136, 62, 0.2);
-            color: #f0883e;
+            background: rgba(234, 179, 8, 0.2);
+            color: #eab308;
         }
         .diff-field-change-detail {
-            padding: 4px 10px 4px 20px;
+            padding: 6px 12px 6px 24px;
             font-size: 11px;
             color: #8b949e;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
         }
         .diff-field-row {
-            padding: 4px 12px;
+            padding: 6px 14px;
             font-family: 'JetBrains Mono', 'Consolas', monospace;
             font-size: 12px;
-            border-bottom: 1px solid #2d333b;
+            border-bottom: 1px solid #21262d;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
         .diff-annotations {
-            color: #57ab38;
+            color: #22c55e;
             font-size: 11px;
         }
         .diff-validation-details {
@@ -836,10 +1171,10 @@
             border-left: 2px solid #444;
         }
         .diff-validation-after {
-            color: #57ab38;
-            border-left-color: #57ab38;
+            color: #22c55e;
+            border-left-color: #22c55e;
         }
-        /* IDE风格的颜色 - Java语法高亮 */
+        /* ===== IDE风格的颜色 - Java语法高亮 ===== */
         .diff-java-type { color: #79c0ff; }  /* 蓝色 - 类型 */
         .diff-java-name { color: #e3b341; }  /* 黄色 - 字段名 */
         .diff-java-keyword { color: #ff7b72; }  /* 红色 - 关键字 */
@@ -848,10 +1183,10 @@
         .diff-java-number { color: #79c0ff; }  /* 蓝色 - 数字 */
         .diff-java-comment { color: #8b949e; }  /* 灰色 - 注释 */
 
-        /* 变更对比的颜色 */
+        /* 变更对比的颜色 - Git 风格 */
         .diff-prop { color: #79c0ff; }
-        .diff-old-val { color: #f85149; text-decoration: line-through; opacity: 0.7; }
-        .diff-new-val { color: #57ab38; font-weight: 600; }
+        .diff-old-val { color: #ef4444; text-decoration: line-through; opacity: 0.7; font-weight: 500; }
+        .diff-new-val { color: #22c55e; font-weight: 600; }
 
         /* IDE风格语法高亮 - 统一类名 */
         .diff-java-code .syntax-keyword { color: #ff7b72; }   /* 关键字: private, public, return, void */
@@ -978,7 +1313,6 @@
                 <div class="diff-panel diff-panel-left">
                     <div class="diff-panel-header">
                         <span class="diff-panel-badge before">修复前</span>
-                        <span>原始 YAML</span>
                     </div>
                     <div class="diff-content" id="diff-before" data-scroll-group="yaml"></div>
                 </div>
@@ -987,7 +1321,6 @@
                 <div class="diff-panel">
                     <div class="diff-panel-header">
                         <span class="diff-panel-badge after">修复后</span>
-                        <span>修复后的 YAML</span>
                     </div>
                     <div class="diff-content" id="diff-after" data-scroll-group="yaml"></div>
                 </div>
@@ -1051,6 +1384,7 @@
     <script src="lib/js-yaml.min.js"></script>
     <script src="lib/codemirror.min.js"></script>
     <script src="lib/yaml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
     <script src="js/analyzer.js"></script>
     <script>
         var yamlEditor, configEditor;
@@ -1513,39 +1847,257 @@ paths:
         }
 
         /**
-         * Show diff preview modal
+         * Show diff preview modal - 按API分块显示YAML对比
          */
         function showDiffPreview(before, after) {
-            var diff = computeDiff(before, after);
+            var targetBefore = document.getElementById('diff-before');
+            var targetAfter = document.getElementById('diff-after');
 
-            document.getElementById('diff-before').innerHTML = renderDiffContent(before, diff, 'before');
-            document.getElementById('diff-after').innerHTML = renderDiffContent(after, diff, 'after');
+            // 解析YAML获取API列表
+            var beforeParsed, afterParsed;
+            try {
+                beforeParsed = jsyaml.load(before);
+                afterParsed = jsyaml.load(after);
+            } catch (e) {
+                beforeParsed = null;
+                afterParsed = null;
+            }
 
-            // Update stats
-            var addCount = diff.filter(function(d) { return d.type === 'add'; }).length;
-            var removeCount = diff.filter(function(d) { return d.type === 'remove'; }).length;
-            document.getElementById('diff-adds').textContent = addCount + ' 处添加';
-            document.getElementById('diff-removes').textContent = removeCount + ' 处删除';
+            // 获取所有API路径
+            var apis = [];
+            if (beforeParsed && afterParsed && beforeParsed.paths && afterParsed.paths) {
+                var allPaths = new Set([...Object.keys(beforeParsed.paths), ...Object.keys(afterParsed.paths)]);
+                allPaths.forEach(function(path) {
+                    var beforeMethods = beforeParsed.paths[path] || {};
+                    var afterMethods = afterParsed.paths[path] || {};
+                    var allMethods = new Set([...Object.keys(beforeMethods), ...Object.keys(afterMethods)]);
+                    allMethods.forEach(function(method) {
+                        apis.push({
+                            path: path,
+                            method: method.toUpperCase(),
+                            before: beforeMethods[method] || null,
+                            after: afterMethods[method] || null
+                        });
+                    });
+                });
+            }
 
-            // Compute and display impact summary
+            // 如果没有API或解析失败，回退到行级对比
+            if (apis.length === 0) {
+                var diff = Diff.diffLines(before, after);
+                targetBefore.innerHTML = renderSimpleDiff(before, diff, 'remove');
+                targetAfter.innerHTML = renderSimpleDiff(after, diff, 'add');
+
+                var addCount = 0, removeCount = 0;
+                diff.forEach(function(part) {
+                    var lines = (part.value.match(/\n/g) || []).length || 1;
+                    if (part.added) addCount += lines;
+                    if (part.removed) removeCount += lines;
+                });
+                document.getElementById('diff-adds').textContent = '+' + addCount + ' 行';
+                document.getElementById('diff-removes').textContent = '-' + removeCount + ' 行';
+            } else {
+                // 按API分块渲染 - 确保左右高度一致
+                var beforeBlocksHtml = '';
+                var afterBlocksHtml = '';
+
+                // 先收集所有API块
+                var apiPairs = [];
+
+                apis.forEach(function(api, index) {
+                    var method = api.method;
+                    var path = api.path;
+                    var methodColor = method === 'GET' ? '#61affe' : method === 'POST' ? '#49cc90' : method === 'PUT' ? '#fca130' : method === 'DELETE' ? '#f93e3e' : '#9012fe';
+
+                    // 生成该API的YAML片段
+                    var beforeYaml = '';
+                    var afterYaml = '';
+
+                    if (api.before) {
+                        beforeYaml = '  ' + method + ':\n';
+                        if (api.before.summary) beforeYaml += '    summary: ' + api.before.summary + '\n';
+                        if (api.before.description) beforeYaml += '    description: ' + api.before.description + '\n';
+                        if (api.before.operationId) beforeYaml += '    operationId: ' + api.before.operationId + '\n';
+                        if (api.before.parameters && api.before.parameters.length > 0) {
+                            beforeYaml += '    parameters:\n';
+                            api.before.parameters.forEach(function(p) {
+                                beforeYaml += '      - name: ' + p.name + '\n';
+                                if (p.in) beforeYaml += '        in: ' + p.in + '\n';
+                                if (p.required) beforeYaml += '        required: ' + p.required + '\n';
+                                if (p.description) beforeYaml += '        description: ' + p.description + '\n';
+                                if (p.schema && p.schema.type) beforeYaml += '        schema:\n          type: ' + p.schema.type + '\n';
+                            });
+                        }
+                    }
+
+                    if (api.after) {
+                        afterYaml = '  ' + method + ':\n';
+                        if (api.after.summary) afterYaml += '    summary: ' + api.after.summary + '\n';
+                        if (api.after.description) afterYaml += '    description: ' + api.after.description + '\n';
+                        if (api.after.operationId) afterYaml += '    operationId: ' + api.after.operationId + '\n';
+                        if (api.after.parameters && api.after.parameters.length > 0) {
+                            afterYaml += '    parameters:\n';
+                            api.after.parameters.forEach(function(p) {
+                                afterYaml += '      - name: ' + p.name + '\n';
+                                if (p.in) afterYaml += '        in: ' + p.in + '\n';
+                                if (p.required) afterYaml += '        required: ' + p.required + '\n';
+                                if (p.description) afterYaml += '        description: ' + p.description + '\n';
+                                if (p.schema && p.schema.type) afterYaml += '        schema:\n          type: ' + p.schema.type + '\n';
+                                if (p.schema && p.schema.minimum) afterYaml += '          minimum: ' + p.schema.minimum + '\n';
+                                if (p.schema && p.schema.maximum) afterYaml += '          maximum: ' + p.schema.maximum + '\n';
+                                if (p.schema && p.schema.minLength) afterYaml += '          minLength: ' + p.schema.minLength + '\n';
+                                if (p.schema && p.schema.maxLength) afterYaml += '          maxLength: ' + p.schema.maxLength + '\n';
+                                if (p.schema && p.schema.pattern) afterYaml += '          pattern: ' + p.schema.pattern + '\n';
+                            });
+                        }
+                    }
+
+                    // 对比这两个YAML片段
+                    var apiDiff = Diff.diffLines(beforeYaml || '(无)', afterYaml || '(无)');
+
+                    // 渲染修复前块 - 使用内联样式确保结构一致
+                    var beforeBlockHtml = '<div class="diff-api-block-paired" data-index="' + index + '" style="margin-bottom:12px;border:1px solid #21262d;border-radius:6px;overflow:hidden;">';
+                    beforeBlockHtml += '<div class="diff-api-block-header" style="padding:8px 14px;background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:10px;">';
+                    beforeBlockHtml += '<span style="padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;background:' + methodColor + ';color:#fff;">' + method + '</span>';
+                    beforeBlockHtml += '<span style="font-size:12px;font-weight:500;color:#c9d1d9;font-family:monospace;">' + escapeHtml(path) + '</span>';
+                    beforeBlockHtml += '</div>';
+                    beforeBlockHtml += '<div class="diff-yaml-block" style="background:rgba(248,81,73,0.03);padding:10px;">';
+                    beforeBlockHtml += '<div style="color:#f85149;font-size:10px;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">修复前</div>';
+                    beforeBlockHtml += renderSimpleDiff(beforeYaml || '(无)', apiDiff, 'remove');
+                    beforeBlockHtml += '</div></div>';
+
+                    // 渲染修复后块 - 使用相同的结构确保高度一致
+                    var afterBlockHtml = '<div class="diff-api-block-paired" data-index="' + index + '" style="margin-bottom:12px;border:1px solid #21262d;border-radius:6px;overflow:hidden;">';
+                    afterBlockHtml += '<div class="diff-api-block-header" style="padding:8px 14px;background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:10px;">';
+                    afterBlockHtml += '<span style="padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;background:' + methodColor + ';color:#fff;">' + method + '</span>';
+                    afterBlockHtml += '<span style="font-size:12px;font-weight:500;color:#c9d1d9;font-family:monospace;">' + escapeHtml(path) + '</span>';
+                    afterBlockHtml += '</div>';
+                    afterBlockHtml += '<div class="diff-yaml-block" style="background:rgba(56,139,253,0.03);padding:10px;">';
+                    afterBlockHtml += '<div style="color:#58a6ff;font-size:10px;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">修复后</div>';
+                    afterBlockHtml += renderSimpleDiff(afterYaml || '(无)', apiDiff, 'add');
+                    afterBlockHtml += '</div></div>';
+
+                    apiPairs.push({
+                        index: index,
+                        before: beforeBlockHtml,
+                        after: afterBlockHtml
+                    });
+                });
+
+                // 使用配对容器确保左右高度同步
+                apiPairs.forEach(function(pair) {
+                    beforeBlocksHtml += pair.before;
+                    afterBlocksHtml += pair.after;
+                });
+
+                // 渲染到容器
+                targetBefore.innerHTML = beforeBlocksHtml;
+                targetAfter.innerHTML = afterBlocksHtml;
+
+                // 同步左右块的高度
+                setTimeout(function() {
+                    syncBlockHeights();
+                }, 100);
+
+                // 统计 - 修复: 同时统计修改的API
+                var addCount = 0, removeCount = 0, modifyCount = 0;
+                apis.forEach(function(api) {
+                    if (api.before && !api.after) {
+                        removeCount++;
+                    } else if (!api.before && api.after) {
+                        addCount++;
+                    } else if (api.before && api.after) {
+                        // API存在于两个版本，检查是否被修改（通过比较JSON表示）
+                        var beforeStr = JSON.stringify(api.before);
+                        var afterStr = JSON.stringify(api.after);
+                        if (beforeStr !== afterStr) {
+                            modifyCount++;
+                        }
+                    }
+                });
+
+                // 显示修改计数（如果有修改的API）
+                if (modifyCount > 0) {
+                    document.getElementById('diff-adds').textContent = '+' + addCount + ' 新增, ' + modifyCount + ' 修改';
+                    document.getElementById('diff-removes').textContent = '-' + removeCount + ' 删除';
+                } else {
+                    document.getElementById('diff-adds').textContent = '+' + addCount + ' API';
+                    document.getElementById('diff-removes').textContent = '-' + removeCount + ' API';
+                }
+            }
+
+            // Impact
             var impact = computeImpact(before, after);
-
-            // Render API and Field changes
             renderApiChanges(impact);
             renderFieldChanges(impact);
 
-            // Store fixed content for apply
             window.pendingFixedContent = after;
-
-            // Sync scroll between left and right panels (YAML only)
             setupScrollSync();
-
-            // Show modal
             document.getElementById('diff-modal').classList.add('active');
+        }
+
+        // 简单渲染：显示所有行，变化的标颜色
+        function renderSimpleDiff(content, diff, type) {
+            var lines = content.split('\n');
+            var html = '';
+            var lineNum = 1;
+
+            // 构建行号到变化类型的映射
+            var lineChangeMap = {};
+            var currentLine = 0;
+
+            diff.forEach(function(part) {
+                var partLines = part.value.split('\n');
+                partLines.forEach(function(line, i) {
+                    // 跳过空字符串（diffSplit会产生最后的空字符串）
+                    if (i < partLines.length - 1 || line) {
+                        if (part.added) {
+                            lineChangeMap[currentLine] = 'add';
+                        } else if (part.removed) {
+                            lineChangeMap[currentLine] = 'remove';
+                        }
+                        currentLine++;
+                    }
+                });
+            });
+
+            // 渲染每一行
+            for (var i = 0; i < lines.length; i++) {
+                var state = lineChangeMap[i] || '';
+                var bg = '';
+                var color = '';
+
+                if (type === 'add' && state === 'add') {
+                    bg = 'background: rgba(46, 213, 115, 0.15);';
+                    color = 'color: #2ed573;';
+                }
+                if (type === 'remove' && state === 'remove') {
+                    bg = 'background: rgba(255, 71, 87, 0.15);';
+                    color = 'color: #ff4757;';
+                }
+
+                html += '<div class="diff-line" style="' + bg + '">';
+                html += '<div class="diff-line-num" style="color: #5c5f66;">' + lineNum + '</div>';
+                html += '<div class="diff-line-content" style="' + color + '">' + escapeHtml(lines[i]) + '</div>';
+                html += '</div>';
+                lineNum++;
+            }
+            return html;
+        }
+
+        // 从 YAML 中提取每个 API 的内容（暂时不用）
+        function extractApis(yamlContent) {
+            return {};
+        }
+
+        // 渲染单个 API 块的 diff（暂时不用）
+        function renderApiBlockDiff(content, diff, type) {
+            return '';
         }
 
         /**
          * Render API-level changes with before/after comparison
+         * 左边(修复前)显示原始代码，右边(修复后)显示修复后代码
          */
         function renderApiChanges(impact) {
             var beforeContainer = document.getElementById('diff-api-before');
@@ -1562,107 +2114,112 @@ paths:
             var apis = impact.apis;
             countEl.textContent = apis.length;
 
-            // 像 GitHub 一样显示：左边原始，右边修复后
-            var beforeHtml = '';
-            var afterHtml = '';
+            // 分别构建修复前和修复后的API块
+            var beforeBlocksHtml = '';
+            var afterBlocksHtml = '';
 
-            apis.forEach(function(api) {
-                var method = (api.method || 'get').toLowerCase();
+            apis.forEach(function(api, index) {
+                var method = (api.method || 'get').toUpperCase();
                 var fixedPath = api.path || '';
                 var originalPath = api.originalPath || api.path || '';
-                // 优先使用name，如果没有则使用summary或operationId，最后使用路径
                 var apiName = api.name || api.summary || api.operationId || fixedPath.replace(/\//g, '').replace(/\{|\}/g, '') || 'api';
                 var annotations = api.annotations || [];
                 var params = api.parameters || [];
                 var originalParams = api.originalParameters || api.parameters || [];
 
-                // 生成完整的 Java 方法代码（带语法高亮）
-                // 修复后使用修复后的参数（带校验注解），修复前使用原始参数（不带校验注解）
+                // 生成Java代码
                 var javaCode = generateJavaControllerCode(fixedPath, method, apiName, annotations, api.description, params);
                 var originalJavaCode = generateJavaControllerCode(originalPath, method, apiName, annotations, api.description, originalParams);
 
+                // 方法颜色
+                var methodColor = method === 'GET' ? '#61affe' : method === 'POST' ? '#49cc90' : method === 'PUT' ? '#fca130' : method === 'DELETE' ? '#f93e3e' : '#9012fe';
+
+                // 构建变更摘要
+                var changesSummary = '';
+                if (api.changes && api.changes.length > 0) {
+                    var changeLines = [];
+                    api.changes.forEach(function(change) {
+                        if (change.prop === 'path') {
+                            changeLines.push('路径: ' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after));
+                        } else if (change.prop.startsWith('参数 ')) {
+                            var detail = change.prop.replace('参数 ', '');
+                            if (change.before === '(无)') {
+                                changeLines.push('+ ' + detail + ': ' + change.after);
+                            } else {
+                                changeLines.push(detail + ': ' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after));
+                            }
+                        }
+                    });
+                    if (changeLines.length > 0) {
+                        changesSummary = '<div class="diff-api-changes">' + changeLines.join('<br>') + '</div>';
+                    }
+                }
+
+                // 块标题（公共部分）
+                var blockHeader = '<div class="diff-api-block-header">' +
+                    '<span class="diff-api-method" style="background:' + methodColor + '">' + method + '</span>' +
+                    '<span class="diff-api-path">' + escapeHtml(fixedPath) + '</span>' +
+                    '<span class="diff-api-type">' + (api.type === 'added' ? '(新增)' : api.type === 'deleted' ? '(删除)' : '(修改)') + '</span>' +
+                    '</div>';
+
                 if (api.type === 'added') {
                     // 新增的接口 - 只在右边显示
-                    afterHtml += '<div class="diff-api-java diff-api-add">';
-                    afterHtml += '<pre class="diff-java-code">' + javaCode + '</pre>';
-                    afterHtml += '</div>';
+                    var afterBlock = '<div class="diff-api-block" id="after-api-block-' + index + '">' +
+                        blockHeader +
+                        '<div class="diff-api-block-content">' +
+                        '<div class="diff-api-block-after" style="flex:1">' +
+                        '<div class="diff-api-block-label" style="color:#2ed573">+ 新增</div>' +
+                        '<pre class="diff-java-code">' + javaCode + '</pre>' +
+                        '</div>' +
+                        '</div></div>';
+                    afterBlocksHtml += afterBlock;
+                    // 左边为空或显示占位
+                    beforeBlocksHtml += '';
+
                 } else if (api.type === 'deleted') {
                     // 删除的接口 - 只在左边显示
-                    beforeHtml += '<div class="diff-api-java diff-api-del">';
-                    beforeHtml += '<pre class="diff-java-code">' + originalJavaCode + '</pre>';
-                    beforeHtml += '</div>';
-                } else if (api.type === 'modified') {
-                    // 修改的接口 - 左边显示原始，右边显示修复后
-                    // 只显示重要变更（路径、description、type等），注解类变更已在代码中体现
-                    var importantChangesHtml = '';
-                    if (api.changes && api.changes.length > 0) {
-                        var hasImportantChange = false;
-                        var changeLines = [];
+                    var beforeBlock = '<div class="diff-api-block" id="before-api-block-' + index + '">' +
+                        blockHeader +
+                        '<div class="diff-api-block-content">' +
+                        '<div class="diff-api-block-before" style="flex:1">' +
+                        '<div class="diff-api-block-label" style="color:#ff4757">- 删除</div>' +
+                        '<pre class="diff-java-code">' + originalJavaCode + '</pre>' +
+                        '</div>' +
+                        '</div></div>';
+                    beforeBlocksHtml += beforeBlock;
+                    // 右边为空
+                    afterBlocksHtml += '';
 
-                        api.changes.forEach(function(change) {
-                            // 只显示非注解类的变更
-                            if (change.prop === 'path') {
-                                changeLines.push('<span class="diff-change-before">路径: ' + escapeHtml(change.before) + '</span> → <span class="diff-change-after">' + escapeHtml(change.after) + '</span>');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('description')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' description', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加描述');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes(' type')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' type', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加类型');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('minimum')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' minimum', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加 @Min 校验');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('maximum')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' maximum', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加 @Max 校验');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('minLength')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' minLength', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加最小长度校验');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('maxLength')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' maxLength', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加最大长度校验');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('pattern')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' pattern', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加正则校验');
-                                hasImportantChange = true;
-                            } else if (change.prop.startsWith('参数 ') && change.prop.includes('required')) {
-                                var paramName = change.prop.replace('参数 ', '').replace(' required', '').trim();
-                                changeLines.push('参数 <span class="diff-change-before">' + paramName + '</span>: 添加必填校验');
-                                hasImportantChange = true;
-                            }
-                        });
+                } else {
+                    // 修改的接口 - 左边显示修复前，右边显示修复后
+                    var beforeBlock = '<div class="diff-api-block" id="before-api-block-' + index + '">' +
+                        blockHeader +
+                        '<div class="diff-api-block-content">' +
+                        '<div class="diff-api-block-before" style="flex:1">' +
+                        '<div class="diff-api-block-label" style="color:#ff4757">修改前</div>' +
+                        changesSummary +
+                        '<pre class="diff-java-code">' + originalJavaCode + '</pre>' +
+                        '</div>' +
+                        '</div></div>';
 
-                        if (hasImportantChange) {
-                            importantChangesHtml = '<div class="diff-changes">' + changeLines.join('<br>') + '</div>';
-                        }
-                    }
+                    var afterBlock = '<div class="diff-api-block" id="after-api-block-' + index + '">' +
+                        blockHeader +
+                        '<div class="diff-api-block-content">' +
+                        '<div class="diff-api-block-after" style="flex:1">' +
+                        '<div class="diff-api-block-label" style="color:#2ed573">修改后</div>' +
+                        changesSummary +
+                        '<pre class="diff-java-code">' + javaCode + '</pre>' +
+                        '</div>' +
+                        '</div></div>';
 
-                    // 左边显示原始代码
-                    beforeHtml += '<div class="diff-api-java diff-api-mod">';
-                    beforeHtml += importantChangesHtml;
-                    beforeHtml += '<pre class="diff-java-code">' + originalJavaCode + '</pre>';
-                    beforeHtml += '</div>';
-
-                    // 右边显示修复后代码
-                    afterHtml += '<div class="diff-api-java diff-api-mod">';
-                    afterHtml += importantChangesHtml;
-                    afterHtml += '<pre class="diff-java-code">' + javaCode + '</pre>';
-                    afterHtml += '</div>';
+                    beforeBlocksHtml += beforeBlock;
+                    afterBlocksHtml += afterBlock;
                 }
             });
 
-            if (beforeHtml === '') beforeHtml = '<div class="diff-field-empty">-</div>';
-            if (afterHtml === '') afterHtml = '<div class="diff-field-empty">-</div>';
-
-            beforeContainer.innerHTML = beforeHtml;
-            afterContainer.innerHTML = afterHtml;
+            // 渲染到两个面板 - 左边(修复前)，右边(修复后)
+            beforeContainer.innerHTML = beforeBlocksHtml;
+            afterContainer.innerHTML = afterBlocksHtml;
         }
 
         /**
@@ -2777,6 +3334,38 @@ paths:
         }
 
         /**
+         * 同步左右两边API块的高度
+         */
+        function syncBlockHeights() {
+            var beforeContainer = document.getElementById('diff-before');
+            var afterContainer = document.getElementById('diff-after');
+            if (!beforeContainer || !afterContainer) return;
+
+            var beforeBlocks = beforeContainer.querySelectorAll('.diff-api-block-paired');
+            var afterBlocks = afterContainer.querySelectorAll('.diff-api-block-paired');
+
+            var count = Math.min(beforeBlocks.length, afterBlocks.length);
+            for (var i = 0; i < count; i++) {
+                var beforeBlock = beforeBlocks[i];
+                var afterBlock = afterBlocks[i];
+
+                // 获取两个块的内容高度
+                var beforeContent = beforeBlock.querySelector('.diff-yaml-block');
+                var afterContent = afterBlock.querySelector('.diff-yaml-block');
+
+                if (beforeContent && afterContent) {
+                    var beforeHeight = beforeContent.scrollHeight;
+                    var afterHeight = afterContent.scrollHeight;
+                    var maxHeight = Math.max(beforeHeight, afterHeight);
+
+                    // 设置最小高度为较大者
+                    beforeContent.style.minHeight = maxHeight + 'px';
+                    afterContent.style.minHeight = maxHeight + 'px';
+                }
+            }
+        }
+
+        /**
          * Setup synchronized scrolling for all diff panel groups
          */
         function setupScrollSync() {
@@ -2849,145 +3438,110 @@ paths:
         }
 
         /**
-         * Compute line-by-line diff using improved LCS
+         * 使用词语级别对比 - 解决微小格式差异问题
+         * 例如：'^1[3-9]\d{9}$' vs ^1[3-9]\d{9}$ 会被识别为微小差异
          */
         function computeDiff(before, after) {
-            var beforeLines = before.split('\n');
-            var afterLines = after.split('\n');
-
-            // Build LCS matrix
-            var lcs = buildLcsMatrix(beforeLines, afterLines);
-            var diff = [];
-
-            // Backtrack to build diff with line numbers
-            var i = beforeLines.length;
-            var j = afterLines.length;
-
-            while (i > 0 || j > 0) {
-                if (i > 0 && j > 0 && beforeLines[i - 1] === afterLines[j - 1]) {
-                    // Unchanged line
-                    diff.unshift({
-                        type: 'unchanged',
-                        beforeLine: i - 1,
-                        afterLine: j - 1,
-                        beforeNum: i,
-                        afterNum: j
-                    });
-                    i--;
-                    j--;
-                } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-                    // Added line
-                    diff.unshift({
-                        type: 'add',
-                        afterLine: j - 1,
-                        afterNum: j
-                    });
-                    j--;
-                } else if (i > 0) {
-                    // Removed line
-                    diff.unshift({
-                        type: 'remove',
-                        beforeLine: i - 1,
-                        beforeNum: i
-                    });
-                    i--;
-                }
+            if (typeof Diff !== 'undefined') {
+                return Diff.diffWords(before, after);
             }
-
-            return diff;
+            // 降级
+            return [{ value: before, added: false, removed: false }];
         }
 
         /**
-         * Build LCS matrix for diff
+         * 渲染对比视图 - 词语级别高亮，左右独立显示完整内容
+         * 每边都显示完整的行，用颜色标记变化的词语
          */
-        function buildLcsMatrix(arr1, arr2) {
-            var m = arr1.length;
-            var n = arr2.length;
-            var dp = [];
-
-            for (var i = 0; i <= m; i++) {
-                dp[i] = [];
-                for (var j = 0; j <= n; j++) {
-                    dp[i][j] = 0;
-                }
+        function renderDiffContent(beforeContent, afterContent, diff, side) {
+            if (!diff || diff.length === 0) {
+                return escapeHtml(side === 'before' ? beforeContent : afterContent);
             }
 
-            for (var i = 1; i <= m; i++) {
-                for (var j = 1; j <= n; j++) {
-                    if (arr1[i - 1] === arr2[j - 1]) {
-                        dp[i][j] = dp[i - 1][j - 1] + 1;
-                    } else {
-                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+            var content = side === 'before' ? beforeContent : afterContent;
+            var html = '';
+            var lines = content.split('\n');
+
+            // 为每个字符标记状态 (unchanged/add/remove)
+            var charStates = new Array(content.length).fill('unchanged');
+
+            var pos = 0;
+            diff.forEach(function(part) {
+                var partLen = part.value.length;
+                if (part.added) {
+                    for (var i = 0; i < partLen; i++) {
+                        if (pos + i < charStates.length) {
+                            charStates[pos + i] = 'add';
+                        }
+                    }
+                } else if (part.removed) {
+                    for (var i = 0; i < partLen; i++) {
+                        if (pos + i < charStates.length) {
+                            charStates[pos + i] = 'remove';
+                        }
                     }
                 }
-            }
-
-            return dp;
-        }
-
-        /**
-         * Render diff content for one panel (aligned)
-         */
-        function renderDiffContent(content, diff, side) {
-            var lines = content.split('\n');
-            var html = '';
-            var lineNum = 1;  // Sequential line numbers
-
-            // Build a map of changes for quick lookup
-            var changeMap = {};
-            diff.forEach(function(change) {
-                if (change.type === 'add') {
-                    changeMap[change.afterLine] = change;
-                } else if (change.type === 'remove') {
-                    changeMap[-change.beforeLine - 1000] = change;  // Use negative to distinguish
-                } else {
-                    changeMap[side === 'before' ? change.beforeLine : change.afterLine] = change;
-                }
+                pos += partLen;
             });
 
+            // 按行渲染
+            var currentPos = 0;
             for (var i = 0; i < lines.length; i++) {
-                var key = side === 'before' ? i : i;
-                var change = changeMap[i];
+                var line = lines[i];
+                var lineStart = currentPos;
+                var lineEnd = currentPos + line.length;
 
-                if (!change) {
-                    // Unchanged line
-                    html += renderDiffLine(lines[i], lineNum++, 'unchanged');
-                } else if (change.type === 'unchanged') {
-                    html += renderDiffLine(lines[i], lineNum++, 'unchanged');
-                } else if (change.type === 'remove') {
-                    if (side === 'before') {
-                        html += renderDiffLine(lines[i], lineNum++, 'remove');
-                    } else {
-                        html += renderDiffLine('', lineNum++, 'empty');
+                html += '<div class="diff-line">';
+                html += '<div class="diff-line-num">' + (i + 1) + '</div>';
+                html += '<div class="diff-line-content">';
+
+                // 逐字符渲染这一行
+                var currentClass = '';
+                var inSpan = false;
+
+                for (var j = 0; j < line.length; j++) {
+                    var state = charStates[lineStart + j];
+                    var char = line[j];
+
+                    if (state !== currentClass) {
+                        if (inSpan) {
+                            html += '</span>';
+                            inSpan = false;
+                        }
+                        if (state === 'add') {
+                            html += '<span class="diff-word-add">';
+                            inSpan = true;
+                        } else if (state === 'remove') {
+                            html += '<span class="diff-word-remove">';
+                            inSpan = true;
+                        }
+                        currentClass = state;
                     }
-                } else if (change.type === 'add') {
-                    if (side === 'after') {
-                        html += renderDiffLine(lines[i], lineNum++, 'add');
-                    } else {
-                        html += renderDiffLine('', lineNum++, 'empty');
-                    }
+
+                    html += escapeHtml(char);
                 }
-            }
 
-            // Add empty lines for changes that don't exist in this side
-            var maxLines = side === 'before' ?
-                Math.max(...diff.filter(c => c.type === 'remove').map(c => c.beforeLine + 1 || 0)) :
-                Math.max(...diff.filter(c => c.type === 'add').map(c => c.afterLine + 1 || 0));
+                if (inSpan) {
+                    html += '</span>';
+                }
 
-            while (lineNum <= maxLines && lineNum <= lines.length) {
-                html += renderDiffLine('', lineNum++, 'empty');
+                html += '</div></div>';
+                currentPos = lineEnd + 1;
             }
 
             return html;
         }
 
         /**
-         * Render a single diff line
+         * 渲染单行 diff
          */
-        function renderDiffLine(content, lineNum, type) {
+        function renderGitDiffLine(content, lineNum, type) {
+            if (content === undefined || content === null) {
+                content = '';
+            }
+
             var lineClass = '';
-            var showNum = true;
-            var prefix = ' ';  // 默认空格
+            var prefix = ' ';
 
             if (type === 'add') {
                 lineClass = 'add';
@@ -2995,20 +3549,13 @@ paths:
             } else if (type === 'remove') {
                 lineClass = 'remove';
                 prefix = '-';
-            } else if (type === 'empty') {
-                lineClass = 'diff-line-empty';
-                showNum = false;
-                // 空行显示 + 符号表示这是新增行对应的位置
-                prefix = '+';
+            } else {
+                lineClass = 'unchanged';
             }
 
-            var numHtml = showNum ?
-                '<div class="diff-line-num">' + lineNum + '</div>' :
-                '<div class="diff-line-num"></div>';
-
             return '<div class="diff-line ' + lineClass + '">' +
-                numHtml +
-                '<div class="diff-line-content"><span class="diff-prefix">' + prefix + '</span>' + escapeHtml(content || '') + '</div>' +
+                '<div class="diff-line-num">' + (lineNum || '') + '</div>' +
+                '<div class="diff-line-content"><span class="diff-prefix">' + prefix + '</span>' + escapeHtml(content) + '</div>' +
                 '</div>';
         }
 
