@@ -10,6 +10,20 @@
 - 生成 Controller、Request、Response 类
 - 支持类和方法级别自定义注解
 - Web UI 可视化编辑，支持实时预览和 Diff 对比
+- Maven 插件支持，适配 CI/CD 流程
+
+## 项目结构
+
+```
+api-codegen/
+├── api-codegen-core/           # 核心代码生成库
+├── api-codegen-maven-plugin/  # Maven 插件
+└── web-ui/                    # Web 可视化界面
+```
+
+## 环境要求
+
+- **JDK 21** 或更高版本（必需）
 
 ## 支持的 YAML 格式
 
@@ -60,7 +74,12 @@ mvn com.apicgen:api-codegen-maven-plugin:generate -DyamlFile=api.yaml
 ### Java 直接运行
 
 ```bash
-java -jar api-codegen-core/target/api-codegen.jar api.yaml
+# 先构建项目
+mvn clean install -DskipTests
+
+# 使用 Maven 执行插件运行
+cd api-codegen-core
+mvn exec:java -Dexec.mainClass="com.apicgen.Main" -Dexec.args="api.yaml"
 ```
 
 ## 配置文件
@@ -73,7 +92,7 @@ java -jar api-codegen-core/target/api-codegen.jar api.yaml
 copyright: ""
 
 # OpenAPI 配置
-openApi:
+openapi:
   enabled: false
   version: "3.0"
 
@@ -126,18 +145,17 @@ public class ExampleApi {
 }
 ```
 
-## 命令行参数
+## Maven 插件参数
 
 ```bash
-java -jar api-codegen.jar <yaml文件> [选项]
+mvn com.apicgen:api-codegen-maven-plugin:generate [参数]
 
-选项:
-  -output <目录>     输出目录 (默认: ./generated)
-  -package <包名>    基础包名 (默认: com.apicgen)
-  -company <公司名>  版权公司名
-  -force             强制覆盖已有文件
-  -analyze           分析缺失的校验规则
-  -auto-fix          自动补全缺失的校验规则
+常用参数:
+  -DyamlFile=api.yaml        # YAML 文件路径
+  -DbasePackage=com.example   # 基础包名
+  -Dcompany="MyCompany"      # 公司名称
+  -DconfigFile=config.yaml    # 配置文件
+  -Dforce=true               # 强制覆盖已有文件
 ```
 
 ## 校验规则
@@ -230,10 +248,6 @@ public Response getUserById(
 - `openapi3-example.yaml` - OpenAPI 3.0 示例
 - `web-ui/demo-swagger.html` - Web UI Swagger 示例
 - `web-ui/demo-openapi.html` - Web UI OpenAPI 示例
-
-## 环境要求
-
-- JDK 21 或更高版本
 
 ## 测试
 
