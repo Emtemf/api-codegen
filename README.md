@@ -65,6 +65,24 @@ npx serve -l 8080
 **5. OpenAPI 3.0 示例** - 同样支持
 ![OpenAPI Demo](docs/images/09-openapi-initial.png)
 
+### Web UI 操作与 Maven 命令对照
+
+| Web UI 操作 | Maven 命令 |
+|------------|------------|
+| 加载 YAML 文件 | `-DyamlFile=api.yaml` |
+| 设置基础包名 | `-DbasePackage=com.example` |
+| 设置公司名称 | `-Dcompany="MyCompany"` |
+| 配置文件 | `-DconfigFile=codegen-config.yaml` |
+| 分析校验问题 | 内置自动分析 |
+| 自动修复 | 内置自动修复 |
+| 强制覆盖 | `-Dforce=true` |
+
+### IntelliJ 插件（可选）
+
+项目还提供独立的 IntelliJ IDEA 插件，可在 IDE 中直接使用。
+
+**注意**：IntelliJ 插件位于独立仓库：`https://github.com/Emtemf/api-codegen-intellij-standalone`
+
 ### Maven 插件
 
 ```bash
