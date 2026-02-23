@@ -74,12 +74,15 @@ mvn com.apicgen:api-codegen-maven-plugin:generate -DyamlFile=api.yaml
 ### Java 直接运行
 
 ```bash
-# 先构建项目
+# 先构建项目（使用 Maven Wrapper，无需安装 Maven）
+./mvnw clean install -DskipTests
+
+# 或使用本地 Maven
 mvn clean install -DskipTests
 
 # 使用 Maven 执行插件运行
 cd api-codegen-core
-mvn exec:java -Dexec.mainClass="com.apicgen.Main" -Dexec.args="api.yaml"
+../mvnw exec:java -Dexec.mainClass="com.apicgen.Main" -Dexec.args="api.yaml"
 ```
 
 ## 配置文件
