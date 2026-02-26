@@ -445,9 +445,10 @@ The analyzer automatically adds validation rules for Swagger/OpenAPI parameters:
 ### Other Auto-Fixes
 - `required=true` parameters → adds `@NotNull` / `@NotBlank` annotation
 - Path with `//` → removes duplicate slashes
-- Path with `/XXX/` prefix → removes placeholder prefix
 - Missing `description` → adds description from field name
 - Missing `operationId` → generates from summary
+
+**Note:** Path `/XXX/` placeholder is NOT auto-fixed as it may be intentional business logic (version prefix, service identifier, etc.)
 
 ### DFX Rule Codes
 | Code | Rule | Description |
@@ -523,7 +524,7 @@ output:
 
 ## Web UI (`web-ui/`)
 
-Browser-based YAML editor with real-time validation, auto-fix, and code preview.
+Browser-based YAML editor with real-time validation, auto-fix, and unified diff preview.
 
 ```bash
 # Start local server
@@ -535,17 +536,22 @@ cd web-ui && npm test
 ```
 
 **Key files:**
-- `index.html` - Main UI
+- `index.html` - Main UI with single editor panel
 - `js/analyzer.js` - YAML analysis logic (mirrors Java validator rules)
-- `test/analyzer-test.js` - 37 unit tests for analyzer
-- `test/render-test.js` - 16 unit tests for UI rendering
+- `test/analyzer-test.js` - 45 unit tests for analyzer
+- `e2e/*.spec.ts` - 28 E2E tests with Playwright
 
 **Features:**
 - CodeMirror YAML editor with syntax highlighting
 - Real-time validation analysis
-- Auto-fix for validation rules
-- Diff preview showing before/after code
+- Selective auto-fix (choose which issues to fix)
+- Unified diff preview showing Java code changes
 - Supports Swagger 2.0 and OpenAPI 3.0 formats
+
+**UI Layout:**
+- Single YAML editor panel (full width)
+- Analysis panel on the right showing issues
+- Diff modal for preview before applying fixes
 
 ## IntelliJ IDEA Plugin Development
 

@@ -33,6 +33,9 @@ public class ApiValidator {
         // 检查同名 API
         checkDuplicateApi(apis);
 
+        // 检查注解位置一致性
+        checkAnnotationConsistency(apis);
+
         // 校验每个 API
         for (int i = 0; i < apis.size(); i++) {
             validateApi(apis.get(i), "apis[" + i + "]");
@@ -63,6 +66,56 @@ public class ApiValidator {
             }
             apiMap.put(key, api);
         }
+    }
+
+    /**
+     * 检查注解位置一致性
+     * DFX-020: 检查同一路径下的类注解是否一致
+     */
+    private void checkAnnotationConsistency(List<Api> apis) {
+        // 按路径分组，检查类注解是否一致
+        Map<String, List<Api>> pathApis = new HashMap<>();
+        for (Api api : apis) {
+            String path = api.getPath();
+            if (path != null) {
+                pathApis.computeIfAbsent(path, k -> new ArrayList<>()).add(api);
+            }
+        }
+
+        // 检查每个路径下的类注解一致性
+        for (Map.Entry<String, List<Api>> entry : pathApis.entrySet()) {
+            List<Api> pathApiList = entry.getValue();
+            if (pathApiList.size() > 1) {
+                // 多个API在同一个路径下，检查类注解
+                List<String> expectedAnnotations = null;
+                for (Api api : pathApiList) {
+                    List<String> classAnnotations = api.getClassAnnotations();
+                    if (expectedAnnotations == null) {
+                        expectedAnnotations = classAnnotations;
+                    } else if (classAnnotations != null) {
+                        // 比较注解是否一致
+                        if (!areListsEqual(expectedAnnotations, classAnnotations)) {
+                            errors.get().add(new ValidationError(
+                                "api." + api.getName() + ".classAnnotations",
+                                "DFX-020: 同一路径 " + entry.getKey() + " 下的类注解不一致",
+                                classAnnotations.toString(),
+                                "建议所有 HTTP 方法使用相同的类注解"
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 比较两个列表是否相等（忽略顺序）
+     */
+    private boolean areListsEqual(List<String> list1, List<String> list2) {
+        if (list1 == null && list2 == null) return true;
+        if (list1 == null || list2 == null) return false;
+        if (list1.size() != list2.size()) return false;
+        return new HashSet<>(list1).equals(new HashSet<>(list2));
     }
 
     /**

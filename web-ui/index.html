@@ -66,10 +66,7 @@
             min-width: 0;
         }
         .api-panel {
-            flex: 4;
-        }
-        .config-panel {
-            flex: 3;
+            flex: 1;
         }
         .panel:last-child { border-right: none; }
 
@@ -108,34 +105,6 @@
             overflow: hidden;
             position: relative;
             min-height: 0;
-        }
-
-        .config-output-paths {
-            padding: 10px 16px;
-            background: #1a1a2e;
-            border-top: 1px solid #16213e;
-            font-size: 12px;
-        }
-
-        .output-path-item {
-            display: flex;
-            margin-bottom: 4px;
-        }
-
-        .output-path-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .output-path-label {
-            color: #888;
-            width: 80px;
-            flex-shrink: 0;
-        }
-
-        .output-path-value {
-            color: #4ecca3;
-            font-family: monospace;
-            word-break: break-all;
         }
 
         .CodeMirror {
@@ -186,6 +155,7 @@
         }
         .issue.error { background: rgba(231, 76, 60, 0.15); border-color: #e74c3c; }
         .issue.warn { background: rgba(243, 156, 18, 0.15); border-color: #f39c12; }
+        .issue.info { background: rgba(52, 152, 219, 0.15); border-color: #3498db; }
         .issue-checkbox {
             flex-shrink: 0;
             padding-top: 2px;
@@ -222,9 +192,11 @@
         .issue-icon { width: 8px; height: 8px; border-radius: 50%; }
         .issue.error .issue-icon { background: #e74c3c; }
         .issue.warn .issue-icon { background: #f39c12; }
+        .issue.info .issue-icon { background: #3498db; }
         .issue-type { font-size: 11px; text-transform: uppercase; font-weight: 600; }
         .issue.error .issue-type { color: #e74c3c; }
         .issue.warn .issue-type { color: #f39c12; }
+        .issue.info .issue-type { color: #3498db; }
         .issue-rule {
             font-size: 10px;
             color: #666;
@@ -233,6 +205,31 @@
             background: #2a2a3e;
             border-radius: 3px;
             font-family: monospace;
+        }
+        .issue-fixable {
+            font-size: 10px;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+        .issue-fixable.fixable-yes {
+            background: rgba(39, 174, 96, 0.2);
+            color: #27ae60;
+        }
+        .issue-fixable.fixable-no {
+            background: rgba(233, 69, 96, 0.2);
+            color: #e94560;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .issue-fixable.fixable-no:hover {
+            background: rgba(233, 69, 96, 0.4);
+            color: #fff;
+        }
+        .issue-fixable.fixable-no::after {
+            content: ' ✏️';
+            font-size: 9px;
         }
         .issue-message { font-size: 13px; color: #ccc; line-height: 1.4; }
         .issue-api { font-size: 11px; color: #666; margin-top: 4px; font-family: monospace; }
@@ -262,7 +259,9 @@
             flex-shrink: 0;
         }
 
-        textarea { display: none; }
+        /* Hide original textarea for CodeMirror */
+        .api-panel textarea.original-textarea,
+        .output-panel textarea.original-textarea { display: none; }
 
         /* Diff Preview Modal - 简洁直观风格 */
         .diff-modal {
@@ -272,13 +271,88 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(12px);
         }
         .diff-modal.active { display: flex; }
+
+        /* Edit Modal - 编辑弹窗 */
+        .edit-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .edit-modal {
+            background: #1a1a2e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        .edit-modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #0f3460;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 15px;
+            font-weight: 500;
+        }
+        .edit-modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+        .edit-modal-close:hover { color: #e94560; }
+        .edit-modal-body {
+            padding: 20px;
+        }
+        .edit-modal-body label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        .edit-modal-body textarea {
+            width: 100%;
+            padding: 10px 12px;
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 4px;
+            color: #eee;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+        .edit-modal-body textarea:focus {
+            outline: none;
+            border-color: #e94560;
+        }
+        .edit-modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #0f3460;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
         .diff-container {
             background: #0d1117;
             width: 100%;
@@ -289,9 +363,131 @@
             flex-direction: column;
             border: none;
             border-radius: 0;
-            box-shadow: none;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             overflow: hidden;
         }
+
+        /* 改进的 Diff 区块样式 */
+        .diff-api-block-header {
+            padding: 10px 16px;
+            background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .diff-api-block-badge {
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .diff-api-block-badge.get { background: #61affe; color: #fff; }
+        .diff-api-block-badge.post { background: #49cc90; color: #fff; }
+        .diff-api-block-badge.put { background: #fca130; color: #fff; }
+        .diff-api-block-badge.delete { background: #f93e3e; color: #fff; }
+        .diff-api-block-badge.patch { background: #9012fe; color: #fff; }
+        .diff-api-block-path {
+            font-size: 13px;
+            font-weight: 500;
+            color: #e6edf3;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            flex: 1;
+        }
+        .diff-change-indicator {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .diff-change-indicator.added {
+            background: rgba(46, 160, 67, 0.2);
+            color: #3fb950;
+            border: 1px solid rgba(46, 160, 67, 0.4);
+        }
+        .diff-change-indicator.removed {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.4);
+        }
+        .diff-change-indicator.modified {
+            background: rgba(210, 153, 34, 0.2);
+            color: #d29922;
+            border: 1px solid rgba(210, 153, 34, 0.4);
+        }
+        .diff-change-indicator.path-fixed {
+            background: rgba(56, 139, 253, 0.2);
+            color: #58a6ff;
+            border: 1px solid rgba(56, 139, 253, 0.4);
+        }
+        .diff-yaml-content {
+            padding: 12px 16px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            min-height: 60px;
+        }
+        .diff-yaml-content .line { display: block; padding: 2px 0; }
+        .diff-yaml-content .line.removed {
+            background: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+            border-radius: 2px;
+        }
+        .diff-yaml-content .line.added {
+            background: rgba(46, 160, 67, 0.2);
+            color: #3fb950;
+            border-radius: 2px;
+        }
+
+        /* 参数对比表格样式 */
+        .diff-param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        .diff-param-table th {
+            background: #21262d;
+            padding: 8px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #8b949e;
+            border-bottom: 1px solid #30363d;
+        }
+        .diff-param-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #21262d;
+            color: #c9d1d9;
+        }
+        .diff-param-table tr.param-added td { background: rgba(56, 139, 253, 0.1); }
+        .diff-param-table tr.param-removed td { background: rgba(248, 81, 73, 0.1); }
+        .diff-param-table tr.param-changed td { background: rgba(187, 128, 9, 0.1); }
+        .diff-param-table .param-name { font-weight: 500; color: #e6edf3; }
+        .diff-param-table .param-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+        .diff-param-table .param-badge.required { background: #f85149; color: #fff; }
+        .diff-param-table .param-badge.optional { background: #30363d; color: #8b949e; }
+        .diff-param-table .change-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+        .diff-param-table .change-indicator.added { background: #238636; color: #fff; }
+        .diff-param-table .change-indicator.removed { background: #da3633; color: #fff; }
+        .diff-param-table .change-indicator.changed { background: #9e6a03; color: #fff; }
 
         /* 头部 - 简洁风格 */
         .diff-header {
@@ -343,73 +539,262 @@
             flex: 1;
             overflow: hidden;
             display: flex;
+            flex-direction: column;
             min-height: 0;
             background: #0d1117;
         }
 
-        /* 左右面板 */
-        .diff-panel {
+        /* 统一 Diff 面板 */
+        .diff-unified-panel {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            min-width: 0;
         }
-        .diff-panel-left {
-            border-right: 1px solid #21262d;
-        }
-
-        /* 面板头部 */
-        .diff-panel-header {
-            padding: 10px 20px;
+        .diff-unified-header {
+            padding: 12px 20px;
             background: #161b22;
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 600;
-            color: #8b949e;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: #e6edf3;
             border-bottom: 1px solid #21262d;
             display: flex;
             align-items: center;
-            gap: 8px;
             flex-shrink: 0;
         }
-        .diff-panel-badge {
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        .diff-panel-badge.before {
-            background: rgba(248, 81, 73, 0.1);
-            color: #f85149;
-        }
-        .diff-panel-badge.after {
-            background: rgba(56, 139, 253, 0.1);
-            color: #58a6ff;
-        }
-
-        /* Diff 内容 */
-        .diff-content {
+        .diff-unified-content {
             flex: 1;
             overflow-y: auto;
             overflow-x: auto;
-            padding: 0;
-            font-family: 'JetBrains Mono', 'Consolas', monospace;
-            font-size: 12px;
-            line-height: 1.7;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
         }
-        .diff-content::-webkit-scrollbar {
+        .diff-unified-content::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
-        .diff-content::-webkit-scrollbar-track {
+        .diff-unified-content::-webkit-scrollbar-track {
             background: #0d1117;
         }
-        .diff-content::-webkit-scrollbar-thumb {
+        .diff-unified-content::-webkit-scrollbar-thumb {
             background: #30363d;
             border-radius: 4px;
+        }
+
+        /* API 块配对 - 确保前后对齐 */
+        .diff-api-block-paired {
+            margin-bottom: 0;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #161b22;
+            transition: box-shadow 0.2s;
+            display: grid;
+            grid-template-rows: auto 1fr;
+            min-height: 80px;
+        }
+        .diff-api-block-paired:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .diff-api-block-paired[data-index] {
+            /* 确保相同 index 的块高度相同 */
+        }
+
+        /* 统一视图 API 块样式 */
+        .diff-api-unified {
+            margin-bottom: 24px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #161b22;
+        }
+        .diff-api-unified-header {
+            padding: 12px 16px;
+            background: linear-gradient(180deg, #21262d 0%, #161b22 100%);
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .diff-api-unified-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .diff-api-unified-badge.get { background: #61affe; color: #fff; }
+        .diff-api-unified-badge.post { background: #49cc90; color: #fff; }
+        .diff-api-unified-badge.put { background: #fca130; color: #fff; }
+        .diff-api-unified-badge.delete { background: #f93e3e; color: #fff; }
+        .diff-api-unified-badge.patch { background: #9012fe; color: #fff; }
+        .diff-api-path-before {
+            font-size: 13px;
+            color: #f85149;
+            font-family: 'JetBrains Mono', monospace;
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .diff-api-path-arrow {
+            color: #8b949e;
+            font-size: 14px;
+        }
+        .diff-api-path-after {
+            font-size: 14px;
+            color: #3fb950;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 600;
+        }
+        .diff-api-path-unchanged {
+            font-size: 14px;
+            color: #e6edf3;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+        .diff-api-change-type {
+            margin-left: auto;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .diff-api-change-type.path-fixed {
+            background: rgba(255, 184, 108, 0.15);
+            color: #ffb86c;
+            border: 1px solid rgba(255, 184, 108, 0.3);
+        }
+        .diff-api-change-type.modified {
+            background: rgba(56, 139, 253, 0.15);
+            color: #58a6ff;
+            border: 1px solid rgba(56, 139, 253, 0.3);
+        }
+        .diff-api-change-type.added {
+            background: rgba(46, 160, 67, 0.15);
+            color: #3fb950;
+            border: 1px solid rgba(46, 160, 67, 0.3);
+        }
+
+        /* 代码对比区域 - 内部显示删除和添加 */
+        .diff-api-code-section {
+            padding: 0;
+        }
+        .diff-code-section-label {
+            padding: 6px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #8b949e;
+            background: #0d1117;
+            border-bottom: 1px solid #21262d;
+        }
+        .diff-code-section-label.remove {
+            background: rgba(248, 81, 73, 0.05);
+            color: #f85149;
+        }
+        .diff-code-section-label.add {
+            background: rgba(46, 160, 67, 0.05);
+            color: #3fb950;
+        }
+        .diff-code-block {
+            padding: 12px 16px;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .diff-code-block.remove {
+            background: rgba(248, 81, 73, 0.08);
+        }
+        .diff-code-block.add {
+            background: rgba(46, 160, 67, 0.08);
+        }
+        .diff-code-block.unchanged {
+            background: transparent;
+            color: #8b949e;
+        }
+
+        /* 行内高亮 */
+        .diff-highlight-remove {
+            background: rgba(248, 81, 73, 0.3);
+            color: #ffa198;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+        .diff-highlight-add {
+            background: rgba(46, 160, 67, 0.3);
+            color: #7ee787;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        /* 行级 diff 样式 */
+        .diff-line-by-line {
+            padding: 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+        .diff-line-added, .diff-line-removed {
+            display: flex;
+            align-items: flex-start;
+            padding: 2px 16px;
+        }
+        .diff-line-added {
+            background: rgba(46, 160, 67, 0.15);
+            border-left: 3px solid #3fb950;
+        }
+        .diff-line-removed {
+            background: rgba(248, 81, 73, 0.15);
+            border-left: 3px solid #f85149;
+        }
+        .diff-line-marker {
+            flex-shrink: 0;
+            width: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .diff-line-added .diff-line-marker {
+            color: #3fb950;
+        }
+        .diff-line-removed .diff-line-marker {
+            color: #f85149;
+        }
+        .diff-line-code {
+            flex: 1;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        .diff-no-change {
+            padding: 16px;
+            color: #8b949e;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* 无变化提示 */
+        .diff-no-changes {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #8b949e;
+        }
+        .diff-no-changes-icon {
+            font-size: 48px;
+            color: #3fb950;
+            margin-bottom: 16px;
+        }
+        .diff-no-changes-text {
+            font-size: 16px;
         }
 
         /* API 块样式 - 更简洁 */
@@ -1232,33 +1617,7 @@
                     <button class="panel-load-btn" onclick="loadApiFile()">打开</button>
                 </div>
                 <div class="editor-wrapper">
-                    <textarea id="yaml-editor"></textarea>
-                </div>
-            </div>
-
-            <!-- Config YAML Editor -->
-            <div class="panel config-panel">
-                <div class="panel-header">
-                    <span>生成配置 (codegen-config.yaml)</span>
-                    <span id="config-info">-</span>
-                    <button class="panel-load-btn" onclick="loadConfigFile()">打开</button>
-                </div>
-                <div class="editor-wrapper">
-                    <textarea id="config-editor"></textarea>
-                </div>
-                <div class="config-output-paths" id="config-output-paths">
-                    <div class="output-path-item">
-                        <span class="output-path-label">Controller:</span>
-                        <span class="output-path-value" id="output-path-controller">-</span>
-                    </div>
-                    <div class="output-path-item">
-                        <span class="output-path-label">Request:</span>
-                        <span class="output-path-value" id="output-path-request">-</span>
-                    </div>
-                    <div class="output-path-item">
-                        <span class="output-path-label">Response:</span>
-                        <span class="output-path-value" id="output-path-response">-</span>
-                    </div>
+                    <textarea id="yaml-editor" class="original-textarea"></textarea>
                 </div>
             </div>
 
@@ -1309,59 +1668,15 @@
                 <button class="btn btn-secondary" onclick="closeDiffModal()">关闭</button>
             </div>
             <div class="diff-body">
-                <!-- Left: YAML Before -->
-                <div class="diff-panel diff-panel-left">
-                    <div class="diff-panel-header">
+                <!-- 统一 Diff 视图 -->
+                <div class="diff-unified-panel">
+                    <div class="diff-unified-header">
                         <span class="diff-panel-badge before">修复前</span>
-                    </div>
-                    <div class="diff-content" id="diff-before" data-scroll-group="yaml"></div>
-                </div>
-
-                <!-- Middle: YAML After -->
-                <div class="diff-panel">
-                    <div class="diff-panel-header">
+                        <span style="margin: 0 8px;">→</span>
                         <span class="diff-panel-badge after">修复后</span>
+                        <span style="margin-left: 12px; color: #8b949e;">Java 代码变更预览</span>
                     </div>
-                    <div class="diff-content" id="diff-after" data-scroll-group="yaml"></div>
-                </div>
-
-                <!-- Right: API + Field stacked, each with before/after -->
-                <div class="diff-right-panel">
-                    <!-- API Changes -->
-                    <div class="diff-api-section">
-                        <div class="diff-panel-header">
-                            <span>&#128279; 接口变更</span>
-                            <span id="diff-api-count" class="diff-panel-count">0</span>
-                        </div>
-                        <div class="diff-api-panels">
-                            <div class="diff-api-panel diff-api-panel-left">
-                                <div class="diff-api-header">原始</div>
-                                <div class="diff-api-list" id="diff-api-before"></div>
-                            </div>
-                            <div class="diff-api-panel">
-                                <div class="diff-api-header">修复后</div>
-                                <div class="diff-api-list" id="diff-api-after" data-scroll-group="api"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Field Changes -->
-                    <div class="diff-field-section">
-                        <div class="diff-panel-header">
-                            <span>&#128196; 字段变更</span>
-                            <span id="diff-field-count" class="diff-panel-count">0</span>
-                        </div>
-                        <div class="diff-field-panels">
-                            <div class="diff-field-panel diff-field-panel-left">
-                                <div class="diff-field-header">原始</div>
-                                <div class="diff-field-list" id="diff-field-before"></div>
-                            </div>
-                            <div class="diff-field-panel">
-                                <div class="diff-field-header">修复后</div>
-                                <div class="diff-field-list" id="diff-field-after" data-scroll-group="field"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="diff-unified-content" id="diff-unified"></div>
                 </div>
             </div>
             <div class="diff-footer">
@@ -1382,28 +1697,37 @@
     </div>
 
     <script src="lib/js-yaml.min.js"></script>
+    <script>
+        // 确保 jsyaml 全局可用 (js-yaml 可能创建 window.jsyaml)
+        if (typeof jsyaml === 'undefined' && typeof window.jsyaml !== 'undefined') {
+            jsyaml = window.jsyaml;
+        }
+    </script>
     <script src="lib/codemirror.min.js"></script>
     <script src="lib/yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
     <script src="js/analyzer.js"></script>
     <script>
-        var yamlEditor, configEditor;
+        var yamlEditor;
 
-        // Default YAML content (使用Swagger 2.0格式)
+        // Default YAML content (使用Swagger 2.0格式，包含实体对象示例)
         var defaultYaml = `swagger: "2.0"
 info:
-  title: 用户管理API
+  title: 电商系统API
   version: "1.0"
-basePath: /api
+basePath: /api/v1
 paths:
+  # ==================== 简单参数示例 ====================
   /users:
     get:
       summary: 查询用户列表
       operationId: queryUserList
+      description: 分页查询用户列表，支持关键词搜索
       parameters:
         - name: page
           in: query
-          description: 页码
+          description: 页码（从1开始）
+          required: true
           schema:
             type: integer
         - name: pageSize
@@ -1416,47 +1740,317 @@ paths:
           description: 搜索关键词
           schema:
             type: string
+        - name: status
+          in: query
+          description: 用户状态
+          schema:
+            type: string
+            enum: [active, inactive, banned]
       responses:
         200:
-          description: 成功
+          description: 查询成功
+          schema:
+            $ref: '#/definitions/PageResult'
+
+  # ==================== 实体对象示例 ====================
+  /users:
     post:
       summary: 创建用户
       operationId: createUser
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - username
-                - email
-              properties:
-                username:
-                  type: string
-                  minLength: 4
-                  maxLength: 20
-                email:
-                  type: string
-                  format: email
+      description: 创建新用户，需要提供用户基本信息
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateUserReq'
       responses:
         201:
           description: 创建成功
-  /users/{id}:
+          schema:
+            $ref: '#/definitions/CreateUserRsp'
+
+  # ==================== 路径参数示例 ====================
+  /users/{userId}:
     get:
       summary: 获取用户详情
       operationId: getUserById
       parameters:
-        - name: id
+        - name: userId
           in: path
+          description: 用户ID
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         200:
-          description: 成功`;
+          description: 成功
+          schema:
+            $ref: '#/definitions/UserDetail'
 
-        var defaultConfig = 'framework: CXF\n\ncopyright: ""\n\noutput:\n  controller:\n    path: generated/api/\n  request:\n    path: src/main/java/req/\n  response:\n    path: src/main/java/rsp/';
+  # ==================== 复杂实体示例 ====================
+  /orders:
+    post:
+      summary: 创建订单
+      operationId: createOrder
+      description: 创建新订单，包含多个商品
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/CreateOrderReq'
+      responses:
+        201:
+          description: 订单创建成功
+          schema:
+            $ref: '#/definitions/OrderRsp'
+
+  /orders/{orderId}:
+    get:
+      summary: 获取订单详情
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          description: 订单ID
+          required: true
+          schema:
+            type: string
+        - name: includeItems
+          in: query
+          description: 是否包含订单项详情
+          schema:
+            type: boolean
+      responses:
+        200:
+          description: 成功
+          schema:
+            $ref: '#/definitions/OrderDetail'
+
+# ==================== 实体定义 ====================
+definitions:
+  # 分页结果
+  PageResult:
+    type: object
+    properties:
+      total:
+        type: integer
+        description: 总记录数
+      page:
+        type: integer
+        description: 当前页码
+      pageSize:
+        type: integer
+        description: 每页数量
+      list:
+        type: array
+        description: 数据列表
+        items:
+          $ref: '#/definitions/User'
+
+  # 用户基本信息
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: 用户ID
+      username:
+        type: string
+        description: 用户名
+      email:
+        type: string
+        format: email
+        description: 邮箱
+      phone:
+        type: string
+        description: 手机号
+      status:
+        type: string
+        enum: [active, inactive, banned]
+        description: 状态
+      createdAt:
+        type: string
+        format: date-time
+        description: 创建时间
+
+  # 创建用户请求
+  CreateUserReq:
+    type: object
+    required:
+      - username
+      - email
+      - password
+    properties:
+      username:
+        type: string
+        minLength: 4
+        maxLength: 20
+        description: 用户名（4-20字符）
+      email:
+        type: string
+        format: email
+        description: 邮箱地址
+      password:
+        type: string
+        minLength: 8
+        maxLength: 32
+        description: 密码（8-32字符）
+      phone:
+        type: string
+        description: 手机号（可选）
+      nickname:
+        type: string
+        maxLength: 50
+        description: 昵称
+      birthday:
+        type: string
+        format: date
+        description: 生日
+
+  # 创建用户响应
+  CreateUserRsp:
+    type: object
+    properties:
+      userId:
+        type: integer
+        format: int64
+        description: 新创建的用户ID
+      success:
+        type: boolean
+        description: 是否成功
+
+  # 用户详情
+  UserDetail:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      username:
+        type: string
+      email:
+        type: string
+      phone:
+        type: string
+      nickname:
+        type: string
+      avatar:
+        type: string
+        description: 头像URL
+      status:
+        type: string
+      createdAt:
+        type: string
+        format: date-time
+      updatedAt:
+        type: string
+        format: date-time
+
+  # 创建订单请求
+  CreateOrderReq:
+    type: object
+    required:
+      - userId
+      - items
+    properties:
+      userId:
+        type: integer
+        format: int64
+        description: 用户ID
+      shippingAddress:
+        type: string
+        description: 收货地址
+      items:
+        type: array
+        description: 订单项列表
+        items:
+          $ref: '#/definitions/OrderItemReq'
+      couponCode:
+        type: string
+        description: 优惠券代码
+      remark:
+        type: string
+        maxLength: 200
+        description: 订单备注
+
+  # 订单项请求
+  OrderItemReq:
+    type: object
+    required:
+      - productId
+      - quantity
+    properties:
+      productId:
+        type: integer
+        format: int64
+        description: 商品ID
+      quantity:
+        type: integer
+        minimum: 1
+        maximum: 999
+        description: 购买数量
+      skuId:
+        type: string
+        description: SKU ID
+
+  # 创建订单响应
+  OrderRsp:
+    type: object
+    properties:
+      orderId:
+        type: string
+        description: 订单号
+      totalAmount:
+        type: number
+        format: double
+        description: 订单总金额
+      success:
+        type: boolean
+
+  # 订单详情
+  OrderDetail:
+    type: object
+    properties:
+      orderId:
+        type: string
+      userId:
+        type: integer
+        format: int64
+      status:
+        type: string
+        enum: [pending, paid, shipped, completed, cancelled]
+      totalAmount:
+        type: number
+        format: double
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/OrderItem'
+      createdAt:
+        type: string
+        format: date-time
+
+  # 订单项
+  OrderItem:
+    type: object
+    properties:
+      productId:
+        type: integer
+        format: int64
+      productName:
+        type: string
+      quantity:
+        type: integer
+      price:
+        type: number
+        format: double
+      subtotal:
+        type: number
+        format: double`;
 
         // 存储用户的原始 YAML（用于预览对比）
         var originalYaml = defaultYaml;
@@ -1503,13 +2097,11 @@ paths:
         var examples = {
             'swagger': {
                 name: 'Swagger 2.0 (swagger2-example.yaml)',
-                yaml: null,  // 异步加载
-                config: defaultConfig
+                yaml: null  // 异步加载
             },
             'openapi': {
                 name: 'OpenAPI 3.0 (openapi3-example.yaml)',
-                yaml: null,  // 异步加载
-                config: defaultConfig
+                yaml: null  // 异步加载
             }
         };
 
@@ -1550,21 +2142,9 @@ paths:
                 tabSize: 2
             });
 
-            // Initialize config editor
-            configEditor = CodeMirror.fromTextArea(document.getElementById('config-editor'), {
-                mode: 'yaml',
-                theme: 'dracula',
-                lineNumbers: true,
-                lineWrapping: true,
-                indentUnit: 2,
-                tabSize: 2
-            });
-
             // Set default content (blank, user can click "加载示例" to load)
             var currentYaml = '';
-            var currentConfig = defaultConfig;
             yamlEditor.setValue(currentYaml);
-            configEditor.setValue(currentConfig);
             originalYaml = currentYaml;  // 保存为原始版本
 
             // Events
@@ -1573,15 +2153,6 @@ paths:
                 updateStatus();
                 document.getElementById('yaml-info').textContent = '已修改';
             });
-
-            // Config editor events
-            configEditor.on('change', function() {
-                document.getElementById('config-info').textContent = '已修改';
-                updateConfigOutputPaths();
-            });
-
-            // Initialize config output paths
-            updateConfigOutputPaths();
 
             updateStatus();
         }
@@ -1642,15 +2213,12 @@ paths:
                     if (yaml) {
                         originalYaml = yaml;
                         yamlEditor.setValue(yaml);
-                        configEditor.setValue(example.config || defaultConfig);
                         yamlEditor.refresh();
-                        configEditor.refresh();
                         updateStatus();
                         document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
                         document.getElementById('issue-count').textContent = '0';
                         document.getElementById('issue-count').className = 'issue-count';
                         document.getElementById('yaml-info').textContent = example.name;
-                        document.getElementById('config-info').textContent = example.name;
                         setMessage('已加载: ' + example.name);
                     } else {
                         setMessage('加载失败，请检查网络或文件是否存在');
@@ -1714,26 +2282,6 @@ paths:
             return result.join('\n');
         }
 
-        // Load Config YAML file
-        function loadConfigFile() {
-            var input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.yaml,.yml';
-            input.onchange = function(e) {
-                var file = e.target.files[0];
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    configEditor.setValue(e.target.result);
-                    configEditor.refresh();
-                    document.getElementById('config-info').textContent = file.name;
-                    updateConfigOutputPaths();
-                    setMessage('已加载配置: ' + file.name);
-                };
-                reader.readAsText(file);
-            };
-            input.click();
-        }
-
         function saveFile() {
             var content = yamlEditor.getValue();
             var blob = new Blob([content], { type: 'text/yaml' });
@@ -1777,16 +2325,33 @@ paths:
                 return;
             }
 
-            // Reset selection - all selected by default
+            // Reset selection - info issues not selected by default (they don't need fixing)
             selectedIssues = {};
-            issues.forEach(function(_, i) { selectedIssues[i] = true; });
+            issues.forEach(function(issue, i) {
+                // Default to selected, except info which doesn't need fixing
+                selectedIssues[i] = issue.severity !== 'info';
+            });
 
             var html = '<div class="issue-select-all">' +
                 '<label><input type="checkbox" id="select-all-issues" checked onchange="toggleAllIssues(this.checked)"> 全选</label>' +
-                '</div>';
+                '<span style="margin-left: 12px; font-size: 11px; color: #888;">' +
+                '<span style="color: #27ae60;">● 可修复</span> 自动修复 &nbsp; ' +
+                '<span style="color: #e94560;">● 需手动</span> 点击编辑' +
+                '</span></div>';
 
             html += issues.map(function(issue, index) {
                 var checked = selectedIssues[index] ? 'checked' : '';
+                var severityText = issue.severity === 'error' ? '错误' : (issue.severity === 'warn' ? '警告' : '提示');
+
+                // 判断是否可以自动修复
+                var canAutoFix = isAutoFixable(issue);
+
+                if (canAutoFix) {
+                    var fixableBadge = '<span class="issue-fixable fixable-yes" title="此问题可以自动修复">可修复</span>';
+                } else {
+                    var fixableBadge = '<button type="button" class="issue-fixable fixable-no" title="点击编辑" onclick="event.stopPropagation(); event.preventDefault(); handleManualIssue(' + index + ');">需手动</button>';
+                }
+
                 return '<div class="issue ' + issue.severity + '">' +
                     '<div class="issue-checkbox">' +
                     '<input type="checkbox" ' + checked + ' onchange="toggleIssue(' + index + ', this.checked)">' +
@@ -1794,8 +2359,9 @@ paths:
                     '<div class="issue-content">' +
                     '<div class="issue-title">' +
                     '<span class="issue-icon"></span>' +
-                    '<span class="issue-type">' + (issue.severity === 'error' ? '错误' : '警告') + '</span>' +
+                    '<span class="issue-type">' + severityText + '</span>' +
                     '<span class="issue-rule" title="规则依据">' + (issue.rule || '') + '</span>' +
+                    fixableBadge +
                     '</div>' +
                     '<div class="issue-message">' + issue.message + '</div>' +
                     (issue.api !== undefined ? '<div class="issue-api">API: ' + issue.api + '</div>' : '') +
@@ -1806,6 +2372,647 @@ paths:
             container.innerHTML = html;
             window.currentIssues = issues;
             updateIssueCount();
+        }
+
+        /**
+         * 处理"需手动"问题的点击 - 跳转到编辑位置或显示编辑弹窗
+         */
+        function handleManualIssue(index) {
+            console.log('handleManualIssue called with index:', index);
+            var issue = window.currentIssues[index];
+            console.log('issue:', issue);
+            if (!issue) {
+                console.error('No issue found at index:', index);
+                return;
+            }
+
+            // 检查问题类型，提供对应的编辑功能
+            var msg = issue.message;
+            console.log('issue message:', msg);
+
+            // 如果是缺少 description 的问题，显示编辑弹窗
+            if (msg.includes('缺少 description')) {
+                console.log('Showing description editor');
+                showDescriptionEditor(issue);
+            }
+            // 如果是 x-java-class-annotations 问题，显示编辑弹窗
+            else if (msg.includes('x-java-class-annotations') || msg.includes('annotations')) {
+                console.log('Showing annotations editor');
+                showDescriptionEditor(issue);
+            }
+            // 如果是 minLength/maxLength 错误，跳转到对应位置
+            else if (msg.includes('minLength') || msg.includes('maxLength')) {
+                jumpToYamlLocation(issue);
+            }
+            // 其他情况，跳转到对应位置
+            else {
+                jumpToYamlLocation(issue);
+            }
+        }
+
+        /**
+         * 显示 description 编辑弹窗
+         */
+        function showDescriptionEditor(issue) {
+            var fieldName = '';
+            var fieldType = '';
+            var helpText = '';
+            var exampleText = '';
+
+            if (issue.message.includes('必填参数')) {
+                var match = issue.message.match(/必填参数 (\w+) 缺少/);
+                fieldName = match ? match[1] : '参数';
+                fieldType = '参数';
+                helpText = '请输入参数的描述信息，说明参数的用途和格式要求';
+                exampleText = '例如：用户ID，用于唯一标识用户';
+            } else if (issue.message.includes('requestBody')) {
+                fieldName = 'requestBody';
+                fieldType = 'requestBody';
+                helpText = '请输入请求体的描述信息，说明请求体的用途和包含的数据';
+                exampleText = '例如：创建用户的请求体，包含用户名、邮箱等基本信息';
+            } else if (issue.message.includes('x-java-class-annotations')) {
+                fieldName = 'x-java-class-annotations';
+                fieldType = 'annotations';
+                // 提取路径信息
+                var pathMatch = issue.message.match(/路径\s+(\/[^\s]+)\s+下/);
+                var pathStr = pathMatch ? pathMatch[1] : '未知路径';
+                var methodMatch = issue.message.match(/(\w+)\s+方法/);
+                var methodStr = methodMatch ? methodMatch[1] : '未知方法';
+
+                helpText = '<b>问题说明：</b><br>' +
+                    '在 Swagger/OpenAPI 中，您可以为路径（path）和方法（method）分别配置 x-java-class-annotations。<br><br>' +
+                    '<b>当前状态：</b><br>' +
+                    '• 路径：' + pathStr + '<br>' +
+                    '• 方法：' + methodStr + '<br>' +
+                    '• 问题：路径级别和方法级别的 x-java-class-annotations 注解配置不一致<br><br>' +
+                    '<b>解决方法：</b><br>' +
+                    '1. 在下方输入框中填写要统一使用的类级别注解（每行一个）<br>' +
+                    '2. 点击"应用"后，系统会自动在路径级别添加这些注解<br>' +
+                    '3. 如果需要修改方法级别的注解，请手动编辑 YAML 文件';
+                exampleText = '@Secured\n@AuditLog(action="USER_QUERY")';
+            }
+
+            var defaultValue = '';
+            var placeholder = '';
+            if (fieldType === 'annotations') {
+                placeholder = '@Secured\n@AuditLog(action="USER_QUERY")\n@Permission("admin:user:read")';
+            } else {
+                placeholder = exampleText;
+            }
+
+            // 创建编辑弹窗 - annotations 使用更大的弹窗
+            var modalWidth = fieldType === 'annotations' ? '600px' : '500px';
+            var modalHtml = '<div class="edit-modal-overlay" onclick="closeEditModal(event)">' +
+                '<div class="edit-modal" onclick="event.stopPropagation()" style="max-width: ' + modalWidth + ';">' +
+                '<div class="edit-modal-header">' +
+                '<span>📝 编辑 ' + (fieldType === 'annotations' ? '类级别注解' : '描述') + '</span>' +
+                '<button class="edit-modal-close" onclick="closeEditModal()">&times;</button>' +
+                '</div>' +
+                '<div class="edit-modal-body">' +
+                '<div style="background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3); border-radius: 4px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: #ffc107; line-height: 1.6;">' +
+                helpText +
+                '</div>' +
+                (fieldType !== 'annotations' ? '<label>' + fieldType + ': <strong>' + fieldName + '</strong></label>' : '') +
+                (issue.api ? '<label style="color: #888;">API: ' + issue.api + '</label>' : '') +
+                '<label style="margin-top: 12px; display: block;">' + (fieldType === 'annotations' ? '请输入要添加的类级别注解（每行一个）:' : '描述内容:') + '</label>' +
+                '<textarea id="edit-description-input" placeholder="' + placeholder + '" rows="' + (fieldType === 'annotations' ? '4' : '3') + '" style="font-family: ' + (fieldType === 'annotations' ? 'monospace' : 'inherit') + ';">' + defaultValue + '</textarea>' +
+                (fieldType === 'annotations' ? '<div style="font-size: 11px; color: #888; margin-top: 4px;">提示：注解格式为 @AnnotationName 或 @AnnotationName(param="value")</div>' : '') +
+                '</div>' +
+                '<div class="edit-modal-footer">' +
+                '<button class="btn btn-secondary" onclick="closeEditModal()">取消</button>' +
+                '<button class="btn btn-primary" onclick="applyDescriptionEdit(\'' + fieldName + '\', \'' + fieldType + '\', \'' + (issue.field || '') + '\', \'' + (issue.api || '') + '\')">应用</button>' +
+                '</div>' +
+                '</div>' +
+                '</div>';
+
+            // 添加到页面
+            var div = document.createElement('div');
+            div.id = 'edit-modal-container';
+            div.innerHTML = modalHtml;
+            document.body.appendChild(div);
+
+            // 聚焦输入框
+            setTimeout(function() {
+                var input = document.getElementById('edit-description-input');
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }, 100);
+        }
+
+        /**
+         * 应用 description 编辑
+         */
+        function applyDescriptionEdit(fieldName, fieldType, issueField, issueApi) {
+            var description = document.getElementById('edit-description-input').value.trim();
+            if (!description) {
+                alert('请输入内容');
+                return;
+            }
+
+            // 输入验证
+            if (fieldType === 'annotations') {
+                // 验证注解格式
+                var annotations = description.split('\n').filter(function(a) { return a.trim(); });
+                for (var i = 0; i < annotations.length; i++) {
+                    var ann = annotations[i].trim();
+                    if (!ann.startsWith('@')) {
+                        alert('注解格式错误：第 ' + (i + 1) + ' 行 "' + ann + '" 不以 @ 开头\n\n正确格式示例：\n@Secured\n@AuditLog(action="USER_QUERY")');
+                        return;
+                    }
+                    // 检查注解名称是否合法（字母开头，可包含字母数字下划线）
+                    var annName = ann.substring(1).split('(')[0].trim();
+                    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(annName)) {
+                        alert('注解名称不合法：第 ' + (i + 1) + ' 行 "' + annName + '"\n\n注解名称必须以字母开头，只能包含字母、数字和下划线');
+                        return;
+                    }
+                }
+            } else if (fieldType === '参数' || fieldType === 'requestBody') {
+                // 验证描述长度
+                if (description.length < 2) {
+                    alert('描述内容太短，请至少输入2个字符');
+                    return;
+                }
+                if (description.length > 500) {
+                    alert('描述内容太长，请限制在500字符以内');
+                    return;
+                }
+            }
+
+            // 获取当前 YAML 内容
+            var yaml = yamlEditor.getValue();
+            var lines = yaml.split('\n');
+            var modified = false;
+
+            // 解析 API 信息 (格式: "GET /api/v1/path")
+            var apiMethod = '';
+            var apiPath = '';
+            if (issueApi) {
+                var apiParts = issueApi.split(' ');
+                if (apiParts.length >= 2) {
+                    apiMethod = apiParts[0];
+                    apiPath = apiParts[1];
+                }
+            }
+
+            // 尝试找到对应位置并添加 description
+            if (fieldType === 'annotations') {
+                // 处理 x-java-class-annotations 编辑
+                // 从 issueApi 中提取路径
+                if (apiPath) {
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].trim() === apiPath + ':') {
+                            // 找到路径，检查是否已有 x-java-class-annotations
+                            var baseIndent = lines[i].match(/^\s*/)[0];
+                            var j = i + 1;
+                            var foundAnnotations = false;
+
+                            while (j < lines.length) {
+                                var nextLine = lines[j];
+                                var lineIndent = nextLine.match(/^\s*/)[0];
+
+                                // 如果遇到同级或更高级别的元素，停止
+                                if (nextLine.trim() && lineIndent.length <= baseIndent.length) {
+                                    break;
+                                }
+
+                                if (nextLine.includes('x-java-class-annotations:')) {
+                                    // 更新现有注解
+                                    // 找到注解列表的结束位置
+                                    var annotationsIndent = lineIndent + '  ';
+                                    var k = j + 1;
+                                    var newLines = [];
+                                    var annotations = description.split('\n').filter(function(a) { return a.trim(); });
+                                    annotations.forEach(function(ann) {
+                                        newLines.push(annotationsIndent + '- "' + ann.trim() + '"');
+                                    });
+
+                                    // 删除旧的注解行
+                                    while (k < lines.length && (lines[k].match(/^\s*- "/) || lines[k].trim() === '')) {
+                                        var kIndent = lines[k].match(/^\s*/)[0];
+                                        if (kIndent.length <= lineIndent.length) break;
+                                        lines.splice(k, 1);
+                                    }
+
+                                    // 插入新的注解行
+                                    var insertIdx = j + 1;
+                                    for (var m = newLines.length - 1; m >= 0; m--) {
+                                        lines.splice(insertIdx, 0, newLines[m]);
+                                    }
+
+                                    foundAnnotations = true;
+                                    modified = true;
+                                    break;
+                                }
+                                j++;
+                            }
+
+                            if (!foundAnnotations) {
+                                // 添加新的 x-java-class-annotations
+                                var annotationsIndent = baseIndent + '  ';
+                                var newLines = [annotationsIndent + 'x-java-class-annotations:'];
+                                var annotations = description.split('\n').filter(function(a) { return a.trim(); });
+                                annotations.forEach(function(ann) {
+                                    newLines.push(annotationsIndent + '  - "' + ann.trim() + '"');
+                                });
+
+                                for (var m = newLines.length - 1; m >= 0; m--) {
+                                    lines.splice(i + 1, 0, newLines[m]);
+                                }
+                                modified = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } else if (fieldType === 'requestBody') {
+                // 找到 requestBody 所在位置 - 需要根据 API 路径定位
+                // 首先从 YAML 中获取 basePath
+                var basePath = '';
+                for (var bi = 0; bi < lines.length; bi++) {
+                    if (lines[bi].trim().startsWith('basePath:')) {
+                        var basePathMatch = lines[bi].match(/basePath:\s*(['"]?)([^'"\s]+)\1/);
+                        if (basePathMatch) {
+                            basePath = basePathMatch[2];
+                        }
+                        break;
+                    }
+                }
+
+                // 从 apiPath 中移除 basePath 前缀
+                var actualPath = apiPath;
+                if (basePath && apiPath && apiPath.startsWith(basePath)) {
+                    actualPath = apiPath.substring(basePath.length);
+                }
+
+                // 首先找到目标 API 路径
+                if (actualPath) {
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].trim() === actualPath + ':') {
+                            // 找到路径，现在查找对应的方法
+                            var pathIndent = lines[i].match(/^\s*/)[0];
+                            var j = i + 1;
+
+                            while (j < lines.length) {
+                                var methodLine = lines[j];
+                                var methodIndent = methodLine.match(/^\s*/)[0];
+
+                                if (methodLine.trim() && methodIndent.length <= pathIndent.length) {
+                                    break;
+                                }
+
+                                if (methodLine.trim() === apiMethod.toLowerCase() + ':') {
+                                    // 找到方法，查找 requestBody
+                                    var k = j + 1;
+                                    while (k < lines.length) {
+                                        var rbLine = lines[k];
+                                        var rbIndent = rbLine.match(/^\s*/)[0];
+
+                                        if (rbLine.trim() && rbIndent.length <= methodIndent.length) {
+                                            break;
+                                        }
+
+                                        if (rbLine.includes('requestBody:')) {
+                                            var baseIndent = rbLine.match(/^\s*/)[0];
+                                            var descIndent = baseIndent + '  ';
+
+                                            var m = k + 1;
+                                            var foundDesc = false;
+
+                                            while (m < lines.length) {
+                                                var nextLine = lines[m];
+                                                var lineIndent = nextLine.match(/^\s*/)[0];
+
+                                                if (nextLine.trim() && lineIndent.length <= baseIndent.length) {
+                                                    break;
+                                                }
+                                                if (lineIndent === descIndent && nextLine.trim().startsWith('description:')) {
+                                                    lines[m] = descIndent + 'description: ' + description;
+                                                    foundDesc = true;
+                                                    modified = true;
+                                                    break;
+                                                }
+                                                m++;
+                                            }
+
+                                            if (!foundDesc) {
+                                                lines.splice(k + 1, 0, descIndent + 'description: ' + description);
+                                                modified = true;
+                                            }
+                                            break;
+                                        }
+                                        k++;
+                                    }
+                                    break;
+                                }
+                                j++;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // 如果根据 API 定位失败，回退到简单查找
+                if (!modified) {
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].includes('requestBody:')) {
+                            var baseIndent = lines[i].match(/^\s*/)[0];
+                            var descIndent = baseIndent + '  ';
+
+                            var j = i + 1;
+                            var foundDesc = false;
+
+                            while (j < lines.length) {
+                                var nextLine = lines[j];
+                                var lineIndent = nextLine.match(/^\s*/)[0];
+
+                                if (nextLine.trim() && lineIndent.length <= baseIndent.length) {
+                                    break;
+                                }
+                                if (lineIndent === descIndent && nextLine.trim().startsWith('description:')) {
+                                    lines[j] = descIndent + 'description: ' + description;
+                                    foundDesc = true;
+                                    modified = true;
+                                    break;
+                                }
+                                j++;
+                            }
+
+                            if (!foundDesc) {
+                                lines.splice(i + 1, 0, descIndent + 'description: ' + description);
+                                modified = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // 找到参数位置 - 需要根据 API 路径和方法定位正确的参数
+                var foundParam = false;
+
+                // 首先从 YAML 中获取 basePath
+                var basePath = '';
+                for (var bi = 0; bi < lines.length; bi++) {
+                    if (lines[bi].trim().startsWith('basePath:')) {
+                        var basePathMatch = lines[bi].match(/basePath:\s*(['"]?)([^'"\s]+)\1/);
+                        if (basePathMatch) {
+                            basePath = basePathMatch[2];
+                        }
+                        break;
+                    }
+                }
+
+                // 从 apiPath 中移除 basePath 前缀
+                var actualPath = apiPath;
+                if (basePath && apiPath && apiPath.startsWith(basePath)) {
+                    actualPath = apiPath.substring(basePath.length);
+                }
+
+                // 首先找到目标 API 路径
+                if (actualPath) {
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].trim() === actualPath + ':') {
+                            // 找到路径，现在查找对应的方法和参数
+                            var pathIndent = lines[i].match(/^\s*/)[0];
+                            var j = i + 1;
+
+                            // 查找方法块
+                            while (j < lines.length) {
+                                var methodLine = lines[j];
+                                var methodIndent = methodLine.match(/^\s*/)[0];
+
+                                // 如果遇到同级或更高级别的元素，停止
+                                if (methodLine.trim() && methodIndent.length <= pathIndent.length) {
+                                    break;
+                                }
+
+                                // 检查是否是目标方法
+                                if (methodLine.trim() === apiMethod.toLowerCase() + ':') {
+                                    // 找到方法，查找 parameters 块
+                                    var k = j + 1;
+                                    while (k < lines.length) {
+                                        var paramLine = lines[k];
+                                        var paramIndent = paramLine.match(/^\s*/)[0];
+
+                                        // 如果遇到同级或更高级别的元素，停止
+                                        if (paramLine.trim() && paramIndent.length <= methodIndent.length) {
+                                            break;
+                                        }
+
+                                        // 检查是否是目标参数
+                                        if (paramLine.match(/^\s*- name:\s*/) && paramLine.includes(fieldName)) {
+                                            // 找到参数，添加或更新 description
+                                            var currentIndent = paramLine.match(/^\s*/)[0];
+                                            var descIndent = currentIndent.replace(/- /, '') + '  ';
+
+                                            // 检查后续行是否已有 description
+                                            var m = k + 1;
+                                            var foundDesc = false;
+                                            while (m < lines.length) {
+                                                var nextLine = lines[m];
+                                                if (nextLine.match(/^\s*- name:/) ||
+                                                    (nextLine.trim() && nextLine.match(new RegExp('^.{0,' + currentIndent.length + '}\\S')))) {
+                                                    break;
+                                                }
+                                                if (nextLine.includes('description:')) {
+                                                    var existingIndent = nextLine.match(/^\s*/)[0];
+                                                    lines[m] = existingIndent + 'description: ' + description;
+                                                    foundDesc = true;
+                                                    modified = true;
+                                                    break;
+                                                }
+                                                m++;
+                                            }
+
+                                            if (!foundDesc) {
+                                                lines.splice(k + 1, 0, descIndent + 'description: ' + description);
+                                                modified = true;
+                                            }
+                                            foundParam = true;
+                                            break;
+                                        }
+                                        k++;
+                                    }
+                                    break;
+                                }
+                                j++;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // 如果根据 API 定位失败，回退到简单查找
+                if (!foundParam) {
+                    for (var i = 0; i < lines.length; i++) {
+                        var line = lines[i];
+
+                        if (line.match(/^\s*- name:\s*/) && line.includes(fieldName)) {
+                            var currentIndent = line.match(/^\s*/)[0];
+                            var descIndent = currentIndent.replace(/- /, '') + '  ';
+
+                            var j = i + 1;
+                            var foundDesc = false;
+                            while (j < lines.length) {
+                                var nextLine = lines[j];
+                                if (nextLine.match(/^\s*- name:/) ||
+                                    (nextLine.trim() && nextLine.match(new RegExp('^.{0,' + currentIndent.length + '}\\S')))) {
+                                    break;
+                                }
+                                if (nextLine.includes('description:')) {
+                                    var existingIndent = nextLine.match(/^\s*/)[0];
+                                    lines[j] = existingIndent + 'description: ' + description;
+                                    foundDesc = true;
+                                    modified = true;
+                                    break;
+                                }
+                                j++;
+                            }
+
+                            if (!foundDesc) {
+                                lines.splice(i + 1, 0, descIndent + 'description: ' + description);
+                                modified = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (modified) {
+                yamlEditor.setValue(lines.join('\n'));
+                closeEditModal();
+                setMessage('已添加描述，请点击"分析"重新检查');
+            } else {
+                alert('未能找到对应位置，请手动编辑 YAML 文件');
+                closeEditModal();
+            }
+        }
+
+        /**
+         * 关闭编辑弹窗
+         */
+        function closeEditModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            var container = document.getElementById('edit-modal-container');
+            if (container) {
+                container.remove();
+            }
+        }
+
+        /**
+         * 跳转到 YAML 中的对应位置
+         */
+        function jumpToYamlLocation(issue) {
+            var yaml = yamlEditor.getValue();
+            var lines = yaml.split('\n');
+            var msg = issue.message || '';
+
+            // 处理 x-java-class-annotations 不一致的情况
+            if (msg.includes('x-java-class-annotations') || msg.includes('注解') || msg.includes('annotations')) {
+                // 从 message 中提取路径
+                var pathMatch = msg.match(/路径\s+(\/[^\s]+)\s+下/);
+                if (pathMatch) {
+                    var targetPath = pathMatch[1];
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].trim() === targetPath + ':') {
+                            yamlEditor.setCursor(i, 0);
+                            yamlEditor.scrollIntoView(null, 100);
+                            yamlEditor.focus();
+                            setMessage('已跳转到路径 ' + targetPath + '，行 ' + (i + 1));
+                            return;
+                        }
+                    }
+                }
+            }
+
+            if (!issue.field) {
+                // 尝试从 message 中提取路径
+                var pathMatch = msg.match(/API:\s*(\w+)\s+(\/[^\s]+)/);
+                if (pathMatch) {
+                    var method = pathMatch[1];
+                    var path = pathMatch[2];
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].trim() === path + ':') {
+                            yamlEditor.setCursor(i, 0);
+                            yamlEditor.scrollIntoView(null, 100);
+                            yamlEditor.focus();
+                            setMessage('已跳转到路径 ' + path + '，行 ' + (i + 1));
+                            return;
+                        }
+                    }
+                }
+                setMessage('无法定位到具体位置，请手动查找');
+                return;
+            }
+
+            // 根据 issue.field 查找对应行
+            // field 格式可能是: "GET /api/path parameters[0]" 或 "path.method.requestBody.field"
+            var searchTerm = '';
+
+            if (issue.field.includes('parameters[')) {
+                // 提取参数索引
+                var match = issue.field.match(/parameters\[(\d+)\]/);
+                if (match) {
+                    var paramIndex = parseInt(match[1]);
+                    var currentParamIndex = -1;
+                    for (var i = 0; i < lines.length; i++) {
+                        if (lines[i].match(/^\s*- name:/)) {
+                            currentParamIndex++;
+                            if (currentParamIndex === paramIndex) {
+                                yamlEditor.setCursor(i, 0);
+                                yamlEditor.scrollIntoView(null, 100);
+                                yamlEditor.focus();
+                                setMessage('已跳转到参数位置');
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 尝试从 message 中提取字段名
+            var fieldMatch = issue.message.match(/参数 (\w+) /);
+            if (fieldMatch) {
+                searchTerm = fieldMatch[1];
+                for (var i = 0; i < lines.length; i++) {
+                    if (lines[i].includes('name: ' + searchTerm) || lines[i].includes(searchTerm + ':')) {
+                        yamlEditor.setCursor(i, 0);
+                        yamlEditor.scrollIntoView(null, 100);
+                        yamlEditor.focus();
+                        setMessage('已跳转到位置，行 ' + (i + 1));
+                        return;
+                    }
+                }
+            }
+
+            setMessage('无法定位到具体位置，请手动查找');
+        }
+
+        /**
+         * 判断问题是否可以自动修复
+         */
+        function isAutoFixable(issue) {
+            var msg = issue.message || '';
+
+            // 不能自动修复的问题类型
+            var unfixablePatterns = [
+                '缺少 description',           // 需要用户编写描述
+                'x-java-class-annotations',   // 需要用户决定配置
+                'annotations',                // 需要用户决定配置
+                '不一致'                      // 需要用户决定配置
+            ];
+            // 注意：minLength > maxLength 和 minimum > maximum 可以自动修复（交换值）
+
+            for (var i = 0; i < unfixablePatterns.length; i++) {
+                if (msg.includes(unfixablePatterns[i])) {
+                    return false;
+                }
+            }
+
+            // 其他问题都可以自动修复
+            return true;
         }
 
         function toggleIssue(index, checked) {
@@ -1830,63 +3037,285 @@ paths:
         }
 
         function autoFix() {
-            // 使用原始内容作为对比基础，先去掉注释
-            var rawContent = originalYaml || yamlEditor.getValue();
-            var content = stripYamlComments(rawContent);
-            var analyzer = new ApiYamlAnalyzer();
+            try {
+                // 使用原始内容作为对比基础，先去掉注释
+                var rawContent = originalYaml || yamlEditor.getValue();
+                var content = stripYamlComments(rawContent);
+                var analyzer = new ApiYamlAnalyzer();
 
-            // Get selected issues and compute selective fix
-            var issues = window.currentIssues || [];
-            var selectedIndices = Object.keys(selectedIssues).filter(function(i) { return selectedIssues[i]; }).map(function(i) { return parseInt(i); });
+                // Get selected issues and compute selective fix
+                var issues = window.currentIssues || [];
+                var selectedIndices = Object.keys(selectedIssues).filter(function(i) { return selectedIssues[i]; }).map(function(i) { return parseInt(i); });
 
-            var fixed = analyzer.fixSelective(content, selectedIndices);
+                // 如果没有选中任何问题，默认选择所有可修复的问题（非"需手动"）
+                if (selectedIndices.length === 0) {
+                    issues.forEach(function(issue, i) {
+                        // 选择所有非"需手动"的问题（包括 error、warn、info）
+                        if (!issue.message.includes('需手动')) {
+                            selectedIndices.push(i);
+                        }
+                    });
+                }
 
-            // Show diff preview - 使用去掉注释后的内容作为修复前
-            showDiffPreview(content, fixed);
-            setMessage('点击"应用修复"确认更改');
+                var fixed = analyzer.fixSelective(content, selectedIndices);
+
+                // 获取修复统计
+                var fixStats = analyzer.fixStats || { paramsFixed: 0 };
+                window.currentFixStats = fixStats;
+
+                // Show diff preview - 使用去掉注释后的内容作为修复前
+                showDiffPreview(content, fixed);
+                setMessage('点击"应用修复"确认更改');
+            } catch (e) {
+                console.error('AutoFix error:', e);
+                setMessage('自动修复出错: ' + e.message);
+            }
         }
 
         /**
-         * Show diff preview modal - 按API分块显示YAML对比
+         * 生成 API 的 YAML 片段（包含完整参数信息）
          */
-        function showDiffPreview(before, after) {
-            var targetBefore = document.getElementById('diff-before');
-            var targetAfter = document.getElementById('diff-after');
+        function generateApiYaml(method, api) {
+            var yaml = method + ':\n';
+            if (api.summary) yaml += '  summary: ' + api.summary + '\n';
+            if (api.description) yaml += '  description: ' + api.description + '\n';
+            if (api.operationId) yaml += '  operationId: ' + api.operationId + '\n';
 
-            // 解析YAML获取API列表
-            var beforeParsed, afterParsed;
-            try {
-                beforeParsed = jsyaml.load(before);
-                afterParsed = jsyaml.load(after);
-            } catch (e) {
-                beforeParsed = null;
-                afterParsed = null;
-            }
+            if (api.parameters && api.parameters.length > 0) {
+                yaml += '  parameters:\n';
+                api.parameters.forEach(function(p) {
+                    yaml += '    - name: ' + p.name + '\n';
+                    if (p.in) yaml += '      in: ' + p.in + '\n';
+                    if (p.required !== undefined) yaml += '      required: ' + p.required + '\n';
+                    if (p.description) yaml += '      description: ' + p.description + '\n';
 
-            // 获取所有API路径
-            var apis = [];
-            if (beforeParsed && afterParsed && beforeParsed.paths && afterParsed.paths) {
-                var allPaths = new Set([...Object.keys(beforeParsed.paths), ...Object.keys(afterParsed.paths)]);
-                allPaths.forEach(function(path) {
-                    var beforeMethods = beforeParsed.paths[path] || {};
-                    var afterMethods = afterParsed.paths[path] || {};
-                    var allMethods = new Set([...Object.keys(beforeMethods), ...Object.keys(afterMethods)]);
-                    allMethods.forEach(function(method) {
-                        apis.push({
-                            path: path,
-                            method: method.toUpperCase(),
-                            before: beforeMethods[method] || null,
-                            after: afterMethods[method] || null
-                        });
-                    });
+                    if (p.schema) {
+                        yaml += '      schema:\n';
+                        if (p.schema.type) yaml += '        type: ' + p.schema.type + '\n';
+                        if (p.schema.format) yaml += '        format: ' + p.schema.format + '\n';
+                        if (p.schema.minimum !== undefined) yaml += '        minimum: ' + p.schema.minimum + '\n';
+                        if (p.schema.maximum !== undefined) yaml += '        maximum: ' + p.schema.maximum + '\n';
+                        if (p.schema.minLength !== undefined) yaml += '        minLength: ' + p.schema.minLength + '\n';
+                        if (p.schema.maxLength !== undefined) yaml += '        maxLength: ' + p.schema.maxLength + '\n';
+                        if (p.schema.pattern) yaml += '        pattern: ' + p.schema.pattern + '\n';
+                    }
                 });
             }
 
-            // 如果没有API或解析失败，回退到行级对比
+            return yaml;
+        }
+
+        /**
+         * 生成 Java 代码预览（Controller 方法）- 格式化清晰
+         */
+        function generateJavaCode(path, method, api) {
+            if (!api) return '';
+
+            var javaCode = '';
+            var operationId = api.operationId || 'operation';
+            var summary = api.summary || '';
+            var parameters = api.parameters || [];
+
+            // 生成注释
+            javaCode += '/**\n';
+            javaCode += ' * ' + (summary || operationId) + '\n';
+            javaCode += ' */\n';
+
+            // 生成 @Path 注解
+            javaCode += '@' + method.toUpperCase() + '("' + path + '")\n';
+
+            // 收集方法参数
+            var methodParams = [];
+            var paramLines = [];
+
+            parameters.forEach(function(p) {
+                var paramType = mapSchemaTypeToJava(p.schema);
+                var paramName = p.name;
+                var annotations = [];
+
+                // 位置注解
+                if (p.in === 'path') {
+                    annotations.push('@PathParam("' + paramName + '")');
+                } else if (p.in === 'query') {
+                    annotations.push('@QueryParam("' + paramName + '")');
+                } else if (p.in === 'header') {
+                    annotations.push('@HeaderParam("' + paramName + '")');
+                } else if (p.in === 'body') {
+                    annotations.push('@RequestBody');
+                }
+
+                // 校验注解
+                if (p.required) {
+                    if (paramType === 'String') {
+                        annotations.push('@NotBlank');
+                    } else {
+                        annotations.push('@NotNull');
+                    }
+                }
+
+                if (p.schema) {
+                    if (p.schema.minLength !== undefined || p.schema.maxLength !== undefined) {
+                        var min = p.schema.minLength || 0;
+                        var max = p.schema.maxLength || 255;
+                        annotations.push('@Size(min = ' + min + ', max = ' + max + ')');
+                    }
+                    if (p.schema.minimum !== undefined || p.schema.maximum !== undefined) {
+                        var minVal = p.schema.minimum || 0;
+                        var maxVal = p.schema.maximum || 2147483647;
+                        annotations.push('@Range(min = ' + minVal + ', max = ' + maxVal + ')');
+                    }
+                    if (p.schema.pattern) {
+                        annotations.push('@Pattern(regexp = "' + p.schema.pattern + '")');
+                    }
+                    if (p.schema.format === 'email' || (p.name && p.name.toLowerCase().includes('email'))) {
+                        annotations.push('@Email');
+                    }
+                }
+
+                // 生成参数行
+                var paramLine = '        ' + annotations.join(' ') + ' ' + paramType + ' ' + paramName;
+                paramLines.push(paramLine);
+                methodParams.push(paramType + ' ' + paramName);
+            });
+
+            // 生成方法签名
+            if (paramLines.length > 0) {
+                javaCode += 'public Response ' + operationId + '(\n';
+                javaCode += paramLines.join(',\n');
+                javaCode += '\n    ) {\n';
+            } else {
+                javaCode += 'public Response ' + operationId + '() {\n';
+            }
+
+            javaCode += '        // TODO: 实现业务逻辑\n';
+            javaCode += '        return Response.ok().build();\n';
+            javaCode += '    }\n';
+
+            return javaCode;
+        }
+
+        /**
+         * 映射 Schema 类型到 Java 类型
+         */
+        function mapSchemaTypeToJava(schema) {
+            if (!schema) return 'String';
+            var type = schema.type || 'string';
+            var format = schema.format || '';
+
+            switch (type) {
+                case 'string':
+                    if (format === 'date') return 'LocalDate';
+                    if (format === 'date-time') return 'LocalDateTime';
+                    return 'String';
+                case 'integer':
+                    if (format === 'int64') return 'Long';
+                    return 'Integer';
+                case 'number':
+                    if (format === 'float') return 'Float';
+                    if (format === 'double') return 'Double';
+                    return 'Double';
+                case 'boolean':
+                    return 'Boolean';
+                case 'array':
+                    var itemType = schema.items ? mapSchemaTypeToJava(schema.items) : 'String';
+                    return 'List<' + itemType + '>';
+                default:
+                    return 'String';
+            }
+        }
+
+        /**
+         * Show diff preview modal - 统一视图显示 Java 代码风格对比
+         */
+        function showDiffPreview(before, after) {
+            try {
+                // 解析YAML获取API列表
+                var beforeParsed, afterParsed;
+                try {
+                    beforeParsed = jsyaml.load(before);
+                    afterParsed = jsyaml.load(after);
+                } catch (e) {
+                    console.error('YAML parse error in showDiffPreview:', e);
+                    beforeParsed = null;
+                    afterParsed = null;
+                }
+
+            // 路径标准化函数 - 用于匹配修复前后的路径
+            function normalizePath(path) {
+                if (!path) return path;
+                // 删除重复斜杠
+                var normalized = path.replace(/\/+/g, '/');
+                // 删除 /XXX/ 前缀（占位符路径）
+                normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//, '/');
+                // 确保以 / 开头
+                if (!normalized.startsWith('/')) {
+                    normalized = '/' + normalized;
+                }
+                return normalized;
+            }
+
+            // 构建标准化路径映射
+            var normalizedBeforePaths = {};
+            if (beforeParsed && beforeParsed.paths) {
+                for (var origPath in beforeParsed.paths) {
+                    var np = normalizePath(origPath);
+                    normalizedBeforePaths[np] = origPath;
+                }
+            }
+
+            var normalizedAfterPaths = {};
+            if (afterParsed && afterParsed.paths) {
+                for (var origPath in afterParsed.paths) {
+                    var np = normalizePath(origPath);
+                    normalizedAfterPaths[np] = origPath;
+                }
+            }
+
+            // 获取所有标准化路径
+            var allNormalizedPaths = new Set([
+                ...Object.keys(normalizedBeforePaths),
+                ...Object.keys(normalizedAfterPaths)
+            ]);
+
+            // 获取所有API路径（使用标准化路径匹配）
+            var apis = [];
+            allNormalizedPaths.forEach(function(np) {
+                var beforeOrigPath = normalizedBeforePaths[np];
+                var afterOrigPath = normalizedAfterPaths[np];
+                var beforeMethods = beforeOrigPath ? beforeParsed.paths[beforeOrigPath] : {};
+                var afterMethods = afterOrigPath ? afterParsed.paths[afterOrigPath] : {};
+
+                // 获取所有方法
+                var allMethods = new Set([
+                    ...Object.keys(beforeMethods || {}),
+                    ...Object.keys(afterMethods || {})
+                ]);
+
+                allMethods.forEach(function(method) {
+                    // 过滤掉 x- 开头的扩展字段（如 x-java-class-annotations）
+                    if (method.startsWith('x-')) return;
+                    // 过滤掉非 HTTP 方法
+                    var httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'];
+                    if (!httpMethods.includes(method.toLowerCase())) return;
+
+                    apis.push({
+                        normalizedPath: np,
+                        beforePath: beforeOrigPath,
+                        afterPath: afterOrigPath,
+                        method: method.toUpperCase(),
+                        before: beforeMethods ? (beforeMethods[method] || null) : null,
+                        after: afterMethods ? (afterMethods[method] || null) : null
+                    });
+                });
+            });
+
+            // 如果没有API或解析失败，回退到简单对比
             if (apis.length === 0) {
                 var diff = Diff.diffLines(before, after);
-                targetBefore.innerHTML = renderSimpleDiff(before, diff, 'remove');
-                targetAfter.innerHTML = renderSimpleDiff(after, diff, 'add');
+                var unifiedHtml = '<div class="diff-api-unified"><div class="diff-api-code-section">';
+                unifiedHtml += '<div class="diff-code-block">' + renderUnifiedDiff(before, after, diff) + '</div>';
+                unifiedHtml += '</div></div>';
+                document.getElementById('diff-unified').innerHTML = unifiedHtml;
 
                 var addCount = 0, removeCount = 0;
                 diff.forEach(function(part) {
@@ -1897,109 +3326,94 @@ paths:
                 document.getElementById('diff-adds').textContent = '+' + addCount + ' 行';
                 document.getElementById('diff-removes').textContent = '-' + removeCount + ' 行';
             } else {
-                // 按API分块渲染 - 确保左右高度一致
-                var beforeBlocksHtml = '';
-                var afterBlocksHtml = '';
-
-                // 先收集所有API块
-                var apiPairs = [];
+                // 统一视图渲染 - 只显示有变化的 API
+                var unifiedHtml = '';
+                var changeCount = 0;
 
                 apis.forEach(function(api, index) {
                     var method = api.method;
-                    var path = api.path;
-                    var methodColor = method === 'GET' ? '#61affe' : method === 'POST' ? '#49cc90' : method === 'PUT' ? '#fca130' : method === 'DELETE' ? '#f93e3e' : '#9012fe';
+                    var beforePath = api.beforePath || '';
+                    var afterPath = api.afterPath || '';
 
-                    // 生成该API的YAML片段
-                    var beforeYaml = '';
-                    var afterYaml = '';
+                    // 生成该API的 Java 代码
+                    var beforeJava = api.before ? generateJavaCode(beforePath, method, api.before) : '';
+                    var afterJava = api.after ? generateJavaCode(afterPath, method, api.after) : '';
 
-                    if (api.before) {
-                        beforeYaml = '  ' + method + ':\n';
-                        if (api.before.summary) beforeYaml += '    summary: ' + api.before.summary + '\n';
-                        if (api.before.description) beforeYaml += '    description: ' + api.before.description + '\n';
-                        if (api.before.operationId) beforeYaml += '    operationId: ' + api.before.operationId + '\n';
-                        if (api.before.parameters && api.before.parameters.length > 0) {
-                            beforeYaml += '    parameters:\n';
-                            api.before.parameters.forEach(function(p) {
-                                beforeYaml += '      - name: ' + p.name + '\n';
-                                if (p.in) beforeYaml += '        in: ' + p.in + '\n';
-                                if (p.required) beforeYaml += '        required: ' + p.required + '\n';
-                                if (p.description) beforeYaml += '        description: ' + p.description + '\n';
-                                if (p.schema && p.schema.type) beforeYaml += '        schema:\n          type: ' + p.schema.type + '\n';
-                            });
+                    // 判断是否有变化
+                    var changeType = '';
+                    var hasChange = false;
+                    if (api.before && !api.after) {
+                        changeType = 'removed';
+                        hasChange = true;
+                    } else if (!api.before && api.after) {
+                        changeType = 'added';
+                        hasChange = true;
+                    } else if (beforePath !== afterPath) {
+                        changeType = 'path-fixed';
+                        hasChange = true;
+                    } else {
+                        var beforeStr = JSON.stringify(api.before);
+                        var afterStr = JSON.stringify(api.after);
+                        if (beforeStr !== afterStr) {
+                            changeType = 'modified';
+                            hasChange = true;
                         }
                     }
 
-                    if (api.after) {
-                        afterYaml = '  ' + method + ':\n';
-                        if (api.after.summary) afterYaml += '    summary: ' + api.after.summary + '\n';
-                        if (api.after.description) afterYaml += '    description: ' + api.after.description + '\n';
-                        if (api.after.operationId) afterYaml += '    operationId: ' + api.after.operationId + '\n';
-                        if (api.after.parameters && api.after.parameters.length > 0) {
-                            afterYaml += '    parameters:\n';
-                            api.after.parameters.forEach(function(p) {
-                                afterYaml += '      - name: ' + p.name + '\n';
-                                if (p.in) afterYaml += '        in: ' + p.in + '\n';
-                                if (p.required) afterYaml += '        required: ' + p.required + '\n';
-                                if (p.description) afterYaml += '        description: ' + p.description + '\n';
-                                if (p.schema && p.schema.type) afterYaml += '        schema:\n          type: ' + p.schema.type + '\n';
-                                if (p.schema && p.schema.minimum) afterYaml += '          minimum: ' + p.schema.minimum + '\n';
-                                if (p.schema && p.schema.maximum) afterYaml += '          maximum: ' + p.schema.maximum + '\n';
-                                if (p.schema && p.schema.minLength) afterYaml += '          minLength: ' + p.schema.minLength + '\n';
-                                if (p.schema && p.schema.maxLength) afterYaml += '          maxLength: ' + p.schema.maxLength + '\n';
-                                if (p.schema && p.schema.pattern) afterYaml += '          pattern: ' + p.schema.pattern + '\n';
-                            });
+                    // 只显示有变化的 API
+                    if (!hasChange) return;
+                    changeCount++;
+
+                    // 开始渲染统一块
+                    unifiedHtml += '<div class="diff-api-unified">';
+
+                    // 头部：显示方法和路径变化
+                    unifiedHtml += '<div class="diff-api-unified-header">';
+                    unifiedHtml += '<span class="diff-api-unified-badge ' + method.toLowerCase() + '">' + method + '</span>';
+
+                    if (changeType === 'path-fixed') {
+                        unifiedHtml += '<span class="diff-api-path-before">' + escapeHtml(beforePath) + '</span>';
+                        unifiedHtml += '<span class="diff-api-path-arrow">→</span>';
+                        unifiedHtml += '<span class="diff-api-path-after">' + escapeHtml(afterPath) + '</span>';
+                        unifiedHtml += '<span class="diff-api-change-type path-fixed">路径修复</span>';
+                    } else {
+                        unifiedHtml += '<span class="diff-api-path-unchanged">' + escapeHtml(afterPath || beforePath) + '</span>';
+                        if (changeType === 'added') {
+                            unifiedHtml += '<span class="diff-api-change-type added">新增</span>';
+                        } else if (changeType === 'removed') {
+                            unifiedHtml += '<span class="diff-api-change-type removed">已删除</span>';
+                        } else if (changeType === 'modified') {
+                            unifiedHtml += '<span class="diff-api-change-type modified">参数修改</span>';
                         }
                     }
+                    unifiedHtml += '</div>';
 
-                    // 对比这两个YAML片段
-                    var apiDiff = Diff.diffLines(beforeYaml || '(无)', afterYaml || '(无)');
+                    // 行级 diff 视图
+                    unifiedHtml += '<div class="diff-line-by-line">';
 
-                    // 渲染修复前块 - 使用内联样式确保结构一致
-                    var beforeBlockHtml = '<div class="diff-api-block-paired" data-index="' + index + '" style="margin-bottom:12px;border:1px solid #21262d;border-radius:6px;overflow:hidden;">';
-                    beforeBlockHtml += '<div class="diff-api-block-header" style="padding:8px 14px;background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:10px;">';
-                    beforeBlockHtml += '<span style="padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;background:' + methodColor + ';color:#fff;">' + method + '</span>';
-                    beforeBlockHtml += '<span style="font-size:12px;font-weight:500;color:#c9d1d9;font-family:monospace;">' + escapeHtml(path) + '</span>';
-                    beforeBlockHtml += '</div>';
-                    beforeBlockHtml += '<div class="diff-yaml-block" style="background:rgba(248,81,73,0.03);padding:10px;">';
-                    beforeBlockHtml += '<div style="color:#f85149;font-size:10px;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">修复前</div>';
-                    beforeBlockHtml += renderSimpleDiff(beforeYaml || '(无)', apiDiff, 'remove');
-                    beforeBlockHtml += '</div></div>';
+                    if (changeType === 'path-fixed') {
+                        // 路径修复：只显示修复后的代码
+                        unifiedHtml += '<div class="diff-code-block add">';
+                        unifiedHtml += renderLineByLineDiff('', afterJava);
+                        unifiedHtml += '</div>';
+                    } else {
+                        // 其他修改：显示行级对比
+                        unifiedHtml += renderLineByLineDiff(beforeJava, afterJava);
+                    }
 
-                    // 渲染修复后块 - 使用相同的结构确保高度一致
-                    var afterBlockHtml = '<div class="diff-api-block-paired" data-index="' + index + '" style="margin-bottom:12px;border:1px solid #21262d;border-radius:6px;overflow:hidden;">';
-                    afterBlockHtml += '<div class="diff-api-block-header" style="padding:8px 14px;background:#161b22;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:10px;">';
-                    afterBlockHtml += '<span style="padding:2px 6px;border-radius:3px;font-size:10px;font-weight:600;background:' + methodColor + ';color:#fff;">' + method + '</span>';
-                    afterBlockHtml += '<span style="font-size:12px;font-weight:500;color:#c9d1d9;font-family:monospace;">' + escapeHtml(path) + '</span>';
-                    afterBlockHtml += '</div>';
-                    afterBlockHtml += '<div class="diff-yaml-block" style="background:rgba(56,139,253,0.03);padding:10px;">';
-                    afterBlockHtml += '<div style="color:#58a6ff;font-size:10px;font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">修复后</div>';
-                    afterBlockHtml += renderSimpleDiff(afterYaml || '(无)', apiDiff, 'add');
-                    afterBlockHtml += '</div></div>';
-
-                    apiPairs.push({
-                        index: index,
-                        before: beforeBlockHtml,
-                        after: afterBlockHtml
-                    });
+                    unifiedHtml += '</div>';
+                    unifiedHtml += '</div>';
                 });
 
-                // 使用配对容器确保左右高度同步
-                apiPairs.forEach(function(pair) {
-                    beforeBlocksHtml += pair.before;
-                    afterBlocksHtml += pair.after;
-                });
+                // 如果没有变化
+                if (changeCount === 0) {
+                    unifiedHtml = '<div class="diff-no-changes"><div class="diff-no-changes-icon">✓</div><div class="diff-no-changes-text">没有需要修复的问题</div></div>';
+                }
 
-                // 渲染到容器
-                targetBefore.innerHTML = beforeBlocksHtml;
-                targetAfter.innerHTML = afterBlocksHtml;
+                // 渲染到统一容器
+                document.getElementById('diff-unified').innerHTML = unifiedHtml;
 
-                // 同步左右块的高度
-                setTimeout(function() {
-                    syncBlockHeights();
-                }, 100);
-
-                // 统计 - 修复: 同时统计修改的API
+                // 统计变化数量
                 var addCount = 0, removeCount = 0, modifyCount = 0;
                 apis.forEach(function(api) {
                     if (api.before && !api.after) {
@@ -2007,33 +3421,31 @@ paths:
                     } else if (!api.before && api.after) {
                         addCount++;
                     } else if (api.before && api.after) {
-                        // API存在于两个版本，检查是否被修改（通过比较JSON表示）
                         var beforeStr = JSON.stringify(api.before);
                         var afterStr = JSON.stringify(api.after);
-                        if (beforeStr !== afterStr) {
+                        if (beforeStr !== afterStr || api.beforePath !== api.afterPath) {
                             modifyCount++;
                         }
                     }
                 });
 
-                // 显示修改计数（如果有修改的API）
-                if (modifyCount > 0) {
-                    document.getElementById('diff-adds').textContent = '+' + addCount + ' 新增, ' + modifyCount + ' 修改';
-                    document.getElementById('diff-removes').textContent = '-' + removeCount + ' 删除';
+                // 显示修复统计 - 优先显示实际修复的参数数量
+                var fixStats = window.currentFixStats || {};
+                if (fixStats.paramsFixed > 0) {
+                    document.getElementById('diff-adds').textContent = fixStats.paramsFixed + ' 个参数已修复';
                 } else {
-                    document.getElementById('diff-adds').textContent = '+' + addCount + ' API';
-                    document.getElementById('diff-removes').textContent = '-' + removeCount + ' API';
+                    document.getElementById('diff-adds').textContent = modifyCount + ' 处修改';
                 }
+                document.getElementById('diff-removes').textContent = removeCount + ' 处删除';
             }
-
-            // Impact
-            var impact = computeImpact(before, after);
-            renderApiChanges(impact);
-            renderFieldChanges(impact);
 
             window.pendingFixedContent = after;
             setupScrollSync();
             document.getElementById('diff-modal').classList.add('active');
+            } catch (e) {
+                console.error('showDiffPreview error:', e);
+                setMessage('显示预览出错: ' + e.message);
+            }
         }
 
         // 简单渲染：显示所有行，变化的标颜色
@@ -2083,6 +3495,243 @@ paths:
                 lineNum++;
             }
             return html;
+        }
+
+        /**
+         * 渲染 Java 代码 diff（带语法高亮）
+         */
+        function renderJavaDiff(content, diff, type) {
+            var lines = content.split('\n');
+            var html = '';
+            var lineNum = 1;
+
+            // 构建行号到变化类型的映射
+            var lineChangeMap = {};
+            var currentLine = 0;
+
+            diff.forEach(function(part) {
+                var partLines = part.value.split('\n');
+                partLines.forEach(function(line, i) {
+                    if (i < partLines.length - 1 || line) {
+                        if (part.added) {
+                            lineChangeMap[currentLine] = 'add';
+                        } else if (part.removed) {
+                            lineChangeMap[currentLine] = 'remove';
+                        }
+                        currentLine++;
+                    }
+                });
+            });
+
+            // 渲染每一行
+            for (var i = 0; i < lines.length; i++) {
+                var state = lineChangeMap[i] || '';
+                var bg = '';
+                var prefix = '';
+
+                if (type === 'add' && state === 'add') {
+                    bg = 'background: rgba(46, 213, 115, 0.15);';
+                    prefix = '+';
+                }
+                if (type === 'remove' && state === 'remove') {
+                    bg = 'background: rgba(255, 71, 87, 0.15);';
+                    prefix = '-';
+                }
+
+                // Java 语法高亮
+                var highlightedLine = highlightJavaSyntax(lines[i]);
+
+                html += '<div class="diff-line diff-java-line" style="' + bg + '">';
+                html += '<div class="diff-line-prefix" style="color: #5c5f66; width: 20px; text-align: center;">' + prefix + '</div>';
+                html += '<div class="diff-line-num" style="color: #5c5f66;">' + lineNum + '</div>';
+                html += '<div class="diff-line-content">' + highlightedLine + '</div>';
+                html += '</div>';
+                lineNum++;
+            }
+            return html;
+        }
+
+        /**
+         * Java 语法高亮
+         */
+        function highlightJavaSyntax(line) {
+            var escaped = escapeHtml(line);
+
+            // 关键字
+            var keywords = ['public', 'private', 'protected', 'class', 'interface', 'extends', 'implements',
+                           'void', 'return', 'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break',
+                           'continue', 'try', 'catch', 'finally', 'throw', 'throws', 'new', 'this', 'super',
+                           'static', 'final', 'abstract', 'synchronized', 'volatile', 'transient', 'native',
+                           'import', 'package', 'true', 'false', 'null', 'instanceof'];
+            keywords.forEach(function(kw) {
+                var regex = new RegExp('\\b(' + kw + ')\\b', 'g');
+                escaped = escaped.replace(regex, '<span style="color: #ff79c6;">$1</span>');
+            });
+
+            // 类型
+            var types = ['String', 'Integer', 'Long', 'Double', 'Float', 'Boolean', 'Byte', 'Short', 'Character',
+                        'List', 'Map', 'Set', 'ArrayList', 'HashMap', 'HashSet', 'Response', 'LocalDate', 'LocalDateTime',
+                        'Object', 'Class'];
+            types.forEach(function(t) {
+                var regex = new RegExp('\\b(' + t + ')\\b', 'g');
+                escaped = escaped.replace(regex, '<span style="color: #8be9fd;">$1</span>');
+            });
+
+            // 注解
+            escaped = escaped.replace(/(@\w+)/g, '<span style="color: #ffb86c;">$1</span>');
+
+            // 字符串
+            escaped = escaped.replace(/(&quot;[^&]*&quot;)/g, '<span style="color: #f1fa8c;">$1</span>');
+
+            // 注释
+            escaped = escaped.replace(/(\/\/.*)$/g, '<span style="color: #6272a4;">$1</span>');
+
+            // 数字
+            escaped = escaped.replace(/\b(\d+)\b/g, '<span style="color: #bd93f9;">$1</span>');
+
+            return escaped;
+        }
+
+        /**
+         * 行级 diff 渲染 - 显示变化的行
+         */
+        function renderLineByLineDiff(beforeCode, afterCode) {
+            var html = '';
+
+            // 使用 diff 库比较
+            var diff = Diff.diffLines(beforeCode || '', afterCode || '');
+
+            diff.forEach(function(part) {
+                var lines = part.value.split('\n');
+                // 移除最后的空字符串
+                if (lines.length > 0 && lines[lines.length - 1] === '') {
+                    lines.pop();
+                }
+
+                lines.forEach(function(line) {
+                    if (part.added) {
+                        // 新增的行
+                        html += '<div class="diff-line-added">';
+                        html += '<span class="diff-line-marker">+</span>';
+                        html += '<span class="diff-line-code">' + highlightJavaSyntax(line) + '</span>';
+                        html += '</div>';
+                    } else if (part.removed) {
+                        // 删除的行
+                        html += '<div class="diff-line-removed">';
+                        html += '<span class="diff-line-marker">-</span>';
+                        html += '<span class="diff-line-code">' + highlightJavaSyntax(line) + '</span>';
+                        html += '</div>';
+                    } else {
+                        // 未变化的行 - 只显示上下文
+                        // 为了简洁，这里不显示未变化的行
+                    }
+                });
+            });
+
+            return html || '<div class="diff-no-change">（无变化）</div>';
+        }
+
+        // 生成参数对比表格
+        function renderParamDiffTable(beforeParams, afterParams) {
+            if (!beforeParams && !afterParams) return '';
+
+            var beforeMap = {};
+            var afterMap = {};
+
+            if (beforeParams) {
+                beforeParams.forEach(function(p) { beforeMap[p.name] = p; });
+            }
+            if (afterParams) {
+                afterParams.forEach(function(p) { afterMap[p.name] = p; });
+            }
+
+            var allNames = new Set([...Object.keys(beforeMap), ...Object.keys(afterMap)]);
+            var rows = [];
+
+            allNames.forEach(function(name) {
+                var before = beforeMap[name];
+                var after = afterMap[name];
+                var status = '';
+                var statusText = '';
+
+                if (before && !after) {
+                    status = 'param-removed';
+                    statusText = 'removed';
+                } else if (!before && after) {
+                    status = 'param-added';
+                    statusText = 'added';
+                } else if (before && after) {
+                    // 检查是否有变化
+                    var changed = false;
+                    if (before.required !== after.required) changed = true;
+                    if (JSON.stringify(before.schema) !== JSON.stringify(after.schema)) changed = true;
+                    if (before.description !== after.description) changed = true;
+                    if (changed) {
+                        status = 'param-changed';
+                        statusText = 'changed';
+                    }
+                }
+
+                if (status || (!before && !after)) return;
+
+                var row = '<tr class="' + status + '">';
+                row += '<td class="param-name">' + escapeHtml(name) + '</td>';
+
+                // Before values
+                if (before) {
+                    var reqBadge = before.required ? '<span class="param-badge required">必填</span>' : '<span class="param-badge optional">可选</span>';
+                    row += '<td>' + reqBadge + (before.description ? escapeHtml(before.description) : '-') + '</td>';
+                    row += '<td>' + (before.schema ? escapeHtml(before.schema.type || '-') : '-') + '</td>';
+                    row += '<td>' + formatSchemaValidation(before.schema) + '</td>';
+                } else {
+                    row += '<td>-</td><td>-</td><td>-</td>';
+                }
+
+                // After values
+                if (after) {
+                    var reqBadge = after.required ? '<span class="param-badge required">必填</span>' : '<span class="param-badge optional">可选</span>';
+                    row += '<td>' + reqBadge + (after.description ? escapeHtml(after.description) : '-') + '</td>';
+                    row += '<td>' + (after.schema ? escapeHtml(after.schema.type || '-') : '-') + '</td>';
+                    row += '<td>' + formatSchemaValidation(after.schema) + '</td>';
+                } else {
+                    row += '<td>-</td><td>-</td><td>-</td>';
+                }
+
+                row += '</tr>';
+                rows.push(row);
+            });
+
+            if (rows.length === 0) return '';
+
+            var html = '<table class="diff-param-table">';
+            html += '<thead><tr>';
+            html += '<th style="width:12%">参数</th>';
+            html += '<th style="width:18%">描述</th>';
+            html += '<th style="width:10%">类型</th>';
+            html += '<th style="width:20%">校验规则</th>';
+            html += '<th style="width:18%">描述</th>';
+            html += '<th style="width:10%">类型</th>';
+            html += '<th style="width:20%">校验规则</th>';
+            html += '</tr></thead>';
+            html += '<tbody>';
+            html += '<tr style="background:#161b22;"><td colspan="4" style="text-align:center;color:#8b949e;font-weight:600;">修复前</td><td colspan="3" style="text-align:center;color:#8b949e;font-weight:600;">修复后</td></tr>';
+            html += rows.join('');
+            html += '</tbody></table>';
+            return html;
+        }
+
+        // 格式化 schema 校验规则显示
+        function formatSchemaValidation(schema) {
+            if (!schema) return '-';
+            var parts = [];
+            if (schema.minimum !== undefined) parts.push('min=' + schema.minimum);
+            if (schema.maximum !== undefined) parts.push('max=' + schema.maximum);
+            if (schema.minLength !== undefined) parts.push('minLength=' + schema.minLength);
+            if (schema.maxLength !== undefined) parts.push('maxLength=' + schema.maxLength);
+            if (schema.pattern) parts.push('pattern=' + schema.pattern.substring(0, 20) + (schema.pattern.length > 20 ? '...' : ''));
+            if (schema.minItems !== undefined) parts.push('minItems=' + schema.minItems);
+            if (schema.maxItems !== undefined) parts.push('maxItems=' + schema.maxItems);
+            return parts.length > 0 ? escapeHtml(parts.join(', ')) : '-';
         }
 
         // 从 YAML 中提取每个 API 的内容（暂时不用）
@@ -3334,38 +4983,6 @@ paths:
         }
 
         /**
-         * 同步左右两边API块的高度
-         */
-        function syncBlockHeights() {
-            var beforeContainer = document.getElementById('diff-before');
-            var afterContainer = document.getElementById('diff-after');
-            if (!beforeContainer || !afterContainer) return;
-
-            var beforeBlocks = beforeContainer.querySelectorAll('.diff-api-block-paired');
-            var afterBlocks = afterContainer.querySelectorAll('.diff-api-block-paired');
-
-            var count = Math.min(beforeBlocks.length, afterBlocks.length);
-            for (var i = 0; i < count; i++) {
-                var beforeBlock = beforeBlocks[i];
-                var afterBlock = afterBlocks[i];
-
-                // 获取两个块的内容高度
-                var beforeContent = beforeBlock.querySelector('.diff-yaml-block');
-                var afterContent = afterBlock.querySelector('.diff-yaml-block');
-
-                if (beforeContent && afterContent) {
-                    var beforeHeight = beforeContent.scrollHeight;
-                    var afterHeight = afterContent.scrollHeight;
-                    var maxHeight = Math.max(beforeHeight, afterHeight);
-
-                    // 设置最小高度为较大者
-                    beforeContent.style.minHeight = maxHeight + 'px';
-                    afterContent.style.minHeight = maxHeight + 'px';
-                }
-            }
-        }
-
-        /**
          * Setup synchronized scrolling for all diff panel groups
          */
         function setupScrollSync() {
@@ -3566,39 +5183,6 @@ paths:
             var div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        }
-
-        /**
-         * Update config output paths display
-         */
-        function updateConfigOutputPaths() {
-            try {
-                var configContent = configEditor.getValue();
-                if (!configContent || !configContent.trim()) {
-                    document.getElementById('output-path-controller').textContent = '-';
-                    document.getElementById('output-path-request').textContent = '-';
-                    document.getElementById('output-path-response').textContent = '-';
-                    return;
-                }
-
-                var config = jsyaml.load(configContent);
-                if (!config || !config.output) {
-                    document.getElementById('output-path-controller').textContent = '-';
-                    document.getElementById('output-path-request').textContent = '-';
-                    document.getElementById('output-path-response').textContent = '-';
-                    return;
-                }
-
-                var output = config.output;
-                document.getElementById('output-path-controller').textContent = output.controller ? output.controller.path || '-' : '-';
-                document.getElementById('output-path-request').textContent = output.request ? output.request.path || '-' : '-';
-                document.getElementById('output-path-response').textContent = output.response ? output.response.path || '-' : '-';
-            } catch (e) {
-                // Invalid YAML, ignore
-                document.getElementById('output-path-controller').textContent = '-';
-                document.getElementById('output-path-request').textContent = '-';
-                document.getElementById('output-path-response').textContent = '-';
-            }
         }
 
         function setMessage(msg) {

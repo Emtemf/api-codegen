@@ -90,12 +90,36 @@ class ApiYamlAnalyzer {
             }
         }
 
+        // 收集所有路径的注解信息，用于一致性检查
+        const pathAnnotations = {};
+
         for (const [path, methods] of Object.entries(paths)) {
+            // 提取 path 级别的 x-java-class-annotations
+            const pathClassAnnotations = methods['x-java-class-annotations'];
+            pathAnnotations[path] = {
+                classAnnotations: pathClassAnnotations || null,
+                operations: []
+            };
+
             for (const [method, operation] of Object.entries(methods)) {
+                // 跳过非 HTTP 方法的字段（如 x-java-class-annotations）
+                if (!['get', 'post', 'put', 'delete', 'patch', 'options', 'head'].includes(method)) {
+                    continue;
+                }
+
                 // 检查必需字段
                 if (!operation.operationId) {
                     this.addIssue('warn', `API ${method.toUpperCase()} ${path} 缺少 operationId`, 0);
                 }
+
+                // 记录操作级别的注解信息
+                const methodAnnotations = operation['x-java-method-annotations'];
+                const operationClassAnnotations = operation['x-java-class-annotations'];
+                pathAnnotations[path].operations.push({
+                    method: method,
+                    methodAnnotations: methodAnnotations || null,
+                    operationClassAnnotations: operationClassAnnotations || null
+                });
 
                 // 检查路径格式
                 const fullPath = basePath + path;
@@ -123,6 +147,47 @@ class ApiYamlAnalyzer {
                 }
             }
         }
+
+        // DFX-020: 检查同一路径下类注解一致性
+        this.checkAnnotationConsistency(pathAnnotations);
+    }
+
+    /**
+     * 检查注解位置一致性 (DFX-020)
+     */
+    checkAnnotationConsistency(pathAnnotations) {
+        for (const [path, pathInfo] of Object.entries(pathAnnotations)) {
+            const operations = pathInfo.operations;
+            if (operations.length <= 1) continue;
+
+            // 获取 path 级别的类注解
+            const pathClassAnnotations = pathInfo.classAnnotations;
+
+            // 检查每个操作的注解是否一致
+            for (const op of operations) {
+                // 检查方法级别的 x-java-class-annotations 是否与 path 级别一致
+                if (op.operationClassAnnotations) {
+                    if (!pathClassAnnotations) {
+                        this.addIssue('warn', `DFX-020: 路径 ${path} 的 ${op.method.toUpperCase()} 方法有 x-java-class-annotations，但 path 级别没有定义（需手动配置）`, 0);
+                    } else if (!this.areArraysEqual(op.operationClassAnnotations, pathClassAnnotations)) {
+                        const pathAnns = Array.isArray(pathClassAnnotations) ? pathClassAnnotations.join(', ') : JSON.stringify(pathClassAnnotations);
+                        const methodAnns = Array.isArray(op.operationClassAnnotations) ? op.operationClassAnnotations.join(', ') : JSON.stringify(op.operationClassAnnotations);
+                        this.addIssue('warn', `DFX-020: 路径 ${path} 下 ${op.method.toUpperCase()} 方法的 x-java-class-annotations 与 path 级别不一致（需手动统一配置）\n  path级别: [${pathAnns}]\n  方法级别: [${methodAnns}]`, 0);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 比较两个数组是否相等（忽略顺序）
+     */
+    areArraysEqual(arr1, arr2) {
+        if (!arr1 || !arr2) return false;
+        if (arr1.length !== arr2.length) return false;
+        const set1 = new Set(arr1);
+        const set2 = new Set(arr2);
+        return set1.size === set2.size && [...set1].every(x => set2.has(x));
     }
 
     /**
@@ -132,9 +197,9 @@ class ApiYamlAnalyzer {
         const paramPath = `${method} ${path} parameters[${index}]`;
         const apiIdentifier = `${method.toUpperCase()} ${path}`;
 
-        // 检查必需参数是否有描述
+        // 检查必需参数是否有描述（需手动处理）
         if (param.required && !param.description) {
-            this.addIssue('warn', `必填参数 ${param.name} 缺少 description`, 0, apiIdentifier, paramPath);
+            this.addIssue('warn', `必填参数 ${param.name} 缺少 description（需手动添加描述）`, 0, apiIdentifier, paramPath);
         }
 
         // 检查参数类型（Swagger默认是string，但建议明确声明）
@@ -168,11 +233,11 @@ class ApiYamlAnalyzer {
             if (!hasStringValidation) {
                 // 检查是否是邮箱字段
                 if (fieldName.includes('email') || fieldName.includes('mail')) {
-                    this.addIssue('warn', `邮箱字段 ${param.name} 缺少 @Email 校验`, 0, apiIdentifier, paramPath);
+                    this.addIssue('info', `邮箱字段 ${param.name} 建议添加 @Email 校验`, 0, apiIdentifier, paramPath);
                 }
                 // 检查是否是电话字段
                 else if (fieldName.includes('phone') || fieldName.includes('mobile')) {
-                    this.addIssue('warn', `电话字段 ${param.name} 缺少正则校验`, 0, apiIdentifier, paramPath);
+                    this.addIssue('info', `电话字段 ${param.name} 建议添加正则校验`, 0, apiIdentifier, paramPath);
                 }
                 // 普通 String 字段
                 else {
@@ -184,7 +249,7 @@ class ApiYamlAnalyzer {
             const minLen = param.minLength || (param.schema && param.schema.minLength);
             const maxLen = param.maxLength || (param.schema && param.schema.maxLength);
             if (minLen !== undefined && maxLen !== undefined && minLen > maxLen) {
-                this.addIssue('error', `参数 ${param.name} 的 minLength 不能大于 maxLength`, 0, apiIdentifier, paramPath);
+                this.addIssue('error', `参数 ${param.name} 的 minLength(${minLen}) 不能大于 maxLength(${maxLen})（需手动修正）`, 0, apiIdentifier, paramPath);
             }
         }
 
@@ -234,6 +299,21 @@ class ApiYamlAnalyzer {
             }
         }
 
+        // 检查日期类型字段 (Swagger format: type=string, format=date or format=date-time)
+        if (paramType === 'string' && param.format) {
+            const fieldName = param.name.toLowerCase();
+            // 生日字段建议添加 @Past 校验
+            if (param.format === 'date' || param.format === 'date-time') {
+                if (fieldName.includes('birth') || fieldName.includes('dob')) {
+                    this.addIssue('info', `生日字段建议添加 @Past 校验`, 0, apiIdentifier, paramPath);
+                }
+                // 预约/计划字段建议添加 @Future 校验
+                if (fieldName.includes('appoint') || fieldName.includes('schedule') || fieldName.includes('startTime') || fieldName.includes('endTime')) {
+                    this.addIssue('info', `计划/预约字段建议添加 @Future 校验`, 0, apiIdentifier, paramPath);
+                }
+            }
+        }
+
         // 检查 List/Array 类型的校验规则
         if (paramType === 'array' || (param.schema && param.schema.type === 'array')) {
             const hasArrayValidation =
@@ -259,10 +339,122 @@ class ApiYamlAnalyzer {
      */
     analyzeRequestBody(requestBody, path, method) {
         const apiIdentifier = `${method} ${path}`;
-        // 检查必需的 requestBody 是否有 description
+        // 检查必需的 requestBody 是否有 description（需手动处理）
         if (requestBody.required && !requestBody.description) {
-            this.addIssue('warn', `requestBody 缺少 description`, 0, apiIdentifier, 'requestBody');
+            this.addIssue('warn', `requestBody 缺少 description（需手动添加描述）`, 0, apiIdentifier, 'requestBody');
         }
+
+        // 分析 requestBody 中的字段
+        if (requestBody.content && requestBody.content['application/json']) {
+            const schema = requestBody.content['application/json'].schema;
+            if (schema) {
+                this.analyzeSchemaFields(schema, path, method);
+            }
+        }
+    }
+
+    /**
+     * 分析 schema 中的字段（用于 requestBody）
+     */
+    analyzeSchemaFields(schema, path, method) {
+        const apiIdentifier = `${method} ${path}`;
+
+        // 处理 $ref 引用
+        if (schema.$ref) {
+            const refName = schema.$ref.split('/').pop();
+            // 尝试从 definitions/components 中获取
+            const refSchema = this.getRefSchema(schema.$ref);
+            if (refSchema) {
+                this.analyzeSchemaFields(refSchema, path, method);
+            }
+            return;
+        }
+
+        // 处理直接定义的属性
+        const properties = schema.properties;
+        if (!properties) return;
+
+        for (const [propName, propDef] of Object.entries(properties)) {
+            const fieldName = propName.toLowerCase();
+            const fieldPath = `${path}.${method}.requestBody.${propName}`;
+
+            // 检查日期类型字段
+            if (propDef.type === 'string' && propDef.format) {
+                // 生日字段建议添加 @Past 校验
+                if ((propDef.format === 'date' || propDef.format === 'date-time') &&
+                    (fieldName.includes('birth') || fieldName.includes('dob') || fieldName.includes('birthday'))) {
+                    this.addIssue('info', `生日字段 ${propName} 建议添加 @Past 校验`, 0, apiIdentifier, fieldPath);
+                }
+                // 预约/计划字段建议添加 @Future 校验
+                if ((propDef.format === 'date' || propDef.format === 'date-time') &&
+                    (fieldName.includes('appoint') || fieldName.includes('schedule') || fieldName.includes('startTime') || fieldName.includes('endTime'))) {
+                    this.addIssue('info', `计划/预约字段 ${propName} 建议添加 @Future 校验`, 0, apiIdentifier, fieldPath);
+                }
+            }
+
+            // 检查 String 类型字段的校验建议
+            if (propDef.type === 'string') {
+                const hasStringValidation = propDef.minLength !== undefined ||
+                    propDef.maxLength !== undefined ||
+                    propDef.pattern !== undefined;
+
+                if (!hasStringValidation) {
+                    // 检查是否是邮箱字段
+                    if (fieldName.includes('email') || fieldName.includes('mail')) {
+                        this.addIssue('info', `邮箱字段 ${propName} 建议添加 @Email 校验`, 0, apiIdentifier, fieldPath);
+                    }
+                    // 检查是否是电话字段
+                    else if (fieldName.includes('phone') || fieldName.includes('mobile')) {
+                        this.addIssue('info', `电话字段 ${propName} 建议添加正则校验`, 0, apiIdentifier, fieldPath);
+                    }
+                    // 普通 String 字段 - 长度校验建议
+                    else if (!propDef.format) {  // 不对有 format 的字段（如 date）建议长度校验
+                        this.addIssue('warn', `String 字段 ${propName} 缺少长度校验`, 0, apiIdentifier, fieldPath);
+                    }
+                }
+
+                // 检查 minLength > maxLength
+                const minLen = propDef.minLength;
+                const maxLen = propDef.maxLength;
+                if (minLen !== undefined && maxLen !== undefined && minLen > maxLen) {
+                    this.addIssue('error', `参数 ${propName} 的 minLength(${minLen}) 不能大于 maxLength(${maxLen})（需手动修正）`, 0, apiIdentifier, fieldPath);
+                }
+            }
+
+            // 递归分析嵌套对象
+            if (propDef.type === 'object' && propDef.properties) {
+                this.analyzeSchemaFields(propDef, path, method);
+            }
+
+            // 分析数组成员
+            if (propDef.type === 'array' && propDef.items) {
+                if (propDef.items.type === 'object' && propDef.items.properties) {
+                    this.analyzeSchemaFields(propDef.items, path, method);
+                }
+            }
+        }
+    }
+
+    /**
+     * 获取 $ref 引用的 schema
+     */
+    getRefSchema(ref) {
+        // Swagger 2.0: #/definitions/xxx
+        // OpenAPI 3.0: #/components/schemas/xxx
+        const parts = ref.split('/');
+        const refName = parts[parts.length - 1];
+
+        // 尝试从 Swagger 2.0 definitions 获取
+        if (this.yaml.definitions && this.yaml.definitions[refName]) {
+            return this.yaml.definitions[refName];
+        }
+
+        // 尝试从 OpenAPI 3.0 components.schemas 获取
+        if (this.yaml.components && this.yaml.components.schemas && this.yaml.components.schemas[refName]) {
+            return this.yaml.components.schemas[refName];
+        }
+
+        return null;
     }
 
     /**
@@ -364,20 +556,20 @@ class ApiYamlAnalyzer {
 
             if (field.validation && field.validation.minLength && field.validation.maxLength &&
                 field.validation.minLength > field.validation.maxLength) {
-                this.addIssue('error', 'minLength 不能大于 maxLength', 0, apiIndex, fieldPath + '.name');
+                this.addIssue('error', `minLength(${field.validation.minLength}) 不能大于 maxLength(${field.validation.maxLength})（需手动修正）`, 0, apiIndex, fieldPath + '.name');
             }
         }
 
         // 邮箱字段检查
         if ((field.name.includes('email') || field.name.includes('mail')) &&
             field.validation && !field.validation.email) {
-            this.addIssue('warn', '邮箱字段建议添加 @Email 校验', 0, apiIndex, fieldPath + '.name');
+            this.addIssue('info', '邮箱字段建议添加 @Email 校验', 0, apiIndex, fieldPath + '.name');
         }
 
         // 电话字段检查
         if ((field.name.includes('phone') || field.name.includes('tel') || field.name.includes('mobile')) &&
             field.validation && !field.validation.pattern) {
-            this.addIssue('warn', '电话字段建议添加正则校验 ^1[3-9]\\d{9}$', 0, apiIndex, fieldPath + '.name');
+            this.addIssue('info', '电话字段建议添加正则校验 ^1[3-9]\\d{9}$', 0, apiIndex, fieldPath + '.name');
         }
 
         // 数值类型检查
@@ -411,7 +603,13 @@ class ApiYamlAnalyzer {
             field.validation) {
             if (field.name.includes('birth') || field.name.includes('dob') || field.name.includes('birthday')) {
                 if (!field.validation.past) {
-                    this.addIssue('warn', '生日字段建议添加 @Past 校验', 0, apiIndex, fieldPath + '.name');
+                    this.addIssue('info', '生日字段建议添加 @Past 校验', 0, apiIndex, fieldPath + '.name');
+                }
+            }
+            // 计划/预约字段建议添加 @Future 校验
+            if (field.name.includes('appoint') || field.name.includes('schedule') || field.name.includes('startTime') || field.name.includes('endTime')) {
+                if (!field.validation.future) {
+                    this.addIssue('info', '计划/预约字段建议添加 @Future 校验', 0, apiIndex, fieldPath + '.name');
                 }
             }
         }
@@ -444,6 +642,12 @@ class ApiYamlAnalyzer {
      * 选择性修复问题 - 只修复选中的问题
      */
     fixSelective(yamlContent, selectedIndices) {
+        // 重置修复统计
+        this.fixStats = {
+            paramsFixed: 0,
+            pathsFixed: 0
+        };
+
         try {
             const parsed = jsyaml.load(yamlContent);
             if (!parsed) {
@@ -472,9 +676,28 @@ class ApiYamlAnalyzer {
                 return yamlContent;  // 不修复，直接返回原内容
             }
 
-            // 如果是Swagger格式，修复路径和参数问题
+            // 收集需要修复的问题类型
+            const selectedIssues = this.issues.filter((_, index) => selectedIndices.includes(index));
+            const issueTypes = new Set();
+            selectedIssues.forEach(issue => {
+                if (issue.message.includes('//')) issueTypes.add('double-slash');
+                if (issue.message.includes('notNull') || issue.message.includes('@NotNull')) issueTypes.add('notnull');
+                if (issue.message.includes('@Email') || issue.message.includes('邮箱')) issueTypes.add('email');
+                if (issue.message.includes('正则') || issue.message.includes('pattern') || issue.message.includes('电话')) issueTypes.add('pattern');
+                if (issue.message.includes('长度')) issueTypes.add('length');
+                if (issue.message.includes('范围') || issue.message.includes('min') || issue.message.includes('max')) issueTypes.add('range');
+                if (issue.message.includes('@Past') || issue.message.includes('生日')) issueTypes.add('past');
+                if (issue.message.includes('@Future') || issue.message.includes('计划') || issue.message.includes('预约')) issueTypes.add('future');
+            });
+
+            // 只修复选中的问题类型
             if (isSwagger) {
-                this.fixSwagger(parsed);
+                // 只修复 // 路径问题（如果选中）
+                if (issueTypes.has('double-slash')) {
+                    this.fixSwaggerPaths(parsed);
+                }
+                // 修复参数问题
+                this.fixStats.paramsFixed = this.fixSwaggerParamsSelective(parsed, selectedIndices);
             }
 
             // 根据选中的问题索引，构建需要修复的字段集合
@@ -483,6 +706,10 @@ class ApiYamlAnalyzer {
 
             this.issues.forEach((issue, index) => {
                 if (!selectedIndices.includes(index)) return;
+
+                // 跳过 info 级别的问题，它们不需要修复
+                if (issue.severity === 'info') return;
+
                 // 注意: issue.api 是 API 索引 (0-based)
                 if (issue.api === undefined || issue.api === null) return;
 
@@ -630,21 +857,369 @@ class ApiYamlAnalyzer {
             let fixedPath = path;
             let hasChanges = false;
 
-            // 修复路径包含 // 的问题
+            // 修复路径包含 // 的问题（只修复格式问题）
             if (fixedPath.includes('//')) {
                 fixedPath = fixedPath.replace(/\/+/g, '/');
                 hasChanges = true;
             }
 
-            // 修复 /XXX/ 前缀（如 /XXX/users -> /users）
-            if (fixedPath.match(/^\/[A-Z][A-Z0-9_]*\//i)) {
-                fixedPath = fixedPath.replace(/^\/[A-Z][A-Z0-9_]*/, '');
-                hasChanges = true;
-            }
+            // 不再自动修复 /XXX/ 前缀（见 fixSwagger 中的注释）
 
             if (hasChanges && fixedPath !== path) {
                 paths[fixedPath] = methods;
                 delete paths[path];
+            }
+        }
+    }
+
+    /**
+     * 只修复 Swagger 路径中的 // 问题（用于选择性修复）
+     */
+    fixSwaggerPaths(parsed) {
+        // 修复 basePath 包含 // 的问题
+        if (parsed.basePath && parsed.basePath.includes('//')) {
+            const fixedBasePath = parsed.basePath.replace(/\/+/g, '/');
+            if (fixedBasePath !== parsed.basePath) {
+                this.addInfoMessage(`修复 basePath 重复斜杠: "${parsed.basePath}" → "${fixedBasePath}"`);
+                parsed.basePath = fixedBasePath;
+            }
+        }
+
+        // 修复 servers (OpenAPI 3.0) 包含 // 的问题
+        if (parsed.servers && Array.isArray(parsed.servers)) {
+            parsed.servers.forEach((server, idx) => {
+                if (server.url && server.url.includes('//')) {
+                    const fixedUrl = server.url.replace(/\/+/g, '/');
+                    if (fixedUrl !== server.url) {
+                        this.addInfoMessage(`修复 servers[${idx}] URL 重复斜杠: "${server.url}" → "${fixedUrl}"`);
+                        server.url = fixedUrl;
+                    }
+                }
+            });
+        }
+
+        // 修复 paths 中的 // 问题
+        const paths = parsed.paths || {};
+        for (const [path, methods] of Object.entries(paths)) {
+            let currentPath = path;
+            let hasChanges = false;
+
+            if (currentPath.includes('//')) {
+                currentPath = currentPath.replace(/\/+/g, '/');
+                hasChanges = true;
+            }
+
+            if (hasChanges && currentPath !== path) {
+                paths[currentPath] = methods;
+                delete paths[path];
+                this.addInfoMessage(`修复路径: "${path}" → "${currentPath}"`);
+            }
+        }
+    }
+
+    /**
+     * 选择性修复 Swagger 参数（只修复选中的问题）
+     * @returns {number} 修复的参数数量
+     */
+    fixSwaggerParamsSelective(parsed, selectedIndices) {
+        // 收集选中问题的索引和对应的消息
+        const selectedIssueMessages = new Map();
+        this.issues.forEach((issue, index) => {
+            if (selectedIndices.includes(index)) {
+                if (!selectedIssueMessages.has(issue.field)) {
+                    selectedIssueMessages.set(issue.field, []);
+                }
+                selectedIssueMessages.get(issue.field).push(issue.message);
+            }
+        });
+
+        // 修复 paths 中的参数
+        const paths = parsed.paths || {};
+        const basePath = parsed.basePath || '';
+        let fixedCount = 0;
+
+        for (const [path, methods] of Object.entries(paths)) {
+            for (const [method, operation] of Object.entries(methods)) {
+                if (typeof operation !== 'object') continue;
+
+                const httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'];
+                if (!httpMethods.includes(method.toLowerCase())) continue;
+
+                // 使用 fullPath（包含 basePath），与分析时一致
+                const apiPath = basePath + path;
+
+                // 修复 parameters
+                if (operation.parameters && Array.isArray(operation.parameters)) {
+                    operation.parameters.forEach((param, paramIndex) => {
+                        const key = `${method.toUpperCase()} ${apiPath} parameters[${paramIndex}]`;
+                        let messages = selectedIssueMessages.get(key) || [];
+
+                        // 如果没有找到，尝试匹配可能被修复的路径（// -> /）
+                        if (messages.length === 0 && apiPath.includes('/')) {
+                            // 尝试查找原始路径（包含 //）的问题
+                            for (const [issueKey, issueMessages] of selectedIssueMessages.entries()) {
+                                // 跳过无效的 key（如 undefined 或非字符串）
+                                if (!issueKey || typeof issueKey !== 'string') continue;
+                                if (issueKey.includes('//')) {
+                                    // 将 issueKey 中的 // 替换为 / 来比较
+                                    const normalizedIssueKey = issueKey.replace(/\/+/g, '/');
+                                    if (normalizedIssueKey === key) {
+                                        messages = issueMessages;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (messages.length > 0) {
+                            fixedCount++;
+                            messages.forEach(message => {
+                                this.fixParameterValidation(param, message);
+                            });
+                        }
+                    });
+                }
+
+                // 修复 requestBody 中的字段
+                if (operation.requestBody && operation.requestBody.content &&
+                    operation.requestBody.content['application/json'] &&
+                    operation.requestBody.content['application/json'].schema) {
+                    const schema = operation.requestBody.content['application/json'].schema;
+                    const schemaFixCount = this.fixSchemaFields(schema, apiPath, method.toUpperCase(), selectedIssueMessages);
+                    fixedCount += schemaFixCount;
+                }
+            }
+        }
+
+        return fixedCount;
+    }
+
+    /**
+     * 修复 schema 中的字段（用于 requestBody）
+     * @returns {number} 修复的字段数量
+     */
+    fixSchemaFields(schema, path, method, selectedIssueMessages) {
+        let fixedCount = 0;
+
+        // 处理 $ref 引用 - 不修复引用的字段
+        if (schema.$ref) {
+            return 0;
+        }
+
+        // 处理直接定义的属性
+        const properties = schema.properties;
+        if (!properties) return 0;
+
+        for (const [propName, propDef] of Object.entries(properties)) {
+            const fieldPath = `${path}.${method}.requestBody.${propName}`;
+            const messages = selectedIssueMessages.get(fieldPath) || [];
+
+            if (messages.length > 0) {
+                fixedCount++;
+                messages.forEach(message => {
+                    this.fixSchemaFieldValidation(propDef, propName, message);
+                });
+            }
+
+            // 递归修复嵌套对象
+            if (propDef.type === 'object' && propDef.properties) {
+                fixedCount += this.fixSchemaFields(propDef, path, method, selectedIssueMessages);
+            }
+
+            // 修复数组成员
+            if (propDef.type === 'array' && propDef.items) {
+                if (propDef.items.type === 'object' && propDef.items.properties) {
+                    fixedCount += this.fixSchemaFields(propDef.items, path, method, selectedIssueMessages);
+                }
+            }
+        }
+
+        return fixedCount;
+    }
+
+    /**
+     * 修复单个 schema 字段的校验规则（用于 requestBody 字段）
+     */
+    fixSchemaFieldValidation(propDef, propName, message) {
+        // 日期类型字段的 @Past/@Future 建议
+        if (message.includes('@Past')) {
+            propDef['x-java-validation'] = propDef['x-java-validation'] || {};
+            propDef['x-java-validation'].past = true;
+            this.addInfoMessage(`修复字段 ${propName}: 添加 @Past 校验`);
+        }
+
+        if (message.includes('@Future')) {
+            propDef['x-java-validation'] = propDef['x-java-validation'] || {};
+            propDef['x-java-validation'].future = true;
+            this.addInfoMessage(`修复字段 ${propName}: 添加 @Future 校验`);
+        }
+
+        // 邮箱格式
+        if (message.includes('@Email') || message.includes('邮箱')) {
+            propDef.format = 'email';
+            this.addInfoMessage(`修复字段 ${propName}: 添加 email 格式校验`);
+        }
+
+        // 电话正则校验
+        if (message.includes('电话') || message.includes('phone') || message.includes('正则校验')) {
+            propDef.pattern = '^(\\+86|86)?1[3-9]\\d{9}$';
+            this.addInfoMessage(`修复字段 ${propName}: 添加手机号正则校验`);
+        }
+
+        // 长度校验
+        if (message.includes('长度')) {
+            if (!propDef.minLength) propDef.minLength = 1;
+            if (!propDef.maxLength) propDef.maxLength = 255;
+            this.addInfoMessage(`修复字段 ${propName}: 添加长度校验`);
+        }
+
+        // minLength > maxLength 错误 - 交换值
+        if (message.includes('minLength') && message.includes('maxLength') && message.includes('不能大于')) {
+            const minLen = propDef.minLength;
+            const maxLen = propDef.maxLength;
+            if (minLen !== undefined && maxLen !== undefined && minLen > maxLen) {
+                // 交换值
+                propDef.minLength = maxLen;
+                propDef.maxLength = minLen;
+                this.addInfoMessage(`修复字段 ${propName}: 交换 minLength(${maxLen}) 和 maxLength(${minLen})`);
+            }
+        }
+
+        // minimum > maximum 错误 - 交换值
+        if (message.includes('minimum') && message.includes('maximum') && message.includes('不能大于')) {
+            const min = propDef.minimum;
+            const max = propDef.maximum;
+            if (min !== undefined && max !== undefined && min > max) {
+                // 交换值
+                propDef.minimum = max;
+                propDef.maximum = min;
+                this.addInfoMessage(`修复字段 ${propName}: 交换 minimum(${max}) 和 maximum(${min})`);
+            }
+        }
+    }
+
+    /**
+     * 修复单个参数的校验规则
+     */
+    fixParameterValidation(param, message) {
+        // Swagger 2.0 参数可以直接有 type，不一定要 schema
+        // 统一使用 param 本身的字段，而不是 schema 子对象
+        if (!param.schema && param.type) {
+            // Swagger 2.0 格式，直接在 param 上设置校验
+            // 不需要创建 schema 对象
+        } else if (!param.schema) {
+            // 既没有 type 也没有 schema，创建默认 schema
+            param.schema = { type: 'string' };
+        }
+
+        if (message.includes('notNull') || message.includes('@NotNull')) {
+            // 必填参数标记并添加实际校验
+            param.required = true;
+            // 添加满足 hasRequiredValidation 检查的校验规则
+            const paramType = param.type || (param.schema && param.schema.type);
+            if (paramType === 'string' || !paramType) {
+                // String 类型添加 minLength
+                if (param.schema) {
+                    if (!param.schema.minLength) param.schema.minLength = 1;
+                } else {
+                    if (!param.minLength) param.minLength = 1;
+                }
+            } else if (paramType === 'integer' || paramType === 'number') {
+                // 数值类型添加 minimum
+                if (param.schema) {
+                    if (param.schema.minimum === undefined) param.schema.minimum = 1;
+                } else {
+                    if (param.minimum === undefined) param.minimum = 1;
+                }
+            }
+            this.addInfoMessage(`修复参数 ${param.name}: 添加 @NotNull 校验`);
+        }
+
+        if (message.includes('长度')) {
+            if (param.schema) {
+                if (!param.schema.minLength) param.schema.minLength = 1;
+                if (!param.schema.maxLength) param.schema.maxLength = 255;
+            } else {
+                if (!param.minLength) param.minLength = 1;
+                if (!param.maxLength) param.maxLength = 255;
+            }
+            this.addInfoMessage(`修复参数 ${param.name}: 添加长度校验`);
+        }
+
+        if (message.includes('@Email') || message.includes('邮箱')) {
+            if (param.schema) {
+                param.schema.format = 'email';
+            } else {
+                param.format = 'email';
+            }
+            this.addInfoMessage(`修复参数 ${param.name}: 添加 email 格式校验`);
+        }
+
+        if (message.includes('电话') || message.includes('phone')) {
+            if (param.schema) {
+                param.schema.pattern = '^(\\+86|86)?1[3-9]\\d{9}$';
+            } else {
+                param.pattern = '^(\\+86|86)?1[3-9]\\d{9}$';
+            }
+            this.addInfoMessage(`修复参数 ${param.name}: 添加手机号正则校验`);
+        }
+
+        // 数值类型范围校验
+        const numType = param.type || (param.schema && param.schema.type);
+        if (numType === 'integer' || numType === 'number') {
+            if (message.includes('范围') || message.includes('最小值') ||
+                (message.includes('min') && message.includes('max'))) {
+                const target = param.schema || param;
+                if (param.name.toLowerCase().includes('page')) {
+                    target.minimum = 1;
+                    target.maximum = 2147483647;
+                } else if (param.name.toLowerCase().includes('size') ||
+                           param.name.toLowerCase().includes('limit')) {
+                    target.minimum = 1;
+                    target.maximum = 100;
+                } else if (param.in === 'path') {
+                    // 路径参数
+                    target.minimum = 1;
+                } else {
+                    target.minimum = 0;
+                    target.maximum = 2147483647;
+                }
+                this.addInfoMessage(`修复参数 ${param.name}: 添加范围校验`);
+            }
+        }
+
+        // 数组类型大小校验
+        const arrType = param.type || (param.schema && param.schema.type);
+        if (arrType === 'array') {
+            if (message.includes('大小') || message.includes('minItems') || message.includes('maxItems')) {
+                const target = param.schema || param;
+                if (!target.minItems) target.minItems = 1;
+                if (!target.maxItems) target.maxItems = 100;
+                this.addInfoMessage(`修复参数 ${param.name}: 添加数组大小校验`);
+            }
+        }
+
+        // minLength > maxLength 错误 - 交换值
+        if (message.includes('minLength') && message.includes('maxLength') && message.includes('不能大于')) {
+            const target = param.schema || param;
+            const minLen = target.minLength;
+            const maxLen = target.maxLength;
+            if (minLen !== undefined && maxLen !== undefined && minLen > maxLen) {
+                target.minLength = maxLen;
+                target.maxLength = minLen;
+                this.addInfoMessage(`修复参数 ${param.name}: 交换 minLength(${maxLen}) 和 maxLength(${minLen})`);
+            }
+        }
+
+        // minimum > maximum 错误 - 交换值
+        if (message.includes('minimum') && message.includes('maximum') && message.includes('不能大于')) {
+            const target = param.schema || param;
+            const min = target.minimum;
+            const max = target.maximum;
+            if (min !== undefined && max !== undefined && min > max) {
+                target.minimum = max;
+                target.maximum = min;
+                this.addInfoMessage(`修复参数 ${param.name}: 交换 minimum(${max}) 和 maximum(${min})`);
             }
         }
     }
@@ -688,25 +1263,38 @@ class ApiYamlAnalyzer {
                 // 如果同一个方法出现多次，js-yaml 会把它变成数组
                 if (Array.isArray(methods[method])) {
                     this.addIssue('error', `路径 "${path}" 下有重复的 ${method.toUpperCase()} 方法，请检查 YAML 语法`, 0);
-                    return yamlContent;  // 不修复，直接返回原内容
+                    return null;  // 返回 null 表示无法修复
                 }
             }
         }
 
         for (const [path, methods] of Object.entries(paths)) {
+            let currentPath = path;
+            let hasChanges = false;
+
             // 修复路径包含 // 的问题（删除多余的 /）
-            if (path.includes('//')) {
-                const fixedPath = path.replace(/\/+/g, '/');
-                paths[fixedPath] = methods;
-                if (fixedPath !== path) {
-                    delete paths[path];
-                    this.addInfoMessage(`修复路径重复斜杠: "${path}" → "${fixedPath}" (删除了多余的 /)`);
-                }
+            // 注意：只修复重复斜杠，不修复 /XXX/ 占位符（因为那是业务逻辑）
+            if (currentPath.includes('//')) {
+                currentPath = currentPath.replace(/\/+/g, '/');
+                hasChanges = true;
+            }
+
+            // 不再自动修复 /XXX/ 前缀，因为：
+            // 1. /XXX/ 可能是业务逻辑的一部分（如 /v1/users、/api/users）
+            // 2. 自动删除可能破坏业务语义
+            // 3. 应该由开发者手动确认并修改
+
+            if (hasChanges && currentPath !== path) {
+                paths[currentPath] = methods;
+                delete paths[path];
+                this.addInfoMessage(`修复路径: "${path}" → "${currentPath}"`);
             }
 
             // 修复每个 operation
             for (const [method, operation] of Object.entries(methods)) {
-                this.fixSwaggerOperation(operation);
+                if (typeof operation === 'object') {
+                    this.fixSwaggerOperation(operation);
+                }
             }
         }
 
@@ -834,6 +1422,22 @@ class ApiYamlAnalyzer {
                 if (hasRequiredValidation) {
                     param.minNotNull = true;
                     this.addInfoMessage(`修复参数 ${param.name}: 必填参数添加 @NotNull 校验`);
+
+                    // 必填参数还需要添加实际校验（根据类型）
+                    var requiredType = param.type || (param.schema && param.schema.type);
+                    if (requiredType === 'string') {
+                        // String 类型添加 minLength
+                        if (!param.minLength) {
+                            param.minLength = 1;
+                            if (param.schema) param.schema.minLength = 1;
+                        }
+                    } else if (requiredType === 'integer' || requiredType === 'number') {
+                        // 数值类型添加 minimum
+                        if (!param.minimum) {
+                            param.minimum = 1;
+                            if (param.schema) param.schema.minimum = 1;
+                        }
+                    }
                 }
 
                 // 添加 type（如果没有 schema，默认使用 string）

@@ -12,10 +12,14 @@
 # - DFX-006: 电话字段缺少正则校验 (已包含)
 # - DFX-007: 数值字段缺少范围校验 (已包含)
 # - DFX-008: List字段缺少大小校验 (已包含)
+# - DFX-009: minLength > maxLength (已包含)
+# - DFX-010: min > max (已包含)
 # - DFX-011: page参数缺少范围校验 (已包含)
 # - DFX-012: pageSize参数缺少范围校验 (已包含)
 # - DFX-014: 路径参数缺少最小值校验 (已包含)
-# - 字段变更: 使用 definitions 触发字段级别变更检测 (新增)
+# - DFX-020: 注解位置一致性校验 (已包含)
+# - WARN: 必填参数缺少 description (已包含)
+# - INFO: 邮箱/电话/生日/预约字段优化建议 (已包含)
 
 swagger: '2.0'
 info:
@@ -419,6 +423,214 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/UserModel'
+      responses:
+        '200':
+          description: 成功
+
+  # ========== 自定义注解场景 - x-java-class-annotations ==========
+  # 场景1: 类级别注解（path级别）
+  /admin/users:
+    x-java-class-annotations:
+      - "@Secured"
+      - "@AuditLog(action='USER_QUERY')"
+    get:
+      summary: 获取用户列表 - 带类注解
+      operationId: getAdminUsers
+      x-java-method-annotations:
+        - "@Permission('admin:user:read')"
+        - "@RateLimiter(maxRequests=100)"
+      responses:
+        '200':
+          description: 成功
+
+  # 场景2: 方法级别注解（operation级别）
+  /admin/users/{id}:
+    get:
+      summary: 获取用户详情 - 仅有方法注解
+      operationId: getAdminUserById
+      x-java-method-annotations:
+        - "@Permission('admin:user:read')"
+        - "@Cacheable(key='#id')"
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: 成功
+
+  # 场景3: 同一路径下多个方法，类注解一致（正常场景）
+  /secure:
+    x-java-class-annotations:
+      - "@Secured"
+      - "@RequireRole('ADMIN')"
+    get:
+      summary: 获取安全配置 - GET
+      operationId: getSecureConfig
+      x-java-method-annotations:
+        - "@AuditLog(action='SECURE_GET')"
+      responses:
+        '200':
+          description: 成功
+    post:
+      summary: 更新安全配置 - POST
+      operationId: updateSecureConfig
+      x-java-method-annotations:
+        - "@AuditLog(action='SECURE_UPDATE')"
+        - "@Transactional"
+      responses:
+        '200':
+          description: 成功
+
+  # 场景4: 同一路径下类注解不一致（异常场景 - DFX-020）
+  /inconsistent:
+    x-java-class-annotations:
+      - "@Secured"
+    get:
+      summary: 获取资源 - GET
+      operationId: getInconsistent
+      x-java-class-annotations:
+        - "@DifferentAnnotation"  # 异常：与path级别注解不一致
+      responses:
+        '200':
+          description: 成功
+    post:
+      summary: 创建资源 - POST
+      operationId: createInconsistent
+      # 异常：POST方法没有类注解，但GET有
+      responses:
+        '201':
+          description: 创建成功
+
+  # ========== DFX-009: minLength > maxLength 错误 ==========
+  /api/invalid-length:
+    get:
+      summary: 搜索 - 长度范围错误
+      operationId: searchInvalidLength
+      parameters:
+        - name: keyword
+          in: query
+          description: 搜索关键词
+          schema:
+            type: string
+            minLength: 100
+            maxLength: 10
+      responses:
+        '200':
+          description: 成功
+
+  # ========== DFX-010: min > max 错误 ==========
+  /api/invalid-range:
+    get:
+      summary: 查询 - 数值范围错误
+      operationId: queryInvalidRange
+      parameters:
+        - name: age
+          in: query
+          description: 年龄
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 10
+      responses:
+        '200':
+          description: 成功
+
+  # ========== WARN: 必填参数缺少 description ==========
+  /api/missing-description:
+    get:
+      summary: 查询 - 必填参数缺少描述
+      operationId: queryMissingDesc
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+
+  # ========== INFO: 邮箱字段建议添加 @Email ==========
+  /api/suggest-email:
+    post:
+      summary: 注册 - 邮箱字段建议
+      operationId: registerUser
+      parameters:
+        - name: email
+          in: query
+          description: 邮箱地址
+          schema:
+            type: string
+            # 缺少 format: email，但字段名包含 email
+      responses:
+        '200':
+          description: 成功
+
+  # ========== INFO: 电话字段建议添加正则 ==========
+  /api/suggest-phone:
+    post:
+      summary: 绑定手机号 - 电话字段建议
+      operationId: bindPhone
+      parameters:
+        - name: mobile
+          in: query
+          description: 手机号
+          schema:
+            type: string
+            # 缺少 pattern，但字段名包含 mobile
+      responses:
+        '200':
+          description: 成功
+
+  # ========== INFO: 生日字段建议添加 @Past ==========
+  /api/suggest-birthday:
+    post:
+      summary: 设置生日 - 生日字段建议
+      operationId: setBirthday
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                birthday:
+                  type: string
+                  format: date
+                  description: 生日日期
+                  # 字段名包含 birthday，但缺少 past: true
+                dob:
+                  type: string
+                  format: date
+                  description: 出生日期
+      responses:
+        '200':
+          description: 成功
+
+  # ========== INFO: 预约字段建议添加 @Future ==========
+  /api/suggest-appointment:
+    post:
+      summary: 预约 - 预约字段建议
+      operationId: createAppointment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scheduleTime:
+                  type: string
+                  format: date-time
+                  description: 预约时间
+                appointmentDate:
+                  type: string
+                  format: date
+                  description: 预约日期
       responses:
         '200':
           description: 成功

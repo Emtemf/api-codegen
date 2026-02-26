@@ -11,7 +11,6 @@ export class AppPage {
 
   // Panels
   readonly apiPanel: Locator;
-  readonly configPanel: Locator;
   readonly outputPanel: Locator;
 
   // Action buttons
@@ -21,7 +20,6 @@ export class AppPage {
 
   // Editors - CodeMirror creates a wrapper div
   readonly yamlEditor: Locator;
-  readonly configEditor: Locator;
   readonly outputEditor: Locator;
 
   // Status
@@ -34,7 +32,6 @@ export class AppPage {
     this.navButtons = page.locator('.nav-btn');
 
     this.apiPanel = page.locator('.api-panel');
-    this.configPanel = page.locator('.config-panel');
     this.outputPanel = page.locator('.output-panel');
 
     // Use button text selectors
@@ -44,7 +41,6 @@ export class AppPage {
 
     // Use CodeMirror class - it's the visible editor wrapper
     this.yamlEditor = page.locator('.api-panel .CodeMirror');
-    this.configEditor = page.locator('.config-panel .CodeMirror');
     this.outputEditor = page.locator('.output-panel .CodeMirror');
 
     this.statusMessage = page.locator('.status');
@@ -108,19 +104,15 @@ export class AppPage {
    * Get generated output content
    */
   async getOutputContent(): Promise<string> {
-    // Try output panel first, then config panel
-    const panels = [this.outputEditor, this.configEditor];
-
-    for (const panel of panels) {
-      try {
-        await panel.waitFor({ state: 'visible', timeout: 3000 });
-        const content = await panel.evaluate(el => (el as any).CodeMirror?.getValue() || '');
-        if (content.length > 0) {
-          return content;
-        }
-      } catch (e) {
-        continue;
+    // Try output panel
+    try {
+      await this.outputEditor.waitFor({ state: 'visible', timeout: 3000 });
+      const content = await this.outputEditor.evaluate(el => (el as any).CodeMirror?.getValue() || '');
+      if (content.length > 0) {
+        return content;
       }
+    } catch (e) {
+      // Output panel not available
     }
 
     return '';
@@ -131,5 +123,93 @@ export class AppPage {
    */
   async screenshot(name: string) {
     await this.page.screenshot({ path: `artifacts/${name}.png` });
+  }
+
+  /**
+   * Get issue count from the issue list
+   */
+  async getIssueCount(): Promise<number> {
+    const issueList = this.page.locator('#issue-list');
+    try {
+      await issueList.waitFor({ state: 'visible', timeout: 3000 });
+      const issues = issueList.locator('.issue');
+      return await issues.count();
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  /**
+   * Get all issues from the issue list
+   */
+  async getIssues(): Promise<any[]> {
+    const issueList = this.page.locator('#issue-list');
+    try {
+      await issueList.waitFor({ state: 'visible', timeout: 3000 });
+      const issues = issueList.locator('.issue');
+      const count = await issues.count();
+
+      const result = [];
+      for (let i = 0; i < count; i++) {
+        const issue = issues.nth(i);
+        const message = await issue.locator('.issue-message').textContent().catch(() => '');
+        const severity = await issue.getAttribute('class').catch(() => '');
+        result.push({
+          message: message,
+          severity: severity.includes('error') ? 'error' : severity.includes('warn') ? 'warn' : 'info'
+        });
+      }
+      return result;
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /**
+   * Get "需手动" button for a specific issue by index
+   */
+  getManualFixButton(index: number): Locator {
+    return this.page.locator('.issue').nth(index).locator('button.issue-fixable.fixable-no');
+  }
+
+  /**
+   * Get edit modal
+   */
+  getEditModal(): Locator {
+    return this.page.locator('.edit-modal-overlay');
+  }
+
+  /**
+   * Check if edit modal is visible
+   */
+  async isEditModalVisible(): Promise<boolean> {
+    try {
+      const modal = this.getEditModal();
+      await modal.waitFor({ state: 'visible', timeout: 2000 });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Get description input in edit modal
+   */
+  getDescriptionInput(): Locator {
+    return this.page.locator('#edit-description-input');
+  }
+
+  /**
+   * Click apply button in edit modal
+   */
+  async clickApplyInEditModal() {
+    await this.page.locator('.edit-modal-footer button.btn-primary').click();
+  }
+
+  /**
+   * Close edit modal
+   */
+  async closeEditModal() {
+    await this.page.locator('.edit-modal-close').click();
   }
 }

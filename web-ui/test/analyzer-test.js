@@ -73,6 +73,7 @@ function test(category, scenario, input, expected, fn) {
 
         const errors = actualIssues.filter(i => i.severity === 'error');
         const warnings = actualIssues.filter(i => i.severity === 'warn');
+        const infos = actualIssues.filter(i => i.severity === 'info');
 
         // 验证预期结果
         const validations = [];
@@ -83,6 +84,10 @@ function test(category, scenario, input, expected, fn) {
 
         if (expected.warnCount !== undefined && warnings.length !== expected.warnCount) {
             validations.push(`警告数量: 预期 ${expected.warnCount}, 实际 ${warnings.length}`);
+        }
+
+        if (expected.infoCount !== undefined && infos.length !== expected.infoCount) {
+            validations.push(`信息数量: 预期 ${expected.infoCount}, 实际 ${infos.length}`);
         }
 
         if (expected.hasMessage !== undefined) {
@@ -195,6 +200,22 @@ test('错误检测', '路径包含 // 应报错 (Issue #2)',
     path: /api//users
     method: POST`,
     { errorCount: 1, hasMessage: '//' }
+);
+
+// 注意：/XXX/ 不再被视为错误，因为它是业务路径占位符
+// test('错误检测', '路径包含 /XXX/ 占位符应报错', ...);
+
+test('错误检测', '路径包含 //XXX/ 应检测为 // 错误',
+    `swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  //XXXX/services/web/message:
+    get:
+      summary: Test
+      operationId: testApi`,
+    { errorCount: 1, hasMessage: '//' }  // 检测到 // 路径错误
 );
 
 test('错误检测', 'Swagger 格式应直接分析，不需要转换 (Issue #4)',
@@ -328,7 +349,7 @@ test('校验规则', 'String 字段无任何校验应警告',
     { warnCount: 1, hasMessage: 'String' }
 );
 
-test('校验规则', '邮箱字段缺少 @Email 应警告',
+test('校验规则', '邮箱字段缺少 @Email 应提示',
     `apis:
   - name: createUser
     path: /api/users
@@ -339,10 +360,10 @@ test('校验规则', '邮箱字段缺少 @Email 应警告',
         - name: userEmail
           type: String
           validation: {}`,
-    { warnCount: 2, hasMessage: '@Email' }
+    { infoCount: 1, hasMessage: '@Email' }
 );
 
-test('校验规则', '电话字段缺少正则应警告',
+test('校验规则', '电话字段缺少正则应提示',
     `apis:
   - name: createUser
     path: /api/users
@@ -353,7 +374,7 @@ test('校验规则', '电话字段缺少正则应警告',
         - name: mobilePhone
           type: String
           validation: {}`,
-    { warnCount: 2, hasMessage: '正则' }
+    { infoCount: 1, hasMessage: '正则' }
 );
 
 test('校验规则', '数值字段缺少范围应警告',
@@ -384,7 +405,7 @@ test('校验规则', 'List 字段缺少大小应警告',
     { warnCount: 1, hasMessage: '大小' }
 );
 
-test('校验规则', '生日字段缺少 @Past 应警告',
+test('校验规则', '生日字段缺少 @Past 应提示',
     `apis:
   - name: createUser
     path: /api/users
@@ -395,7 +416,7 @@ test('校验规则', '生日字段缺少 @Past 应警告',
         - name: birthday
           type: LocalDate
           validation: {}`,
-    { warnCount: 1, hasMessage: '@Past' }
+    { infoCount: 1, hasMessage: '@Past' }
 );
 
 test('校验规则', '完整有效的 YAML 应无错误',
@@ -842,6 +863,37 @@ paths:
 { fixedValue: (parsed) => {
     const param = parsed.paths['/users/{id}'].get.parameters[0];
     return param.type === 'string';
+}}
+);
+
+// 测试 basePath 场景下的自动修复（P0 Bug 验证）
+test('自动修复', 'Swagger basePath 场景 → 正确匹配参数并修复',
+`
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+basePath: /api/v1
+paths:
+  /XXX/users/detail:
+    get:
+      summary: Get user detail
+      operationId: getUserDetail
+      parameters:
+        - name: id
+          in: query
+          required: true
+          type: integer
+          description: User ID
+      responses:
+        200:
+          description: Success
+`,
+{ fixedValue: (parsed) => {
+    // 验证参数被正确修复
+    const param = parsed.paths['/XXX/users/detail'].get.parameters[0];
+    // 必填参数应该添加 minimum 校验
+    return param.minimum !== undefined;
 }}
 );
 
