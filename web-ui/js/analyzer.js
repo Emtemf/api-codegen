@@ -148,7 +148,7 @@ class ApiYamlAnalyzer {
             }
         }
 
-        // DFX-020: 检查同一路径下类注解一致性
+        // x-java-class-annotations 在 path 级别和方法级别允许不同，不做一致性告警
         this.checkAnnotationConsistency(pathAnnotations);
     }
 
@@ -156,27 +156,8 @@ class ApiYamlAnalyzer {
      * 检查注解位置一致性 (DFX-020)
      */
     checkAnnotationConsistency(pathAnnotations) {
-        for (const [path, pathInfo] of Object.entries(pathAnnotations)) {
-            const operations = pathInfo.operations;
-            if (operations.length <= 1) continue;
-
-            // 获取 path 级别的类注解
-            const pathClassAnnotations = pathInfo.classAnnotations;
-
-            // 检查每个操作的注解是否一致
-            for (const op of operations) {
-                // 检查方法级别的 x-java-class-annotations 是否与 path 级别一致
-                if (op.operationClassAnnotations) {
-                    if (!pathClassAnnotations) {
-                        this.addIssue('warn', `DFX-020: 路径 ${path} 的 ${op.method.toUpperCase()} 方法有 x-java-class-annotations，但 path 级别没有定义（需手动配置）`, 0);
-                    } else if (!this.areArraysEqual(op.operationClassAnnotations, pathClassAnnotations)) {
-                        const pathAnns = Array.isArray(pathClassAnnotations) ? pathClassAnnotations.join(', ') : JSON.stringify(pathClassAnnotations);
-                        const methodAnns = Array.isArray(op.operationClassAnnotations) ? op.operationClassAnnotations.join(', ') : JSON.stringify(op.operationClassAnnotations);
-                        this.addIssue('warn', `DFX-020: 路径 ${path} 下 ${op.method.toUpperCase()} 方法的 x-java-class-annotations 与 path 级别不一致（需手动统一配置）\n  path级别: [${pathAnns}]\n  方法级别: [${methodAnns}]`, 0);
-                    }
-                }
-            }
-        }
+        // 允许 path 与 operation 的 x-java-class-annotations 不一致，不生成 DFX-020
+        return;
     }
 
     /**

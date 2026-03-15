@@ -280,6 +280,64 @@ apis:
 
   test.describe('自动修复功能', () => {
 
+    test('选中建议后应用修复应更新编辑器并减少问题数', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const yamlWithFixableIssues = `
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+`.trim();
+
+      await appPage.setYamlContent(yamlWithFixableIssues);
+      await appPage.analyzeButton.click();
+      await page.waitForTimeout(1000);
+
+      const initialYaml = await appPage.getYamlContent();
+      const initialIssueCount = await appPage.getIssueCount();
+      expect(initialIssueCount).toBeGreaterThan(0);
+
+      const firstIssueCheckbox = page.locator('#issue-list .issue input[type="checkbox"]').first();
+      await expect(firstIssueCheckbox).toBeChecked();
+      await firstIssueCheckbox.click();
+      await expect(firstIssueCheckbox).not.toBeChecked();
+      await firstIssueCheckbox.click();
+      await expect(firstIssueCheckbox).toBeChecked();
+
+      await appPage.autoFix();
+
+      const diffModal = page.locator('#diff-modal');
+      await expect(diffModal).toBeVisible();
+
+      const applyFixButton = page.locator('#diff-modal button:has-text("应用修复")');
+      await applyFixButton.click();
+      await expect(diffModal).not.toBeVisible();
+
+      await expect.poll(async () => await appPage.getYamlContent()).not.toBe(initialYaml);
+      const updatedYaml = await appPage.getYamlContent();
+      expect(updatedYaml).toContain('minLength: 1');
+      expect(updatedYaml).toContain('required: true');
+      expect(updatedYaml).not.toBe(initialYaml);
+
+      await expect.poll(async () => await appPage.getIssueCount()).toBeLessThan(initialIssueCount);
+    });
+
     test('应能修复路径 // 问题', async ({ page }) => {
       // Collect console logs
       const consoleLogs: string[] = [];

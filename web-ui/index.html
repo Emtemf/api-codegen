@@ -3038,8 +3038,8 @@ definitions:
 
         function autoFix() {
             try {
-                // 使用原始内容作为对比基础，先去掉注释
-                var rawContent = originalYaml || yamlEditor.getValue();
+                // 使用当前编辑器内容作为修复来源，避免分析后继续基于旧快照生成修复
+                var rawContent = yamlEditor.getValue();
                 var content = stripYamlComments(rawContent);
                 var analyzer = new ApiYamlAnalyzer();
 

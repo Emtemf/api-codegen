@@ -36,75 +36,85 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * API 代码生成 Maven 插件
+ * Maven 插件入口：读取 YAML 与插件参数，完成校验分析、定义校验及代码落盘。
+ * <p>
+ * 行为边界：
+ * <ul>
+ *   <li>仅负责编排流程，不承载具体代码生成算法。</li>
+ *   <li>文件写入遵循 {@code force} 覆盖策略：默认跳过已存在文件，开启后先备份再覆盖。</li>
+ * </ul>
  */
 @Mojo(name = "generate", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ApiCodegenMojo extends AbstractMojo {
 
+    /**
+     * JDK 日志器，用于在 Maven 上下文不可用时仍可输出日志。
+     */
     private static final Logger LOG = Logger.getLogger(ApiCodegenMojo.class.getName());
 
     /**
-     * YAML 文件路径
+     * 待解析的 API 定义 YAML 文件绝对/相对路径。
      */
     @Parameter(property = "yamlFile", defaultValue = "${basedir}/src/main/resources/api.yaml", required = true)
     private String yamlFile;
 
     /**
-     * 输出目录
+     * 代码输出根目录，后续会拼接 controller/request/response 子路径。
      */
     @Parameter(property = "outputDir", defaultValue = "${basedir}/src/main/java", required = true)
     private String outputDir;
 
     /**
-     * 基础包名
+     * 生成代码使用的基础包名；可覆盖配置文件中的同名配置。
      */
     @Parameter(property = "basePackage", defaultValue = "com.apicgen", required = true)
     private String basePackage;
 
     /**
-     * 框架类型: cxf, spring
+     * 目标框架类型（cxf/spring），解析时会转为大写枚举值。
      */
     @Parameter(property = "framework", defaultValue = "cxf")
     private String framework;
 
     /**
-     * 公司名称（用于版权声明，为空时省略）
+     * 版权声明中的公司名称；为空时不拼接公司名。
      */
     @Parameter(property = "company", defaultValue = "")
     private String company;
 
     /**
-     * 开始年份
+     * 版权声明起始年份；为空时且 company 非空则使用当前年份。
      */
     @Parameter(property = "startYear", defaultValue = "")
     private String startYear;
 
     /**
-     * 是否启用 OpenAPI 注解
+     * 是否启用 OpenAPI 注解输出开关。
      */
     @Parameter(property = "openapi", defaultValue = "false")
     private boolean openapi;
 
     /**
-     * 是否强制覆盖已有文件
+     * 覆盖策略开关：
+     * false 表示目标文件已存在时跳过；true 表示先备份 .bak 后覆盖写入。
      */
     @Parameter(property = "force", defaultValue = "false")
     private boolean force;
 
     /**
-     * 配置文件路径
+     * 插件配置文件路径（默认读取项目根目录 codegen-config.yaml）。
      */
     @Parameter(property = "configFile", defaultValue = "${basedir}/codegen-config.yaml")
     private String configFile;
 
     /**
-     * 是否分析缺失的校验规则
+     * 仅执行校验规则分析，不生成代码。
      */
     @Parameter(property = "analyze", defaultValue = "false")
     private boolean analyze;
 
     /**
-     * 是否自动修复缺失的校验规则
+     * 执行校验规则自动修复并回写 YAML，修复后直接结束流程。
      */
     @Parameter(property = "autoFix", defaultValue = "false")
     private boolean autoFix;
@@ -166,7 +176,11 @@ public class ApiCodegenMojo extends AbstractMojo {
     }
 
     /**
-     * 运行校验规则分析
+     * 执行校验规则分析，并按开关决定是否回写修复结果。
+     *
+     * @param apiDefinition 已解析的 API 定义对象，不负责空值兜底
+     * @param autoFix true 表示执行自动修复并尝试写回原 YAML；false 仅输出分析结果
+     * @param yamlFile 原始 YAML 文件，用于 autoFix 回写与失败兜底文件输出
      */
     private void runValidationAnalysis(ApiDefinition apiDefinition, boolean autoFix, File yamlFile) {
         logInfo("========================================");
@@ -243,6 +257,15 @@ public class ApiCodegenMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * 加载并合并代码生成配置。
+     * <p>
+     * 合并顺序：先读取 {@code configFile}，再用插件参数覆盖关键项（framework/basePackage/openapi/copyright）。
+     * 若输出配置缺失，仅补齐默认对象，不在此处创建业务文件。
+     *
+     * @return 合并后的配置对象，供后续生成流程使用
+     * @throws IOException 配置文件存在但读取失败时抛出
+     */
     private CodegenConfig loadConfig() throws IOException {
         File configFileObj = new File(configFile);
         CodegenConfig config = new CodegenConfig();
@@ -294,6 +317,20 @@ public class ApiCodegenMojo extends AbstractMojo {
         return config;
     }
 
+    /**
+     * 按配置生成并写入 Controller/Request/Response 代码。
+     * <p>
+     * 行为边界：
+     * <ul>
+     *   <li>CXF 生成器走统一 Controller 生成路径。</li>
+     *   <li>其他生成器回退为逐 API 生成 Controller。</li>
+     *   <li>实际覆盖行为由 {@link #writeCode(Path, String, String)} 与 {@code force} 控制。</li>
+     * </ul>
+     *
+     * @param apiDefinition 已通过解析/校验的 API 定义
+     * @param config 合并后的生成配置
+     * @throws IOException 创建目录或写文件失败时抛出
+     */
     private void generateCode(ApiDefinition apiDefinition, CodegenConfig config) throws IOException {
         CodeGenerator generator = CodeGeneratorFactory.getGenerator(config);
 
@@ -406,6 +443,20 @@ public class ApiCodegenMojo extends AbstractMojo {
         return (basePkg != null ? basePkg : "com.apicgen") + ".rsp";
     }
 
+    /**
+     * 将单个 Java 文件写入磁盘，并执行覆盖策略。
+     * <p>
+     * 覆盖规则：
+     * <ul>
+     *   <li>当目标已存在且 {@code force=false} 时跳过写入并打印提示。</li>
+     *   <li>当目标已存在且 {@code force=true} 时先备份为 {@code .bak}，再覆盖写入。</li>
+     * </ul>
+     *
+     * @param filePath 目标文件完整路径
+     * @param code 待写入源码文本
+     * @param className 类名（当前仅用于接口兼容，方法内不参与逻辑分支）
+     * @throws IOException 创建目录、备份或写入失败时抛出
+     */
     private void writeCode(Path filePath, String code, String className) throws IOException {
         // 确保父目录存在
         Files.createDirectories(filePath.getParent());
@@ -435,7 +486,11 @@ public class ApiCodegenMojo extends AbstractMojo {
         Files.createDirectories(path);
     }
 
-    // 适配 Maven 日志
+    /**
+     * 输出 INFO 日志，同时写入 JDK Logger 与 Maven Log（若可用）。
+     *
+     * @param message 日志正文
+     */
     private void logInfo(String message) {
         LOG.info(message);
         Log log = getLog();
@@ -444,6 +499,11 @@ public class ApiCodegenMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * 输出 WARNING 日志，同时写入 JDK Logger 与 Maven Log（若可用）。
+     *
+     * @param message 日志正文
+     */
     private void logWarning(String message) {
         LOG.warning(message);
         Log log = getLog();
@@ -452,6 +512,11 @@ public class ApiCodegenMojo extends AbstractMojo {
         }
     }
 
+    /**
+     * 输出 ERROR/SEVERE 日志，同时写入 JDK Logger 与 Maven Log（若可用）。
+     *
+     * @param message 日志正文
+     */
     private void logSevere(String message) {
         LOG.log(Level.SEVERE, message);
         Log log = getLog();
