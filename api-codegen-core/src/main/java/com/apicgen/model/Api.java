@@ -42,8 +42,20 @@ public class Api {
 
     /**
      * 自定义注解列表（应用于该API的方法）
+     * @deprecated 使用 {@link #methodAnnotations} 代替
      */
+    @Deprecated
     private List<String> annotations;
+
+    /**
+     * 方法级别自定义注解（x-java-method-annotations）
+     */
+    private List<String> methodAnnotations;
+
+    /**
+     * 类级别自定义注解（x-java-class-annotations）
+     */
+    private List<String> classAnnotations;
 
     /**
      * 框架类型: cxf 或 spring

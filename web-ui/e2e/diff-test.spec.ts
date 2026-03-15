@@ -95,20 +95,15 @@ test.describe('Diff Feature Verification', () => {
     await page.screenshot({ path: 'D:/idea/workSpace/api-codegen/web-ui/test-results/diff-check.png' });
 
     let diffWorks = false;
-    let yamlDiffWorks = false;
-    let apiDiffWorks = false;
+    let unifiedDiffWorks = false;
 
     if (isModalVisible) {
-      // Step 6: Check if YAML diff shows content
-      console.log('Step 6: Checking YAML diff content...');
-      const diffBefore = page.locator('#diff-before');
-      const diffAfter = page.locator('#diff-after');
+      // Step 6: Check unified diff view
+      console.log('Step 6: Checking unified diff content...');
+      const diffUnified = page.locator('#diff-unified');
 
-      const beforeContent = await diffBefore.innerHTML().catch(() => '');
-      const afterContent = await diffAfter.innerHTML().catch(() => '');
-
-      console.log('Diff before content length:', beforeContent.length);
-      console.log('Diff after content length:', afterContent.length);
+      const unifiedContent = await diffUnified.innerHTML().catch(() => '');
+      console.log('Unified diff content length:', unifiedContent.length);
 
       // Check stats
       const addsText = await page.locator('#diff-adds').textContent().catch(() => '');
@@ -116,55 +111,16 @@ test.describe('Diff Feature Verification', () => {
       console.log('Adds:', addsText, 'Removes:', removesText);
 
       // Assertions - content should not be empty
-      yamlDiffWorks = beforeContent.length > 0 && afterContent.length > 0;
-      console.log('YAML Diff has content:', yamlDiffWorks);
+      unifiedDiffWorks = unifiedContent.length > 0;
+      console.log('Unified Diff has content:', unifiedDiffWorks);
 
-      // Step 7: Check if API diff shows per-API blocks with add/remove comparison
+      // Step 7: Check if API diff shows per-API blocks
       console.log('Step 7: Checking API-level diff blocks...');
-      const apiBeforeList = page.locator('#diff-api-before');
-      const apiAfterList = page.locator('#diff-api-after');
+      const apiBlocksUnified = await page.locator('#diff-unified .diff-api-unified').count().catch(() => 0);
+      console.log('API blocks in unified view:', apiBlocksUnified);
 
-      const apiBeforeHtml = await apiBeforeList.innerHTML().catch(() => '');
-      const apiAfterHtml = await apiAfterList.innerHTML().catch(() => '');
-
-      console.log('API diff before length:', apiBeforeHtml.length);
-      console.log('API diff after length:', apiAfterHtml.length);
-
-      // Check for API change blocks - should have .diff-api-java elements
-      const apiBlocksBefore = await page.locator('#diff-api-before .diff-api-block').count().catch(() => 0);
-      const apiBlocksAfter = await page.locator('#diff-api-after .diff-api-block').count().catch(() => 0);
-      console.log('API blocks before:', apiBlocksBefore, 'after:', apiBlocksAfter);
-
-      // If no blocks, check for old .diff-api-java class
-      const apiJavaBefore = await page.locator('#diff-api-before .diff-api-java').count().catch(() => 0);
-      const apiJavaAfter = await page.locator('#diff-api-after .diff-api-java').count().catch(() => 0);
-      console.log('API Java blocks before:', apiJavaBefore, 'after:', apiJavaAfter);
-
-      // Check if there are API changes displayed
-      const apiCountEl = page.locator('#diff-api-count');
-      const apiCountText = await apiCountEl.textContent().catch(() => '0');
-      console.log('API count:', apiCountText);
-
-      // API diff works if there are Java code blocks OR content in the containers
-      const hasOldFormat = apiJavaBefore + apiJavaAfter > 0;
-      const hasNewFormat = apiBlocksBefore + apiBlocksAfter > 0;
-
-      console.log('Has old side-by-side format:', hasOldFormat);
-      console.log('Has new per-API block format:', hasNewFormat);
-
-      // User wants: per-API blocks with internal add/remove comparison
-      apiDiffWorks = hasNewFormat;
-      console.log('API Diff per-API blocks:', apiDiffWorks);
-
-      // Verify that before and after show DIFFERENT content
-      // Get actual content from first API block
-      const firstBeforeBlock = await page.locator('#diff-api-before .diff-api-block').first().innerHTML().catch(() => '');
-      const firstAfterBlock = await page.locator('#diff-api-after .diff-api-block').first().innerHTML().catch(() => '');
-      const contentDifferent = firstBeforeBlock !== firstAfterBlock;
-      console.log('Before/After content is different:', contentDifferent);
-
-      // Overall diff works
-      diffWorks = yamlDiffWorks && apiDiffWorks && contentDifferent;
+      // API diff works if there are API blocks with changes
+      diffWorks = unifiedDiffWorks && apiBlocksUnified > 0;
     }
 
     // Report
@@ -172,8 +128,8 @@ test.describe('Diff Feature Verification', () => {
     console.log('- Analysis works: ' + (issueCountText !== '0' ? 'YES' : 'NO'));
     console.log('- Has validation issues: ' + (hasIssues ? 'YES' : 'NO'));
     console.log('- Auto-fix works: ' + (isModalVisible ? 'YES' : 'NO'));
-    console.log('- YAML Diff preview shows content: ' + (yamlDiffWorks ? 'YES' : 'NO'));
-    console.log('- API Diff blocks with add/remove: ' + (apiDiffWorks ? 'YES' : 'NO'));
+    console.log('- Unified Diff preview shows content: ' + (unifiedDiffWorks ? 'YES' : 'NO'));
+    console.log('- API Diff blocks present: ' + (diffWorks ? 'YES' : 'NO'));
     console.log('================\n');
 
     // Take a final screenshot of the diff modal if visible
@@ -183,8 +139,8 @@ test.describe('Diff Feature Verification', () => {
 
     // Final assertions
     expect(isModalVisible).toBe(true);
-    expect(yamlDiffWorks).toBe(true);
-    // API diff should show blocks - for now we verify it has content
-    expect(apiDiffWorks).toBe(true);
+    expect(unifiedDiffWorks).toBe(true);
+    // API diff should show blocks
+    expect(diffWorks).toBe(true);
   });
 });

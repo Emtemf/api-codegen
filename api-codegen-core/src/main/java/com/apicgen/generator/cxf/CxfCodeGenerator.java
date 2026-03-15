@@ -524,9 +524,20 @@ public class CxfCodeGenerator implements CodeGenerator {
         sb.append("@Path(\"/api\")\n");
 
         // 添加类级别自定义注解
+        // 1. 首先添加配置中的类注解
         if (config.getCustomAnnotations() != null && config.getCustomAnnotations().getClassAnnotations() != null) {
             for (String annotation : config.getCustomAnnotations().getClassAnnotations()) {
                 sb.append(annotation).append("\n");
+            }
+        }
+
+        // 2. 添加从 YAML/Swagger 解析的类注解（来自 x-java-class-annotations）
+        if (!apiDefinition.getApis().isEmpty()) {
+            Api firstApi = apiDefinition.getApis().get(0);
+            if (firstApi.getClassAnnotations() != null && !firstApi.getClassAnnotations().isEmpty()) {
+                for (String annotation : firstApi.getClassAnnotations()) {
+                    sb.append(annotation).append("\n");
+                }
             }
         }
 
@@ -554,13 +565,21 @@ public class CxfCodeGenerator implements CodeGenerator {
         sb.append("     */\n");
 
         // 添加方法级别自定义注解
+        // 1. 首先添加配置中的方法注解
         if (config.getCustomAnnotations() != null && config.getCustomAnnotations().getMethodAnnotations() != null) {
             for (String annotation : config.getCustomAnnotations().getMethodAnnotations()) {
                 sb.append("    ").append(annotation).append("\n");
             }
         }
 
-        // 添加 API 级别的自定义注解（来自接口yaml中的annotations字段）
+        // 2. 添加从 YAML/Swagger 解析的方法注解（来自 x-java-method-annotations）
+        if (api.getMethodAnnotations() != null && !api.getMethodAnnotations().isEmpty()) {
+            for (String annotation : api.getMethodAnnotations()) {
+                sb.append("    ").append(annotation).append("\n");
+            }
+        }
+
+        // 3. 添加遗留的 annotations 字段（向后兼容）
         if (api.getAnnotations() != null && !api.getAnnotations().isEmpty()) {
             for (String annotation : api.getAnnotations()) {
                 sb.append("    ").append(annotation).append("\n");

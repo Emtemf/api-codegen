@@ -65,6 +65,9 @@ npx serve -l 8080
 **5. OpenAPI 3.0 示例** - 同样支持
 ![OpenAPI Demo](docs/images/09-openapi-initial.png)
 
+**6. 修复预览** - 统一 Diff 视图显示 Java 代码变更
+![Diff Preview](docs/images/diff-preview.png)
+
 ### Web UI 操作与 Maven 命令对照
 
 | Web UI 操作 | Maven 命令 |
@@ -74,7 +77,8 @@ npx serve -l 8080
 | 设置公司名称 | `-Dcompany="MyCompany"` |
 | 配置文件 | `-DconfigFile=codegen-config.yaml` |
 | 分析校验问题 | 内置自动分析 |
-| 自动修复 | 内置自动修复 |
+| 选择性修复 | 勾选要修复的问题 |
+| 统一 Diff 预览 | 显示 Java 代码变更 |
 | 强制覆盖 | `-Dforce=true` |
 
 ### IntelliJ 插件（可选）
@@ -295,11 +299,11 @@ mvn test
 ### 端到端测试场景
 
 ```bash
-# Web UI 单元测试
-cd web-ui && node test/diff-test.js
+# Web UI 单元测试 (45 tests)
+cd web-ui && npm test
 
-# Web UI 自动化测试
-node test-ui-diff.js
+# E2E 测试 (28 tests)
+cd web-ui && npx playwright test
 ```
 
 **测试覆盖的 DFX 规则**：

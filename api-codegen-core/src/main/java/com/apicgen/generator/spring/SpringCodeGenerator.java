@@ -128,6 +128,25 @@ public class SpringCodeGenerator implements CodeGenerator {
         sb.append("package ").append(getControllerPackage(config)).append(";\n\n");
         sb.append(SPRING_IMPORTS);
         sb.append("\n@RestController\n");
+
+        // 添加类级别自定义注解
+        // 1. 首先添加配置中的类注解
+        if (config.getCustomAnnotations() != null && config.getCustomAnnotations().getClassAnnotations() != null) {
+            for (String annotation : config.getCustomAnnotations().getClassAnnotations()) {
+                sb.append(annotation).append("\n");
+            }
+        }
+
+        // 2. 添加从 YAML/Swagger 解析的类注解（来自 x-java-class-annotations）
+        if (!apiDefinition.getApis().isEmpty()) {
+            Api firstApi = apiDefinition.getApis().get(0);
+            if (firstApi.getClassAnnotations() != null && !firstApi.getClassAnnotations().isEmpty()) {
+                for (String annotation : firstApi.getClassAnnotations()) {
+                    sb.append(annotation).append("\n");
+                }
+            }
+        }
+
         sb.append("public class ").append(className).append(" {\n\n");
 
         for (Api api : apiDefinition.getApis()) {
@@ -149,8 +168,23 @@ public class SpringCodeGenerator implements CodeGenerator {
         }
 
         // 添加自定义注解
+        // 1. 首先添加配置中的方法注解
         if (config.getCustomAnnotations() != null && config.getCustomAnnotations().getMethodAnnotations() != null) {
             for (String ann : config.getCustomAnnotations().getMethodAnnotations()) {
+                sb.append("    ").append(ann).append("\n");
+            }
+        }
+
+        // 2. 添加从 YAML/Swagger 解析的方法注解（来自 x-java-method-annotations）
+        if (api.getMethodAnnotations() != null && !api.getMethodAnnotations().isEmpty()) {
+            for (String ann : api.getMethodAnnotations()) {
+                sb.append("    ").append(ann).append("\n");
+            }
+        }
+
+        // 3. 添加遗留的 annotations 字段（向后兼容）
+        if (api.getAnnotations() != null && !api.getAnnotations().isEmpty()) {
+            for (String ann : api.getAnnotations()) {
                 sb.append("    ").append(ann).append("\n");
             }
         }

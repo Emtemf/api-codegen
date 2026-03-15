@@ -71,11 +71,14 @@ public class SwaggerConverter {
             String path = pathKeys.next();
             JsonNode pathItem = paths.get(path);
 
+            // 提取路径级别的 x-java-class-annotations
+            List<String> classAnnotations = extractAnnotations(pathItem, "x-java-class-annotations");
+
             // 处理各种 HTTP 方法
             for (String method : Arrays.asList("get", "post", "put", "delete", "patch")) {
                 if (pathItem.has(method)) {
                     JsonNode operation = pathItem.get(method);
-                    Api api = convertOperation(path, method.toUpperCase(), operation, root, basePath);
+                    Api api = convertOperation(path, method.toUpperCase(), operation, pathItem, root, basePath, classAnnotations);
                     apis.add(api);
                 }
             }
@@ -86,7 +89,7 @@ public class SwaggerConverter {
     }
 
     @SuppressWarnings("unchecked")
-    private Api convertOperation(String path, String method, JsonNode operation, JsonNode root, String basePath) {
+    private Api convertOperation(String path, String method, JsonNode operation, JsonNode pathItem, JsonNode root, String basePath, List<String> classAnnotations) {
         Api api = new Api();
 
         // 获取 operationId
@@ -118,7 +121,43 @@ public class SwaggerConverter {
             api.setResponse(responseDef);
         }
 
+        // 解析自定义注解
+        // 1. 类级别注解（从 pathItem 传入）
+        if (classAnnotations != null && !classAnnotations.isEmpty()) {
+            api.setClassAnnotations(classAnnotations);
+        }
+
+        // 2. 方法级别注解（从 operation 提取）
+        List<String> methodAnnotations = extractAnnotations(operation, "x-java-method-annotations");
+        if (methodAnnotations != null && !methodAnnotations.isEmpty()) {
+            api.setMethodAnnotations(methodAnnotations);
+        }
+
         return api;
+    }
+
+    /**
+     * 从 JsonNode 提取 x-java-class-annotations 或 x-java-method-annotations
+     */
+    @SuppressWarnings("unchecked")
+    private List<String> extractAnnotations(JsonNode node, String fieldName) {
+        if (node == null || !node.has(fieldName)) {
+            return null;
+        }
+
+        JsonNode annotationsNode = node.get(fieldName);
+        if (!annotationsNode.isArray()) {
+            return null;
+        }
+
+        List<String> annotations = new ArrayList<>();
+        for (JsonNode annotation : annotationsNode) {
+            if (annotation.isTextual()) {
+                annotations.add(annotation.asText());
+            }
+        }
+
+        return annotations.isEmpty() ? null : annotations;
     }
 
     @SuppressWarnings("unchecked")
