@@ -470,13 +470,14 @@ public class SwaggerConverter {
     }
 
     /**
-     * 规范化路径：修复 // 和 /XXX/ 前缀
+     * 规范化路径：统一分隔符、折叠重复分隔符，并修复 /XXX/ 前缀
      */
     private String normalizePath(String path) {
-        // 修复路径包含 // 的问题
-        if (path.contains("//")) {
-            path = path.replaceAll("/+", "/");
+        if (path == null || path.isEmpty()) {
+            return path;
         }
+
+        path = path.replaceAll("[/\\\\]+", "/");
 
         // 修复 /XXX/ 前缀（如 /XXX/users -> /users）
         if (path.matches("^/[A-Z][A-Z0-9_]*[/].*")) {

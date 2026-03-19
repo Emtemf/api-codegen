@@ -136,17 +136,117 @@ function computeImpact(before, after) {
             var beforePaths = beforeParsed.paths || {};
             var afterPaths = afterParsed.paths || {};
 
-            // Normalize path: ensure it starts with /
+            // Normalize path: convert backslashes, collapse duplicate separators, ensure leading /
             function normalizePath(path) {
                 if (!path) return path;
-                // Remove duplicate slashes
-                var normalized = path.replace(/\/+/g, '/');
-                // Remove /XXX/ prefix (placeholder path) - support any uppercase prefix
-                normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//i, '/');
+                var normalized = String(path).replace(/[\\/]+/g, '/');
+                normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//, '/');
                 if (!normalized.startsWith('/')) {
                     normalized = '/' + normalized;
                 }
                 return normalized;
+            }
+
+            function getRefSchema(doc, ref) {
+                if (!doc || !ref || ref.charAt(0) !== '#') {
+                    return null;
+                }
+                var parts = ref.substring(2).split('/');
+                var current = doc;
+                for (var i = 0; i < parts.length; i++) {
+                    if (!current) {
+                        return null;
+                    }
+                    current = current[parts[i]];
+                }
+                return current || null;
+            }
+
+            function resolveSchema(doc, schema, seenRefs) {
+                if (!schema) {
+                    return null;
+                }
+                if (schema.$ref) {
+                    seenRefs = seenRefs || {};
+                    if (seenRefs[schema.$ref]) {
+                        return null;
+                    }
+                    seenRefs[schema.$ref] = true;
+                    var refSchema = getRefSchema(doc, schema.$ref);
+                    return refSchema ? resolveSchema(doc, refSchema, seenRefs) : null;
+                }
+                return schema;
+            }
+
+            function getRequestBodySchema(doc, operation) {
+                if (!operation || !operation.requestBody || !operation.requestBody.content) {
+                    return null;
+                }
+                var jsonContent = operation.requestBody.content['application/json'];
+                if (!jsonContent || !jsonContent.schema) {
+                    return null;
+                }
+                return resolveSchema(doc, jsonContent.schema, {});
+            }
+
+            function collectSchemaChanges(beforeDoc, beforeSchema, afterDoc, afterSchema, prefix) {
+                var changes = [];
+                var resolvedBefore = resolveSchema(beforeDoc, beforeSchema, {});
+                var resolvedAfter = resolveSchema(afterDoc, afterSchema, {});
+
+                if (!resolvedAfter) {
+                    return changes;
+                }
+
+                var beforeProperties = resolvedBefore && resolvedBefore.properties ? resolvedBefore.properties : {};
+                var afterProperties = resolvedAfter.properties || {};
+
+                for (var propName in afterProperties) {
+                    var beforeProp = beforeProperties[propName];
+                    var afterProp = afterProperties[propName];
+                    var currentPrefix = prefix ? prefix + '.' + propName : propName;
+                    var resolvedBeforeProp = resolveSchema(beforeDoc, beforeProp, {});
+                    var resolvedAfterProp = resolveSchema(afterDoc, afterProp, {});
+
+                    if (resolvedAfterProp && resolvedAfterProp.properties) {
+                        changes = changes.concat(collectSchemaChanges(beforeDoc, beforeProp, afterDoc, afterProp, currentPrefix));
+                    }
+
+                    if (resolvedAfterProp && resolvedAfterProp.type === 'array' && resolvedAfterProp.items) {
+                        var beforeItems = resolvedBeforeProp && resolvedBeforeProp.items ? resolvedBeforeProp.items : null;
+                        changes = changes.concat(collectSchemaChanges(beforeDoc, beforeItems, afterDoc, resolvedAfterProp.items, currentPrefix + '[]'));
+                    }
+
+                    var propsToCompare = ['type', 'format', 'minimum', 'maximum', 'minLength', 'maxLength', 'pattern'];
+                    propsToCompare.forEach(function(prop) {
+                        var beforeValue = resolvedBeforeProp ? resolvedBeforeProp[prop] : undefined;
+                        var afterValue = resolvedAfterProp ? resolvedAfterProp[prop] : undefined;
+                        if (beforeValue !== afterValue && afterValue !== undefined) {
+                            changes.push({ prop: prefix + '.' + propName + ' ' + prop, before: beforeValue === undefined ? '(无)' : beforeValue, after: afterValue });
+                        }
+                    });
+
+                    var beforeValidation = resolvedBeforeProp && resolvedBeforeProp['x-java-validation'] ? resolvedBeforeProp['x-java-validation'] : {};
+                    var afterValidation = resolvedAfterProp && resolvedAfterProp['x-java-validation'] ? resolvedAfterProp['x-java-validation'] : {};
+                    ['past', 'future'].forEach(function(rule) {
+                        var beforeValue = beforeValidation[rule];
+                        var afterValue = afterValidation[rule];
+                        if (beforeValue !== afterValue && afterValue !== undefined) {
+                            changes.push({ prop: prefix + '.' + propName + ' ' + rule, before: beforeValue === undefined ? '(无)' : beforeValue, after: afterValue });
+                        }
+                    });
+                }
+
+                return changes;
+            }
+
+            function collectRequestBodyChanges(beforeMethod, afterMethod) {
+                var beforeSchema = getRequestBodySchema(beforeParsed, beforeMethod);
+                var afterSchema = getRequestBodySchema(afterParsed, afterMethod);
+                if (!afterSchema) {
+                    return [];
+                }
+                return collectSchemaChanges(beforeParsed, beforeSchema, afterParsed, afterSchema, 'requestBody');
             }
 
             // Build normalized map for before paths
@@ -189,9 +289,17 @@ function computeImpact(before, after) {
                     }
                 } else if (originalPath !== path) {
                     // Path was fixed
-                    var afterOpFixed = afterPath[Object.keys(afterPath)[0]];
-                    var beforeOpFixed = beforePath[originalPath] || {};
+                    var methodKey = Object.keys(afterPath)[0];
+                    var afterOpFixed = afterPath[methodKey];
+                    var beforeOpFixed = beforePath[methodKey] || {};
                     var changes = [{ prop: 'path', before: originalPath, after: path }];
+
+                    if (!beforeOpFixed.operationId && afterOpFixed.operationId) {
+                        changes.push({ prop: 'operationId', before: '(无)', after: afterOpFixed.operationId });
+                    }
+                    if (!beforeOpFixed.description && afterOpFixed.description) {
+                        changes.push({ prop: 'description', before: '(无)', after: afterOpFixed.description });
+                    }
 
                     // 比较参数变化
                     if (afterOpFixed.parameters && afterOpFixed.parameters.length > 0) {
@@ -204,6 +312,16 @@ function computeImpact(before, after) {
                             if (!beforeParam) {
                                 changes.push({ prop: '参数 ' + param.name, before: '(无)', after: '新增' });
                             } else {
+                                // 检查description变化
+                                if (!beforeParam.description && param.description) {
+                                    changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
+                                }
+                                // 检查type变化（支持 param.type 和 param.schema.type）
+                                var beforeType = beforeParam.type || (beforeParam.schema && beforeParam.schema.type);
+                                var afterType = param.type || (param.schema && param.schema.type);
+                                if (!beforeType && afterType) {
+                                    changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: afterType });
+                                }
                                 // 检查校验规则变化
                                 var beforeMinLength = beforeParam.minLength || (beforeParam.schema && beforeParam.schema.minLength);
                                 var afterMinLength = param.minLength || (param.schema && param.schema.minLength);
@@ -234,10 +352,12 @@ function computeImpact(before, after) {
                         });
                     }
 
+                    changes = changes.concat(collectRequestBodyChanges(beforeOpFixed, afterOpFixed));
+
                     result.apis.push({
                         path: path,
                         originalPath: originalPath,
-                        method: Object.keys(afterPath)[0],
+                        method: methodKey,
                         name: afterOpFixed.operationId || afterOpFixed.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
                         summary: afterOpFixed.summary || '',
                         operationId: afterOpFixed.operationId || '',
@@ -338,6 +458,8 @@ function computeImpact(before, after) {
                                 });
                             }
 
+                            changes = changes.concat(collectRequestBodyChanges(beforeMethod, afterMethod));
+
                             if (changes.length > 0) {
                                 hasActualChange = true;
                                 pathChanges = pathChanges.concat(changes);
@@ -430,6 +552,44 @@ paths:
     // 由于 normalizePath 处理了 // -> /，这里应该检测不到变更
     // 测试正常情况
     assertEqual(impact.apis.length, 0, '相同路径不应该有变更');
+});
+
+test('computeImpact: 应检测到反斜杠路径规范化修复', () => {
+    const before = `
+paths:
+  /api\\\\users:
+    get:
+      summary: Get users
+`;
+    const after = `
+paths:
+  /api/users:
+    get:
+      summary: Get users
+`;
+    const impact = computeImpact(before, after);
+
+    assertEqual(impact.apis.length, 1, '反斜杠路径修复应该保留为一次修改');
+    assertContains(impact.apis[0].changes, { prop: 'path', before: '/api\\\\users', after: '/api/users' }, '应该检测到反斜杠路径修复');
+});
+
+test('computeImpact: 应检测到混合分隔符路径规范化修复', () => {
+    const before = `
+paths:
+  /XXX/users//detail:
+    get:
+      summary: Get user detail
+`;
+    const after = `
+paths:
+  /users/detail:
+    get:
+      summary: Get user detail
+`;
+    const impact = computeImpact(before, after);
+
+    assertEqual(impact.apis.length, 1, '混合分隔符路径修复应该保留为一次修改');
+    assertContains(impact.apis[0].changes, { prop: 'path', before: '/XXX/users//detail', after: '/users/detail' }, '应该检测到混合分隔符路径修复');
 });
 
 test('computeImpact: 应检测到新增 API', () => {
@@ -590,6 +750,40 @@ paths:
     console.log('  (跳过 requestBody format 测试 - 需要额外处理)');
 });
 
+test('computeImpact: requestBody schema-only 变化应至少保留 YAML 差异', () => {
+    const before = `
+paths:
+  /users:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+`;
+    const after = `
+paths:
+  /users:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+`;
+    const impact = computeImpact(before, after);
+
+    assertEqual(impact.apis.length, 1, 'requestBody schema-only 变化应保留为 API 修改');
+    assertContains(impact.apis[0].changes, { prop: 'requestBody.email format', before: '(无)', after: 'email' }, '应该检测到 requestBody schema format 变化');
+});
+
 test('computeImpact: 应检测到参数描述变化', () => {
     const before = `
 paths:
@@ -734,6 +928,140 @@ paths:
     assertEqual(impact.apis.length, 1, '应该有1个API变更');
     const api = impact.apis[0];
     assertEqual(api.path, '/users/profile', '路径应该以/开头');
+});
+
+test('computeImpact: 重复反斜杠路径修复后仍应保留 schema 级变更', () => {
+    const before = `
+swagger: '2.0'
+paths:
+  \\users\\\\{id}:
+    get:
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+`;
+    const after = `
+swagger: '2.0'
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+`;
+    const impact = computeImpact(before, after);
+
+    assertEqual(impact.apis.length, 1, '应该检测到1个API变更');
+    assertContains(impact.apis[0].changes, { prop: 'path', before: '\\users\\\\{id}', after: '/users/{id}' }, '应该检测到反斜杠路径规范化');
+    assertContains(impact.apis[0].changes, { prop: '参数 id type', before: '(无)', after: 'integer' }, '应该保留 schema type 变化');
+    assertContains(impact.apis[0].changes, { prop: '参数 id minimum', before: '(无)', after: 1 }, '应该保留 schema minimum 变化');
+});
+
+test('computeImpact: 路径中的重复反斜杠应视为同一接口而非新增接口', () => {
+    const before = `
+swagger: '2.0'
+paths:
+  \\users\\\\profile:
+    get:
+      summary: Get profile
+      operationId: getProfile
+`;
+    const after = `
+swagger: '2.0'
+paths:
+  /users/profile:
+    get:
+      summary: Get profile
+      operationId: getProfile
+      description: Profile details
+`;
+    const impact = computeImpact(before, after);
+
+    assertEqual(impact.apis.length, 1, '应该检测到1个API变更');
+    assertEqual(impact.apis[0].type, 'modified', '反斜杠路径规范化后应该是修改类型');
+    assertContains(impact.apis[0].changes, { prop: 'path', before: '\\users\\\\profile', after: '/users/profile' }, '应该检测到路径修复');
+    assertContains(impact.apis[0].changes, { prop: 'description', before: '(无)', after: 'Profile details' }, '应该保留其他字段变化');
+});
+
+test('computeImpact: 路径重复斜杠修复后仍应保留 schema 级变更', () => {
+    const before = `
+swagger: '2.0'
+paths:
+  /users//{id}:
+    get:
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+`;
+    const after = `
+swagger: '2.0'
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+`;
+    const impact = computeImpact(before, after);
+
+    assertEqual(impact.apis.length, 1, '应该检测到1个API变更');
+    assertContains(impact.apis[0].changes, { prop: 'path', before: '/users//{id}', after: '/users/{id}' }, '应该检测到路径规范化');
+    assertContains(impact.apis[0].changes, { prop: '参数 id type', before: '(无)', after: 'integer' }, '应该保留 schema type 变化');
+    assertContains(impact.apis[0].changes, { prop: '参数 id minimum', before: '(无)', after: 1 }, '应该保留 schema minimum 变化');
+});
+
+test('computeImpact: 仅 requestBody schema 变化可由 UI YAML fallback 预览', () => {
+    const before = `
+openapi: '3.0.0'
+paths:
+  /users:
+    post:
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+`;
+    const after = `
+openapi: '3.0.0'
+paths:
+  /users:
+    post:
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+`;
+    const impact = computeImpact(before, after);
+
+    assertEqual(impact.apis.length, 1, 'requestBody schema-only 变化应保留为 API 修改');
+    assertContains(impact.apis[0].changes, { prop: 'requestBody.email format', before: '(无)', after: 'email' }, '应该检测到 requestBody schema format 变化');
 });
 
 // ============================================

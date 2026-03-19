@@ -2152,6 +2152,11 @@ definitions:
             yamlEditor.on('change', function() {
                 updateStatus();
                 document.getElementById('yaml-info').textContent = '已修改';
+                window.currentIssues = [];
+                selectedIssues = {};
+                document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">内容已变更，请重新分析</div></div>';
+                document.getElementById('issue-count').textContent = '0';
+                document.getElementById('issue-count').className = 'issue-count';
             });
 
             updateStatus();
@@ -2317,6 +2322,21 @@ definitions:
         // Store issues with selection state
         var selectedIssues = {};
 
+        function getIssueKey(issue, fallbackIndex) {
+            if (issue && issue.key) return issue.key;
+            return 'issue-' + fallbackIndex;
+        }
+
+        function findIssueByKey(issueKey) {
+            var issues = window.currentIssues || [];
+            for (var i = 0; i < issues.length; i++) {
+                if (getIssueKey(issues[i], i) === issueKey) {
+                    return issues[i];
+                }
+            }
+            return null;
+        }
+
         function renderIssues(issues) {
             var container = document.getElementById('issue-list');
 
@@ -2325,11 +2345,10 @@ definitions:
                 return;
             }
 
-            // Reset selection - info issues not selected by default (they don't need fixing)
+            // Reset selection - default to selected for all auto-fixable issues
             selectedIssues = {};
             issues.forEach(function(issue, i) {
-                // Default to selected, except info which doesn't need fixing
-                selectedIssues[i] = issue.severity !== 'info';
+                selectedIssues[i] = isAutoFixable(issue);
             });
 
             var html = '<div class="issue-select-all">' +
@@ -2883,7 +2902,8 @@ definitions:
             if (modified) {
                 yamlEditor.setValue(lines.join('\n'));
                 closeEditModal();
-                setMessage('已添加描述，请点击"分析"重新检查');
+                analyze();
+                setMessage('已添加描述并重新分析');
             } else {
                 alert('未能找到对应位置，请手动编辑 YAML 文件');
                 closeEditModal();
@@ -2996,24 +3016,52 @@ definitions:
         function isAutoFixable(issue) {
             var msg = issue.message || '';
 
-            // 不能自动修复的问题类型
-            var unfixablePatterns = [
-                '缺少 description',           // 需要用户编写描述
-                'x-java-class-annotations',   // 需要用户决定配置
-                'annotations',                // 需要用户决定配置
-                '不一致'                      // 需要用户决定配置
-            ];
-            // 注意：minLength > maxLength 和 minimum > maximum 可以自动修复（交换值）
+            if (!msg) {
+                return false;
+            }
 
+            if ((issue.severity === 'error') && (msg.includes('重复的') || msg.includes('YAML 语法'))) {
+                return false;
+            }
+
+            var unfixablePatterns = [
+                '缺少 description',
+                '需手动添加描述',
+                'x-java-class-annotations',
+                'annotations',
+                '不一致'
+            ];
             for (var i = 0; i < unfixablePatterns.length; i++) {
                 if (msg.includes(unfixablePatterns[i])) {
                     return false;
                 }
             }
 
-            // 其他问题都可以自动修复
-            return true;
+            return issue.field === 'path' ||
+                msg.includes('路径不能包含重复斜杠') ||
+                msg.includes('路径必须以 / 开头') ||
+                msg.includes('缺少 operationId') ||
+                msg.includes('缺少类型定义') ||
+                msg.includes('notNull') ||
+                msg.includes('@NotNull') ||
+                msg.includes('@Email') ||
+                msg.includes('邮箱') ||
+                msg.includes('正则') ||
+                msg.includes('pattern') ||
+                msg.includes('电话') ||
+                msg.includes('长度') ||
+                msg.includes('范围') ||
+                msg.includes('minLength') ||
+                msg.includes('maxLength') ||
+                msg.includes('minimum') ||
+                msg.includes('maximum') ||
+                msg.includes('@Past') ||
+                msg.includes('生日') ||
+                msg.includes('@Future') ||
+                msg.includes('计划') ||
+                msg.includes('预约');
         }
+
 
         function toggleIssue(index, checked) {
             selectedIssues[index] = checked;
@@ -3047,11 +3095,10 @@ definitions:
                 var issues = window.currentIssues || [];
                 var selectedIndices = Object.keys(selectedIssues).filter(function(i) { return selectedIssues[i]; }).map(function(i) { return parseInt(i); });
 
-                // 如果没有选中任何问题，默认选择所有可修复的问题（非"需手动"）
+                // 如果没有选中任何问题，默认选择所有可自动修复的问题
                 if (selectedIndices.length === 0) {
                     issues.forEach(function(issue, i) {
-                        // 选择所有非"需手动"的问题（包括 error、warn、info）
-                        if (!issue.message.includes('需手动')) {
+                        if (isAutoFixable(issue)) {
                             selectedIndices.push(i);
                         }
                     });
@@ -3225,6 +3272,19 @@ definitions:
         }
 
         /**
+         * 统一路径标准化：转换反斜杠、折叠重复分隔符、修复占位前缀
+         */
+        function normalizePathForDiff(path) {
+            if (!path) return path;
+            var normalized = String(path).replace(/[\\/]+/g, '/');
+            normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//, '/');
+            if (!normalized.startsWith('/')) {
+                normalized = '/' + normalized;
+            }
+            return normalized;
+        }
+
+        /**
          * Show diff preview modal - 统一视图显示 Java 代码风格对比
          */
         function showDiffPreview(before, after) {
@@ -3242,16 +3302,7 @@ definitions:
 
             // 路径标准化函数 - 用于匹配修复前后的路径
             function normalizePath(path) {
-                if (!path) return path;
-                // 删除重复斜杠
-                var normalized = path.replace(/\/+/g, '/');
-                // 删除 /XXX/ 前缀（占位符路径）
-                normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//, '/');
-                // 确保以 / 开头
-                if (!normalized.startsWith('/')) {
-                    normalized = '/' + normalized;
-                }
-                return normalized;
+                return normalizePathForDiff(path);
             }
 
             // 构建标准化路径映射
@@ -3407,7 +3458,50 @@ definitions:
 
                 // 如果没有变化
                 if (changeCount === 0) {
-                    unifiedHtml = '<div class="diff-no-changes"><div class="diff-no-changes-icon">✓</div><div class="diff-no-changes-text">没有需要修复的问题</div></div>';
+                    if (before !== after) {
+                        var impact = computeImpact(before, after);
+                        var hasStructuredChanges = (impact.apis && impact.apis.length > 0) || (impact.fields && impact.fields.length > 0);
+                        var fallbackDiff = Diff.diffLines(before, after);
+
+                        unifiedHtml = '<div class="diff-api-unified"><div class="diff-api-code-section">';
+
+                        if (hasStructuredChanges) {
+                            unifiedHtml += '<div class="diff-changes">';
+
+                            if (impact.apis && impact.apis.length > 0) {
+                                unifiedHtml += '<div style="margin-bottom: 8px; color: #79c0ff; font-weight: 600;">接口/请求变更</div>';
+                                impact.apis.forEach(function(api) {
+                                    var apiLabel = escapeHtml((api.method || '').toUpperCase() + ' ' + (api.path || api.originalPath || api.name || ''));
+                                    unifiedHtml += '<div style="margin-bottom: 6px; color: #c9d1d9;">• ' + apiLabel + '</div>';
+                                    (api.changes || []).forEach(function(change) {
+                                        unifiedHtml += '<div style="padding-left: 16px; color: #8b949e;">- <span class="diff-prop">' + escapeHtml(change.prop) + '</span>: <span class="diff-old-val">' + escapeHtml(String(change.before)) + '</span> → <span class="diff-new-val">' + escapeHtml(String(change.after)) + '</span></div>';
+                                    });
+                                });
+                            }
+
+                            if (impact.fields && impact.fields.length > 0) {
+                                if (impact.apis && impact.apis.length > 0) {
+                                    unifiedHtml += '<div style="height: 8px;"></div>';
+                                }
+                                unifiedHtml += '<div style="margin-bottom: 8px; color: #79c0ff; font-weight: 600;">模型/字段变更</div>';
+                                impact.fields.forEach(function(field) {
+                                    var fieldLabel = escapeHtml((field.className || 'Model') + '.' + (field.field || 'field'));
+                                    var fieldType = field.fieldType ? ' <span class="diff-field-type">(' + escapeHtml(field.fieldType) + ')</span>' : '';
+                                    unifiedHtml += '<div style="margin-bottom: 6px; color: #c9d1d9;">• ' + fieldLabel + fieldType + '</div>';
+                                    (field.changes || []).forEach(function(change) {
+                                        unifiedHtml += '<div style="padding-left: 16px; color: #8b949e;">- ' + escapeHtml(String(change)) + '</div>';
+                                    });
+                                });
+                            }
+
+                            unifiedHtml += '</div>';
+                        }
+
+                        unifiedHtml += '<div class="diff-code-block">' + renderUnifiedDiff(before, after, fallbackDiff) + '</div>';
+                        unifiedHtml += '</div></div>';
+                    } else {
+                        unifiedHtml = '<div class="diff-no-changes"><div class="diff-no-changes-icon">✓</div><div class="diff-no-changes-text">没有需要修复的问题</div></div>';
+                    }
                 }
 
                 // 渲染到统一容器
@@ -3433,6 +3527,15 @@ definitions:
                 var fixStats = window.currentFixStats || {};
                 if (fixStats.paramsFixed > 0) {
                     document.getElementById('diff-adds').textContent = fixStats.paramsFixed + ' 个参数已修复';
+                } else if (changeCount === 0 && before !== after) {
+                    var fallbackDiff = Diff.diffLines(before, after);
+                    var fallbackAddCount = 0;
+                    fallbackDiff.forEach(function(part) {
+                        if (part.added) {
+                            fallbackAddCount += (part.value.match(/\n/g) || []).length || 1;
+                        }
+                    });
+                    document.getElementById('diff-adds').textContent = fallbackAddCount + ' 处修改';
                 } else {
                     document.getElementById('diff-adds').textContent = modifyCount + ' 处修改';
                 }
@@ -4386,15 +4489,109 @@ definitions:
 
                     // Normalize path: ensure it starts with /
                     function normalizePath(path) {
-                        if (!path) return path;
-                        // Remove duplicate slashes
-                        var normalized = path.replace(/\/+/g, '/');
-                        // Remove /XXX/ prefix (placeholder path)
-                        normalized = normalized.replace(/^\/XXX\//, '/');
-                        if (!normalized.startsWith('/')) {
-                            normalized = '/' + normalized;
+                        return normalizePathForDiff(path);
+                    }
+
+                    function getRefSchema(doc, ref) {
+                        if (!doc || !ref || ref.charAt(0) !== '#') {
+                            return null;
                         }
-                        return normalized;
+                        var parts = ref.substring(2).split('/');
+                        var current = doc;
+                        for (var i = 0; i < parts.length; i++) {
+                            if (!current) {
+                                return null;
+                            }
+                            current = current[parts[i]];
+                        }
+                        return current || null;
+                    }
+
+                    function resolveSchema(doc, schema, seenRefs) {
+                        if (!schema) {
+                            return null;
+                        }
+                        if (schema.$ref) {
+                            seenRefs = seenRefs || {};
+                            if (seenRefs[schema.$ref]) {
+                                return null;
+                            }
+                            seenRefs[schema.$ref] = true;
+                            var refSchema = getRefSchema(doc, schema.$ref);
+                            return refSchema ? resolveSchema(doc, refSchema, seenRefs) : null;
+                        }
+                        return schema;
+                    }
+
+                    function getRequestBodySchema(doc, operation) {
+                        if (!operation || !operation.requestBody || !operation.requestBody.content) {
+                            return null;
+                        }
+                        var jsonContent = operation.requestBody.content['application/json'];
+                        if (!jsonContent || !jsonContent.schema) {
+                            return null;
+                        }
+                        return resolveSchema(doc, jsonContent.schema, {});
+                    }
+
+                    function collectSchemaChanges(beforeDoc, beforeSchema, afterDoc, afterSchema, prefix) {
+                        var changes = [];
+                        var resolvedBefore = resolveSchema(beforeDoc, beforeSchema, {});
+                        var resolvedAfter = resolveSchema(afterDoc, afterSchema, {});
+
+                        if (!resolvedAfter) {
+                            return changes;
+                        }
+
+                        var beforeProperties = resolvedBefore && resolvedBefore.properties ? resolvedBefore.properties : {};
+                        var afterProperties = resolvedAfter.properties || {};
+
+                        for (var propName in afterProperties) {
+                            var beforeProp = beforeProperties[propName];
+                            var afterProp = afterProperties[propName];
+                            var currentPrefix = prefix ? prefix + '.' + propName : propName;
+                            var resolvedBeforeProp = resolveSchema(beforeDoc, beforeProp, {});
+                            var resolvedAfterProp = resolveSchema(afterDoc, afterProp, {});
+
+                            if (resolvedAfterProp && resolvedAfterProp.properties) {
+                                changes = changes.concat(collectSchemaChanges(beforeDoc, beforeProp, afterDoc, afterProp, currentPrefix));
+                            }
+
+                            if (resolvedAfterProp && resolvedAfterProp.type === 'array' && resolvedAfterProp.items) {
+                                var beforeItems = resolvedBeforeProp && resolvedBeforeProp.items ? resolvedBeforeProp.items : null;
+                                changes = changes.concat(collectSchemaChanges(beforeDoc, beforeItems, afterDoc, resolvedAfterProp.items, currentPrefix + '[]'));
+                            }
+
+                            var propsToCompare = ['type', 'format', 'minimum', 'maximum', 'minLength', 'maxLength', 'pattern'];
+                            propsToCompare.forEach(function(prop) {
+                                var beforeValue = resolvedBeforeProp ? resolvedBeforeProp[prop] : undefined;
+                                var afterValue = resolvedAfterProp ? resolvedAfterProp[prop] : undefined;
+                                if (beforeValue !== afterValue && afterValue !== undefined) {
+                                    changes.push({ prop: prefix + '.' + propName + ' ' + prop, before: beforeValue === undefined ? '(无)' : beforeValue, after: afterValue });
+                                }
+                            });
+
+                            var beforeValidation = resolvedBeforeProp && resolvedBeforeProp['x-java-validation'] ? resolvedBeforeProp['x-java-validation'] : {};
+                            var afterValidation = resolvedAfterProp && resolvedAfterProp['x-java-validation'] ? resolvedAfterProp['x-java-validation'] : {};
+                            ['past', 'future'].forEach(function(rule) {
+                                var beforeValue = beforeValidation[rule];
+                                var afterValue = afterValidation[rule];
+                                if (beforeValue !== afterValue && afterValue !== undefined) {
+                                    changes.push({ prop: prefix + '.' + propName + ' ' + rule, before: beforeValue === undefined ? '(无)' : beforeValue, after: afterValue });
+                                }
+                            });
+                        }
+
+                        return changes;
+                    }
+
+                    function collectRequestBodyChanges(beforeMethod, afterMethod) {
+                        var beforeSchema = getRequestBodySchema(beforeParsed, beforeMethod);
+                        var afterSchema = getRequestBodySchema(afterParsed, afterMethod);
+                        if (!afterSchema) {
+                            return [];
+                        }
+                        return collectSchemaChanges(beforeParsed, beforeSchema, afterParsed, afterSchema, 'requestBody');
                     }
 
                     // Build normalized map for before paths
@@ -4439,9 +4636,17 @@ definitions:
                             }
                         } else if (originalPath !== path) {
                             // Path was fixed (//users -> /users or users -> /users)
-                            var afterOpFixed = afterPath[Object.keys(afterPath)[0]];
-                            var beforeOpFixed = beforePath[originalPath] || {};
+                            var methodKey = Object.keys(afterPath)[0];
+                            var afterOpFixed = afterPath[methodKey];
+                            var beforeOpFixed = beforePath[methodKey] || {};
                             var changes = [{ prop: 'path', before: originalPath, after: path }];
+
+                            if (!beforeOpFixed.operationId && afterOpFixed.operationId) {
+                                changes.push({ prop: 'operationId', before: '(无)', after: afterOpFixed.operationId });
+                            }
+                            if (!beforeOpFixed.description && afterOpFixed.description) {
+                                changes.push({ prop: 'description', before: '(无)', after: afterOpFixed.description });
+                            }
 
                             // 比较参数变化
                             if (afterOpFixed.parameters && afterOpFixed.parameters.length > 0) {
@@ -4457,6 +4662,12 @@ definitions:
                                         // 检查description变化
                                         if (!beforeParam.description && param.description) {
                                             changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
+                                        }
+                                        // 检查type变化（支持 param.type 和 param.schema.type）
+                                        var beforeType = beforeParam.type || (beforeParam.schema && beforeParam.schema.type);
+                                        var afterType = param.type || (param.schema && param.schema.type);
+                                        if (!beforeType && afterType) {
+                                            changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: afterType });
                                         }
                                         // 检查校验规则变化
                                         var beforeMinLength = beforeParam.minLength || (beforeParam.schema && beforeParam.schema.minLength);
@@ -4488,10 +4699,12 @@ definitions:
                                 });
                             }
 
+                            changes = changes.concat(collectRequestBodyChanges(beforeOpFixed, afterOpFixed));
+
                             result.apis.push({
                                 path: path,
                                 originalPath: originalPath,
-                                method: Object.keys(afterPath)[0],
+                                method: methodKey,
                                 name: afterOpFixed.operationId || afterOpFixed.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
                                 summary: afterOpFixed.summary || '',
                                 operationId: afterOpFixed.operationId || '',
@@ -4600,6 +4813,8 @@ definitions:
                                     }
 
                                     // Only add to changes if there are actual content changes
+                                    changes = changes.concat(collectRequestBodyChanges(beforeMethod, afterMethod));
+
                                     if (changes.length > 0) {
                                         hasActualChange = true;
                                         pathChanges = pathChanges.concat(changes);

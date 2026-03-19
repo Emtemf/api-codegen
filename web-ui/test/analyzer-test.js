@@ -103,9 +103,9 @@ function test(category, scenario, input, expected, fn) {
         // 自动修复验证
         let fixedYaml = null;
         if (expected.fixedValue !== undefined) {
-            fixedYaml = analyzer.fix(input);
+            fixedYaml = expected.fixedYamlFactory ? expected.fixedYamlFactory(analyzer, input, actualIssues) : analyzer.fix(input);
             const parsed = jsyaml.load(fixedYaml);
-            if (!expected.fixedValue(parsed)) {
+            if (!expected.fixedValue(parsed, fixedYaml)) {
                 validations.push(`自动修复结果不符合预期`);
             }
         }
@@ -200,6 +200,14 @@ test('错误检测', '路径包含 // 应报错 (Issue #2)',
     path: /api//users
     method: POST`,
     { errorCount: 1, hasMessage: '//' }
+);
+
+test('错误检测', '路径包含重复反斜杠应报错',
+    `apis:
+  - name: createUser
+    path: "/api\\\\users"
+    method: POST`,
+    { errorCount: 1, hasMessage: '斜杠' }
 );
 
 // 注意：/XXX/ 不再被视为错误，因为它是业务路径占位符
@@ -597,6 +605,95 @@ test('自动修复', '生日字段 → 添加 past: true',
         const field = parsed.apis[0].request.fields[0];
         return field.validation.past === true;
     }}
+);
+
+test('自动修复', '选择性修复应为邮箱/电话/生日/预约 info 问题产生实际 YAML 变更',
+    `apis:
+  - name: createUser
+    path: /api/users
+    method: POST
+    request:
+      className: CreateUserReq
+      fields:
+        - name: userEmail
+          type: String
+          validation: {}
+        - name: mobilePhone
+          type: String
+          validation: {}
+        - name: birthday
+          type: LocalDate
+          validation: {}
+        - name: appointmentDate
+          type: LocalDateTime
+          validation: {}`,
+    {
+        fixedYamlFactory: (analyzer, input, issues) => analyzer.fixSelective(input, issues
+            .map((issue, index) => issue.severity === 'info' ? index : -1)
+            .filter(index => index >= 0)),
+        fixedValue: (parsed) => {
+            const fields = parsed.apis[0].request.fields;
+            return fields[0].validation && fields[0].validation.email === true &&
+                   fields[1].validation && fields[1].validation.pattern === '^(\\+86|86)?1[3-9]\\d{9}$' &&
+                   fields[2].validation && fields[2].validation.past === true &&
+                   fields[3].validation && fields[3].validation.future === true;
+        }
+    },
+    (analyzer, input) => {
+        const issues = analyzer.analyze(input);
+        const selectedIndices = issues
+            .map((issue, index) => issue.severity === 'info' ? index : -1)
+            .filter(index => index >= 0);
+        return selectedIndices.length > 0 ? issues : issues.concat([{ severity: 'error', message: '未找到 info 级别问题' }]);
+    }
+);
+
+test('自动修复', '选择性修复应能更新 $ref 引用 schema 字段',
+    `openapi: '3.0.0'
+info:
+  title: Test API
+  version: '1.0'
+paths:
+  /users:
+    post:
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '200':
+          description: Success
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        mobilePhone:
+          type: string
+        birthday:
+          type: string
+          format: date
+        appointmentDate:
+          type: string
+          format: date-time`,
+    {
+        fixedYamlFactory: (analyzer, input, issues) => analyzer.fixSelective(input, issues
+            .map((issue, index) => issue.severity === 'info' ? index : -1)
+            .filter(index => index >= 0)),
+        fixedValue: (parsed) => {
+            const schema = parsed.components.schemas.CreateUserRequest.properties;
+            return schema.email.format === 'email' &&
+                   schema.mobilePhone.pattern === '^(\\+86|86)?1[3-9]\\d{9}$' &&
+                   schema.birthday['x-java-validation'] && schema.birthday['x-java-validation'].past === true &&
+                   schema.appointmentDate['x-java-validation'] && schema.appointmentDate['x-java-validation'].future === true;
+        }
+    },
+    (analyzer, input) => analyzer.analyze(input)
 );
 
 // ============================================

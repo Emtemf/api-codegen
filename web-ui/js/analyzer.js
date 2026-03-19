@@ -8,6 +8,7 @@ class ApiYamlAnalyzer {
     constructor() {
         this.issues = [];
         this.yamlLines = [];
+        this.yaml = null;
     }
 
     /**
@@ -23,6 +24,8 @@ class ApiYamlAnalyzer {
                 this.addIssue('error', 'YAML 内容为空', 0);
                 return this.issues;
             }
+
+            this.yaml = parsed;
 
             // 检测格式并使用对应的分析器
             if (this.isSwaggerFormat(yamlContent)) {
@@ -48,6 +51,13 @@ class ApiYamlAnalyzer {
         return lower.includes('swagger:') ||
                lower.includes('openapi:') ||
                (lower.includes('info:') && lower.includes('paths:'));
+    }
+
+    /**
+     * 检测是否存在非法路径分隔符
+     */
+    hasInvalidPathSeparators(path) {
+        return typeof path === 'string' && (path.includes('\\') || path.includes('//'));
     }
 
     /**
@@ -125,8 +135,8 @@ class ApiYamlAnalyzer {
                 const fullPath = basePath + path;
                 if (!fullPath.startsWith('/')) {
                     this.addIssue('error', `路径必须以 / 开头: ${fullPath}`, 0);
-                } else if (fullPath.includes('//')) {
-                    this.addIssue('error', `路径不能包含 //: ${fullPath}`, 0);
+                } else if (this.hasInvalidPathSeparators(fullPath)) {
+                    this.addIssue('error', `路径不能包含重复斜杠: ${fullPath}`, 0);
                 }
 
                 // 分析 parameters
@@ -463,8 +473,8 @@ class ApiYamlAnalyzer {
             this.addIssue('error', '缺少 API 路径 (path)', 0, apiIndex, 'path');
         } else if (!api.path.startsWith('/')) {
             this.addIssue('error', '路径必须以 / 开头', 0, apiIndex, 'path');
-        } else if (api.path.includes('//')) {
-            this.addIssue('error', '路径不能包含 //', 0, apiIndex, 'path');
+        } else if (this.hasInvalidPathSeparators(api.path)) {
+            this.addIssue('error', '路径不能包含重复斜杠 // 或反斜杠 \\', 0, apiIndex, 'path');
         }
 
         if (!api.method) {
@@ -635,6 +645,7 @@ class ApiYamlAnalyzer {
                 return yamlContent;
             }
 
+            this.yaml = parsed;
             const isSwagger = this.isSwaggerFormat(yamlContent);
 
             // 先分析获取所有问题
@@ -661,7 +672,7 @@ class ApiYamlAnalyzer {
             const selectedIssues = this.issues.filter((_, index) => selectedIndices.includes(index));
             const issueTypes = new Set();
             selectedIssues.forEach(issue => {
-                if (issue.message.includes('//')) issueTypes.add('double-slash');
+                if (issue.field === 'path' || (issue.message && issue.message.includes('路径不能包含重复斜杠'))) issueTypes.add('path-separators');
                 if (issue.message.includes('notNull') || issue.message.includes('@NotNull')) issueTypes.add('notnull');
                 if (issue.message.includes('@Email') || issue.message.includes('邮箱')) issueTypes.add('email');
                 if (issue.message.includes('正则') || issue.message.includes('pattern') || issue.message.includes('电话')) issueTypes.add('pattern');
@@ -673,8 +684,7 @@ class ApiYamlAnalyzer {
 
             // 只修复选中的问题类型
             if (isSwagger) {
-                // 只修复 // 路径问题（如果选中）
-                if (issueTypes.has('double-slash')) {
+                if (issueTypes.has('path-separators')) {
                     this.fixSwaggerPaths(parsed);
                 }
                 // 修复参数问题
@@ -688,9 +698,6 @@ class ApiYamlAnalyzer {
             this.issues.forEach((issue, index) => {
                 if (!selectedIndices.includes(index)) return;
 
-                // 跳过 info 级别的问题，它们不需要修复
-                if (issue.severity === 'info') return;
-
                 // 注意: issue.api 是 API 索引 (0-based)
                 if (issue.api === undefined || issue.api === null) return;
 
@@ -701,12 +708,9 @@ class ApiYamlAnalyzer {
                     // 提取字段名
                     if (fieldName.includes('fields[')) {
                         // 格式: "request.fields[0].name" 或 "response.fields[1].name"
-                        if (fieldName.includes('fields[0]')) {
-                            fieldName = 'field_0';
-                        } else if (fieldName.includes('fields[1]')) {
-                            fieldName = 'field_1';
-                        } else if (fieldName.includes('fields[2]')) {
-                            fieldName = 'field_2';
+                        const match = fieldName.match(/fields\[(\d+)\]/);
+                        if (match) {
+                            fieldName = 'field_' + match[1];
                         }
                     } else {
                         const parts = fieldName.split('.');
@@ -744,6 +748,12 @@ class ApiYamlAnalyzer {
                         if (!rules.hasOwnProperty('max')) rules.max = 2147483647;
                     }
                 }
+                if (msg.includes('@Past') || msg.includes('生日')) {
+                    rules.past = true;
+                }
+                if (msg.includes('@Future') || msg.includes('计划') || msg.includes('预约')) {
+                    rules.future = true;
+                }
             });
 
             // 应用修复 - 使用字段索引而非名称进行匹配
@@ -763,11 +773,10 @@ class ApiYamlAnalyzer {
 
                                 for (const key of keysToTry) {
                                     if (fieldsToFix.has(key)) {
-                                        if (!field.validation) field.validation = {};
-                                        const rules = fieldsToFix.get(key);
-                                        for (const k in rules) {
-                                            field.validation[k] = rules[k];
-                                        }
+                                        field.validation = {
+                                            ...(field.validation || {}),
+                                            ...fieldsToFix.get(key)
+                                        };
                                         break; // 只应用一次
                                     }
                                 }
@@ -813,6 +822,19 @@ class ApiYamlAnalyzer {
     }
 
     /**
+     * 统一标准化路径：转换反斜杠、折叠重复分隔符、修复占位前缀
+     */
+    normalizePath(path) {
+        if (!path) return path;
+        let normalized = String(path).replace(/[\\/]+/g, '/');
+        normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//, '/');
+        if (!normalized.startsWith('/')) {
+            normalized = '/' + normalized;
+        }
+        return normalized;
+    }
+
+    /**
      * 修复自定义格式
      */
     fixCustom(parsed) {
@@ -831,66 +853,33 @@ class ApiYamlAnalyzer {
      * 修复 Swagger/OpenAPI 格式的路径问题（不序列化）
      */
     fixSwaggerPaths(parsed) {
-        // 修复 paths 中的路径格式
-        const paths = parsed.paths || {};
-
-        for (const [path, methods] of Object.entries(paths)) {
-            let fixedPath = path;
-            let hasChanges = false;
-
-            // 修复路径包含 // 的问题（只修复格式问题）
-            if (fixedPath.includes('//')) {
-                fixedPath = fixedPath.replace(/\/+/g, '/');
-                hasChanges = true;
-            }
-
-            // 不再自动修复 /XXX/ 前缀（见 fixSwagger 中的注释）
-
-            if (hasChanges && fixedPath !== path) {
-                paths[fixedPath] = methods;
-                delete paths[path];
-            }
-        }
-    }
-
-    /**
-     * 只修复 Swagger 路径中的 // 问题（用于选择性修复）
-     */
-    fixSwaggerPaths(parsed) {
-        // 修复 basePath 包含 // 的问题
-        if (parsed.basePath && parsed.basePath.includes('//')) {
-            const fixedBasePath = parsed.basePath.replace(/\/+/g, '/');
+        // 修复 basePath 包含重复路径分隔符的问题
+        if (parsed.basePath) {
+            const fixedBasePath = this.normalizePath(parsed.basePath);
             if (fixedBasePath !== parsed.basePath) {
-                this.addInfoMessage(`修复 basePath 重复斜杠: "${parsed.basePath}" → "${fixedBasePath}"`);
+                this.addInfoMessage(`修复 basePath 路径分隔符: "${parsed.basePath}" → "${fixedBasePath}"`);
                 parsed.basePath = fixedBasePath;
             }
         }
 
-        // 修复 servers (OpenAPI 3.0) 包含 // 的问题
+        // 修复 servers (OpenAPI 3.0) 包含重复路径分隔符的问题
         if (parsed.servers && Array.isArray(parsed.servers)) {
             parsed.servers.forEach((server, idx) => {
-                if (server.url && server.url.includes('//')) {
-                    const fixedUrl = server.url.replace(/\/+/g, '/');
+                if (server.url) {
+                    const fixedUrl = server.url.replace(/([^:])[\\/]+/g, '$1/');
                     if (fixedUrl !== server.url) {
-                        this.addInfoMessage(`修复 servers[${idx}] URL 重复斜杠: "${server.url}" → "${fixedUrl}"`);
+                        this.addInfoMessage(`修复 servers[${idx}] URL 路径分隔符: "${server.url}" → "${fixedUrl}"`);
                         server.url = fixedUrl;
                     }
                 }
             });
         }
 
-        // 修复 paths 中的 // 问题
+        // 修复 paths 中的路径分隔符问题
         const paths = parsed.paths || {};
         for (const [path, methods] of Object.entries(paths)) {
-            let currentPath = path;
-            let hasChanges = false;
-
-            if (currentPath.includes('//')) {
-                currentPath = currentPath.replace(/\/+/g, '/');
-                hasChanges = true;
-            }
-
-            if (hasChanges && currentPath !== path) {
+            const currentPath = this.normalizePath(path);
+            if (currentPath !== path) {
                 paths[currentPath] = methods;
                 delete paths[path];
                 this.addInfoMessage(`修复路径: "${path}" → "${currentPath}"`);
@@ -933,21 +922,16 @@ class ApiYamlAnalyzer {
                 if (operation.parameters && Array.isArray(operation.parameters)) {
                     operation.parameters.forEach((param, paramIndex) => {
                         const key = `${method.toUpperCase()} ${apiPath} parameters[${paramIndex}]`;
-                        let messages = selectedIssueMessages.get(key) || [];
+                        const normalizedKey = `${method.toUpperCase()} ${this.normalizePath(apiPath)} parameters[${paramIndex}]`;
+                        let messages = selectedIssueMessages.get(key) || selectedIssueMessages.get(normalizedKey) || [];
 
-                        // 如果没有找到，尝试匹配可能被修复的路径（// -> /）
                         if (messages.length === 0 && apiPath.includes('/')) {
-                            // 尝试查找原始路径（包含 //）的问题
                             for (const [issueKey, issueMessages] of selectedIssueMessages.entries()) {
-                                // 跳过无效的 key（如 undefined 或非字符串）
                                 if (!issueKey || typeof issueKey !== 'string') continue;
-                                if (issueKey.includes('//')) {
-                                    // 将 issueKey 中的 // 替换为 / 来比较
-                                    const normalizedIssueKey = issueKey.replace(/\/+/g, '/');
-                                    if (normalizedIssueKey === key) {
-                                        messages = issueMessages;
-                                        break;
-                                    }
+                                const normalizedIssueKey = issueKey.replace(/([^:])[\\/]+/g, '$1/');
+                                if (normalizedIssueKey === normalizedKey) {
+                                    messages = issueMessages;
+                                    break;
                                 }
                             }
                         }
@@ -982,9 +966,13 @@ class ApiYamlAnalyzer {
     fixSchemaFields(schema, path, method, selectedIssueMessages) {
         let fixedCount = 0;
 
-        // 处理 $ref 引用 - 不修复引用的字段
+        // 处理 $ref 引用
         if (schema.$ref) {
-            return 0;
+            const refSchema = this.getRefSchema(schema.$ref);
+            if (!refSchema) {
+                return 0;
+            }
+            return this.fixSchemaFields(refSchema, path, method, selectedIssueMessages);
         }
 
         // 处理直接定义的属性
@@ -993,7 +981,8 @@ class ApiYamlAnalyzer {
 
         for (const [propName, propDef] of Object.entries(properties)) {
             const fieldPath = `${path}.${method}.requestBody.${propName}`;
-            const messages = selectedIssueMessages.get(fieldPath) || [];
+            const normalizedFieldPath = `${this.normalizePath(path)}.${method}.requestBody.${propName}`;
+            const messages = selectedIssueMessages.get(fieldPath) || selectedIssueMessages.get(normalizedFieldPath) || [];
 
             if (messages.length > 0) {
                 fixedCount++;
@@ -1003,13 +992,13 @@ class ApiYamlAnalyzer {
             }
 
             // 递归修复嵌套对象
-            if (propDef.type === 'object' && propDef.properties) {
+            if ((propDef.type === 'object' && propDef.properties) || propDef.$ref) {
                 fixedCount += this.fixSchemaFields(propDef, path, method, selectedIssueMessages);
             }
 
             // 修复数组成员
             if (propDef.type === 'array' && propDef.items) {
-                if (propDef.items.type === 'object' && propDef.items.properties) {
+                if ((propDef.items.type === 'object' && propDef.items.properties) || propDef.items.$ref) {
                     fixedCount += this.fixSchemaFields(propDef.items, path, method, selectedIssueMessages);
                 }
             }
@@ -1663,20 +1652,41 @@ class ApiYamlAnalyzer {
      * @param {string} field - 字段路径
      * @param {string} rule - 规则依据/来源
      */
-    addIssue(severity, message, line, apiIndex, field, rule) {
-        this.issues.push({
+    addIssue(severity, message, line, apiIndex, field, rule, target) {
+        const issue = {
             severity: severity,
             message: message,
             line: line,
             api: apiIndex,
             field: field,
             rule: rule || this.getDefaultRule(severity, message)
-        });
+        };
+
+        if (target) {
+            issue.target = target;
+        }
+
+        issue.key = this.buildIssueKey(issue);
+        this.issues.push(issue);
     }
 
-    /**
-     * 获取默认规则依据
-     */
+    buildIssueKey(issue) {
+        const target = issue.target || {};
+        const parts = [
+            issue.severity || '',
+            issue.rule || '',
+            target.domain || '',
+            target.location || '',
+            target.api || issue.api || '',
+            target.method || '',
+            target.path || '',
+            target.fieldPath || issue.field || '',
+            target.ref || '',
+            target.index !== undefined ? String(target.index) : ''
+        ];
+        return parts.join('|');
+    }
+
     getDefaultRule(severity, message) {
         // 根据消息内容推断规则
         if (message.includes('路径不能包含 //')) return 'DFX-001: 路径规范 - 不能包含重复斜杠';

@@ -232,6 +232,60 @@ class SwaggerConverterTest {
             // The path should have double slashes collapsed to single
             assertEquals("/api/users", api.getPath());
         }
+
+        @Test
+        @DisplayName("should_normalize_path_with_repeated_backslashes")
+        void shouldNormalizePathWithRepeatedBackslashes() throws IOException {
+            // Given - a path with repeated backslashes in an escaped YAML key
+            String swaggerContent = """
+                swagger: "2.0"
+                info:
+                  title: User API
+                  version: "1.0"
+                paths:
+                  "/api\\\\\\\\users":
+                    get:
+                      operationId: queryUsers
+                      responses:
+                        200:
+                          description: Success
+                """;
+
+            // When
+            ApiDefinition apiDefinition = YamlParser.parse(swaggerContent);
+
+            // Then - repeated backslashes should be normalized to forward slashes
+            assertNotNull(apiDefinition);
+            var api = apiDefinition.getApis().get(0);
+            assertEquals("/api/users", api.getPath());
+        }
+
+        @Test
+        @DisplayName("should_normalize_path_with_mixed_slashes_and_backslashes")
+        void shouldNormalizePathWithMixedSlashesAndBackslashes() throws IOException {
+            // Given - a path with mixed forward slashes, backslashes, and repeated separators
+            String swaggerContent = """
+                swagger: "2.0"
+                info:
+                  title: User API
+                  version: "1.0"
+                paths:
+                  '/api\\/v1//users\\\\{id}':
+                    get:
+                      operationId: getUser
+                      responses:
+                        200:
+                          description: Success
+                """;
+
+            // When
+            ApiDefinition apiDefinition = YamlParser.parse(swaggerContent);
+
+            // Then - all separators should be normalized to single forward slashes
+            assertNotNull(apiDefinition);
+            var api = apiDefinition.getApis().get(0);
+            assertEquals("/api/v1/users/{id}", api.getPath());
+        }
     }
 
     @Nested
