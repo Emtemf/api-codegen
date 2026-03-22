@@ -21,6 +21,11 @@ api-codegen/
 └── web-ui/                    # Web 可视化界面
 ```
 
+## Bridge Contract
+
+Web UI、IDEA 插件、浏览器插件共用的 JSON bridge contract 见：
+[docs/ui-bridge-contract.md](/home/wula/IdeaProjects/api-codegen/docs/ui-bridge-contract.md)
+
 ## 环境要求
 
 - **JDK 21** 或更高版本（必需）
@@ -40,11 +45,12 @@ api-codegen/
 
 ```bash
 cd web-ui
-npx serve -l 8080
+node server.js
 # 浏览器打开 http://localhost:8080
 ```
 
-或直接用浏览器打开 `web-ui/index.html`
+Web UI 现在通过本地 `server.js` 调用 `api-codegen-core` 作为统一分析/修复入口，
+因此不能再直接打开 `web-ui/index.html`。
 
 ### Web UI 界面预览
 
@@ -66,7 +72,7 @@ npx serve -l 8080
 ![OpenAPI Demo](docs/images/09-openapi-initial.png)
 
 **6. 修复预览** - 统一 Diff 视图显示 Java 代码变更
-![Diff Preview](docs/images/diff-preview.png)
+![Diff Preview](docs/images/04-autofix-preview.png)
 
 ### Web UI 操作与 Maven 命令对照
 
@@ -75,8 +81,7 @@ npx serve -l 8080
 | 加载 YAML 文件 | `-DyamlFile=api.yaml` |
 | 设置基础包名 | `-DbasePackage=com.example` |
 | 设置公司名称 | `-Dcompany="MyCompany"` |
-| 配置文件 | `-DconfigFile=codegen-config.yaml` |
-| 分析校验问题 | 内置自动分析 |
+| 分析校验问题 | 调用 `api-codegen-core` 统一分析 |
 | 选择性修复 | 勾选要修复的问题 |
 | 统一 Diff 预览 | 显示 Java 代码变更 |
 | 强制覆盖 | `-Dforce=true` |
@@ -107,68 +112,28 @@ cd api-codegen-core
 ../mvnw exec:java -Dexec.mainClass="com.apicgen.Main" -Dexec.args="api.yaml"
 ```
 
-## 配置文件
+## 单文件输入与自定义注解
 
-在项目根目录创建 `codegen-config.yaml`：
+用户只维护一份 API YAML。
+如果需要给生成的 Controller 类或方法附加自定义注解，直接写在 Swagger / OpenAPI 文件里，不需要再维护第二份 `codegen-config.yaml`。
 
 ```yaml
-# 版权声明（生成代码时添加到文件顶部）
-# 例如: Copyright (c) 2024 MyCompany. All rights reserved.
-copyright: ""
-
-# OpenAPI 配置
-openapi:
-  enabled: false
-  version: "3.0"
-
-# 自定义注解（可选）
-customAnnotations:
-  classAnnotations:
-    - "@Secured"
-    - "@AuditLog"
-  methodAnnotations:
-    - "@Permission(\"default\")"
-
-# 输出路径配置
-output:
-  controller:
-    path: generated/api/    # Controller 输出目录
-  request:
-    path: src/main/java/req/  # Request 输出目录
-  response:
-    path: src/main/java/rsp/  # Response 类出目录
+openapi: 3.0.1
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@Secured"
+      - "@AuditLog"
+    post:
+      operationId: createUser
+      x-java-method-annotations:
+        - "@Permission(\"user.create\")"
+      responses:
+        "200":
+          description: OK
 ```
 
-### 配置说明
-
-| 配置项 | 说明 |
-|--------|------|
-| `copyright` | 版权声明，直接放到文件顶部，为空则不添加 |
-| `output.controller.path` | 生成的 Controller 类输出路径 |
-| `output.request.path` | 生成的 Request 类输出路径 |
-| `output.response.path` | 生成的 Response 类输出路径 |
-| `customAnnotations` | 可选，自定义注解配置 |
-
-> **注意**: 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
-
-### 自定义注解示例
-
-支持为生成的类和方法添加自定义注解：
-
-```java
-@Path("/api")
-@Secured
-@AuditLog
-public class ExampleApi {
-
-    @Permission("default")
-    @POST
-    @Path("/users")
-    public CreateUserRsp create(@Valid CreateUserReq req) {
-        // ...
-    }
-}
-```
+> 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
 
 ## Maven 插件参数
 
@@ -179,7 +144,6 @@ mvn com.apicgen:api-codegen-maven-plugin:generate [参数]
   -DyamlFile=api.yaml        # YAML 文件路径
   -DbasePackage=com.example   # 基础包名
   -Dcompany="MyCompany"      # 公司名称
-  -DconfigFile=config.yaml    # 配置文件
   -Dforce=true               # 强制覆盖已有文件
 ```
 

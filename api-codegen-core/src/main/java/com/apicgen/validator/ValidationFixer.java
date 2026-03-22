@@ -148,6 +148,11 @@ public class ValidationFixer {
                 validation.setMinLength(ValidationConstants.DEFAULT_MIN_LENGTH);
                 break;
 
+            case "minLength 不能大于 maxLength":
+                validation.setMinLength(ValidationConstants.DEFAULT_MIN_LENGTH);
+                validation.setMaxLength(ValidationConstants.DEFAULT_MAX_LENGTH);
+                break;
+
             case "邮箱字段建议添加 email 校验":
                 validation.setEmail(true);
                 break;
@@ -175,6 +180,12 @@ public class ValidationFixer {
 
             case "数值字段只有 max，缺少 min":
                 validation.setMin(ValidationConstants.DEFAULT_MIN_VALUE);
+                break;
+
+            case "min 不能大于 max":
+            case "max 必须大于 min":
+                validation.setMin(ValidationConstants.DEFAULT_MIN_VALUE);
+                validation.setMax(getDefaultMax(issue.getFieldType()));
                 break;
 
             // 路径参数修复

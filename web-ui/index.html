@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Codegen - Web UI</title>
     <link rel="stylesheet" href="lib/codemirror.min.css">
+    <link rel="stylesheet" href="node_modules/diff2html/bundles/css/diff2html.min.css">
     <link rel="stylesheet" href="lib/dracula.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -231,6 +232,11 @@
             content: ' ✏️';
             font-size: 9px;
         }
+        .issue-fixable.fixable-manual-static {
+            background: rgba(148, 163, 184, 0.18);
+            color: #94a3b8;
+            cursor: default;
+        }
         .issue-message { font-size: 13px; color: #ccc; line-height: 1.4; }
         .issue-api { font-size: 11px; color: #666; margin-top: 4px; font-family: monospace; }
 
@@ -277,86 +283,18 @@
             justify-content: center;
             backdrop-filter: blur(12px);
         }
-        .diff-modal.active { display: flex; }
-
-        /* Edit Modal - 编辑弹窗 */
-        .edit-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1100;
+        .diff-modal.active {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-        }
-        .edit-modal {
-            background: #1a1a2e;
-            border: 1px solid #0f3460;
-            border-radius: 8px;
-            width: 400px;
-            max-width: 90vw;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-        }
-        .edit-modal-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #0f3460;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 15px;
-            font-weight: 500;
-        }
-        .edit-modal-close {
-            background: none;
-            border: none;
-            color: #888;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 0;
-            line-height: 1;
-        }
-        .edit-modal-close:hover { color: #e94560; }
-        .edit-modal-body {
-            padding: 20px;
-        }
-        .edit-modal-body label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 13px;
-            color: #aaa;
-        }
-        .edit-modal-body textarea {
-            width: 100%;
-            padding: 10px 12px;
-            background: #16213e;
-            border: 1px solid #0f3460;
-            border-radius: 4px;
-            color: #eee;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-            min-height: 60px;
-        }
-        .edit-modal-body textarea:focus {
-            outline: none;
-            border-color: #e94560;
-        }
-        .edit-modal-footer {
-            padding: 16px 20px;
-            border-top: 1px solid #0f3460;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
+            align-items: stretch;
+            justify-content: stretch;
         }
 
         .diff-container {
             background: #0d1117;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
+            min-width: 100vw;
+            min-height: 100vh;
             max-width: none;
             max-height: none;
             display: flex;
@@ -948,34 +886,104 @@
         }
 
         /* ===== diff2html 样式覆盖 ===== */
-        .d2h-wrapper {
+        .diff-third-party-shell {
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #0d1117;
+        }
+        .diff-third-party-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(180deg, #161b22 0%, #11161d 100%);
+            border-bottom: 1px solid #21262d;
+        }
+        .diff-third-party-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+        .diff-third-party-badge {
+            margin-left: auto;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #79c0ff;
+            background: rgba(56, 139, 253, 0.16);
+            border: 1px solid rgba(56, 139, 253, 0.28);
+        }
+        .diff-third-party-body {
+            background: #0d1117;
+        }
+        .diff-unified-content .d2h-wrapper {
             font-family: 'JetBrains Mono', 'Consolas', monospace !important;
             font-size: 13px !important;
+            background: #0d1117 !important;
+            color: #c9d1d9 !important;
         }
-        .d2h-file-header { display: none; }
-        .d2h-files { border: none !important; }
-        .d2h-file {
+        .diff-unified-content .d2h-file-header { display: none; }
+        .diff-unified-content .d2h-files-diff,
+        .diff-unified-content .d2h-file-wrapper,
+        .diff-unified-content .d2h-file-side-diff,
+        .diff-unified-content .d2h-code-wrapper,
+        .diff-unified-content .d2h-diff-table,
+        .diff-unified-content .d2h-diff-tbody {
+            background: #0d1117 !important;
+        }
+        .diff-unified-content .d2h-file-wrapper {
             border: none !important;
             box-shadow: none !important;
         }
-        .d2h-file-diff {
-            overflow: hidden !important;
+        .diff-unified-content .d2h-file-side-diff {
+            background: #0d1117 !important;
         }
-        .d2h-code-side-linenum {
-            width: 40px !important;
-            padding: 0 8px !important;
+        .diff-unified-content .d2h-code-side-linenumber {
+            width: 52px !important;
+            min-width: 52px !important;
+            padding: 0 10px !important;
+            color: #6e7681 !important;
+            background: #0d1117 !important;
+            border-color: #21262d !important;
         }
-        .d2h-code-side-line {
+        .diff-unified-content .d2h-code-side-line {
             line-height: 20px !important;
+            color: #c9d1d9 !important;
+            background: transparent !important;
         }
-        .d2h-code-side {
-            font-size: 12px !important;
+        .diff-unified-content .d2h-code-line-prefix,
+        .diff-unified-content .d2h-code-line-ctn {
+            color: inherit !important;
         }
-        /* diff2html 深色主题 */
-        .d2h-dark .d2h-code-side-linenum { color: #5c5f66 !important; }
-        .d2h-dark .d2h-code-side-line { color: #a4b0be !important; }
-        .d2h-dark .d2h-ins { background: rgba(46, 213, 115, 0.15) !important; }
-        .d2h-dark .d2h-del { background: rgba(255, 71, 87, 0.15) !important; }
+        .diff-unified-content .d2h-info,
+        .diff-unified-content .d2h-cntx {
+            background: #11161d !important;
+            color: #8b949e !important;
+        }
+        .diff-unified-content .d2h-del,
+        .diff-unified-content .d2h-del .d2h-code-side-line {
+            background: rgba(248, 81, 73, 0.16) !important;
+            color: #ffb4ad !important;
+        }
+        .diff-unified-content .d2h-ins,
+        .diff-unified-content .d2h-ins .d2h-code-side-line {
+            background: rgba(63, 185, 80, 0.16) !important;
+            color: #b6f0c2 !important;
+        }
+        .diff-unified-content .d2h-change {
+            border-color: #21262d !important;
+        }
+        .diff-unified-content .d2h-emptyplaceholder,
+        .diff-unified-content .d2h-code-side-emptyplaceholder {
+            background: #11161d !important;
+            border-color: #21262d !important;
+        }
+        .diff-unified-content .d2h-ins .d2h-code-line-ctn del,
+        .diff-unified-content .d2h-del .d2h-code-line-ctn del {
+            background: transparent !important;
+        }
 
         /* 空行对齐 */
         .diff-line-empty {
@@ -1591,6 +1599,48 @@
             font-family: 'JetBrains Mono', 'Consolas', monospace;
             font-size: 11px;
         }
+        .diff-resource-summary {
+            margin-bottom: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: rgba(15, 52, 96, 0.22);
+            border: 1px solid rgba(125, 211, 252, 0.22);
+        }
+        .diff-resource-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+        }
+        .diff-resource-row + .diff-resource-row {
+            margin-top: 8px;
+        }
+        .diff-resource-label {
+            font-size: 11px;
+            color: #7dd3fc;
+            min-width: 56px;
+        }
+        .diff-resource-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            line-height: 1.3;
+            border: 1px solid rgba(233, 69, 96, 0.35);
+            background: rgba(233, 69, 96, 0.12);
+            color: #ffd6dd;
+        }
+        .diff-resource-chip.type-class {
+            background: rgba(46, 204, 113, 0.12);
+            border-color: rgba(46, 204, 113, 0.35);
+            color: #bbf7d0;
+        }
+        .diff-resource-chip.type-method {
+            background: rgba(59, 130, 246, 0.12);
+            border-color: rgba(59, 130, 246, 0.35);
+            color: #bfdbfe;
+        }
     </style>
 </head>
 <body>
@@ -1598,7 +1648,7 @@
         <header class="header">
             <div class="logo">API Codegen</div>
             <nav class="nav">
-                <button class="nav-btn active">API + Config</button>
+                <button class="nav-btn active">API</button>
             </nav>
             <div class="actions">
                 <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
@@ -1612,7 +1662,7 @@
             <!-- API YAML Editor -->
             <div class="panel api-panel">
                 <div class="panel-header">
-                    <span>API 定义 (api.yaml)</span>
+                    <span>API 定义 (Swagger / OpenAPI YAML)</span>
                     <span id="yaml-info">-</span>
                     <button class="panel-load-btn" onclick="loadApiFile()">打开</button>
                 </div>
@@ -1706,7 +1756,7 @@
     <script src="lib/codemirror.min.js"></script>
     <script src="lib/yaml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
-    <script src="js/analyzer.js"></script>
+    <script src="node_modules/diff2html/bundles/js/diff2html.min.js"></script>
     <script>
         var yamlEditor;
 
@@ -2058,8 +2108,8 @@ definitions:
 
         // 示例数据定义 - 从外部 YAML 文件加载
         var exampleFiles = {
-            'swagger': '../swagger2-example.yaml',
-            'openapi': '../openapi3-example.yaml'
+            'swagger': '/swagger2-example.yaml',
+            'openapi': '/openapi3-example.yaml'
         };
 
         // 异步加载外部 YAML 文件
@@ -2299,24 +2349,58 @@ definitions:
             setMessage('已保存');
         }
 
-        function analyze() {
-            var content = yamlEditor.getValue();
-            originalYaml = content;  // 保存当前内容作为原始版本，用于预览对比
-            var analyzer = new ApiYamlAnalyzer();
-            var issues = analyzer.analyze(content);
+        async function callCoreApi(apiPath, payload) {
+            var response = await fetch(apiPath, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload || {})
+            });
 
-            document.getElementById('issue-count').textContent = issues.length;
-            renderIssues(issues);
+            var data = {};
+            try {
+                data = await response.json();
+            } catch (e) {
+                throw new Error('core bridge 返回了无效响应');
+            }
 
-            var errorCount = issues.filter(function(i) { return i.severity === 'error'; }).length;
-            var warnCount = issues.filter(function(i) { return i.severity === 'warn'; }).length;
+            if (!response.ok) {
+                var errorMessage = data && data.error && data.error.message
+                    ? data.error.message
+                    : (data && typeof data.error === 'string' ? data.error : ('请求失败: ' + response.status));
+                throw new Error(errorMessage);
+            }
 
-            var countEl = document.getElementById('issue-count');
-            countEl.className = 'issue-count';
-            if (errorCount > 0) countEl.classList.add('error');
-            else if (warnCount > 0) countEl.classList.add('warn');
+            return data;
+        }
 
-            setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告');
+        async function analyze() {
+            try {
+                var content = yamlEditor.getValue();
+                originalYaml = content;  // 保存当前内容作为原始版本，用于预览对比
+                var response = await callCoreApi('/api/analyze', { yaml: content });
+                var issues = response.issues || [];
+
+                document.getElementById('issue-count').textContent = issues.length;
+                renderIssues(issues);
+
+                var errorCount = issues.filter(function(i) { return i.severity === 'error'; }).length;
+                var warnCount = issues.filter(function(i) { return i.severity === 'warn'; }).length;
+
+                var countEl = document.getElementById('issue-count');
+                countEl.className = 'issue-count';
+                if (errorCount > 0) countEl.classList.add('error');
+                else if (warnCount > 0) countEl.classList.add('warn');
+
+                setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告');
+            } catch (e) {
+                console.error('Analyze error:', e);
+                document.getElementById('issue-count').textContent = '0';
+                window.currentIssues = [];
+                renderIssues([]);
+                setMessage('分析出错: ' + e.message);
+            }
         }
 
         // Store issues with selection state
@@ -2345,17 +2429,17 @@ definitions:
                 return;
             }
 
-            // Reset selection - default to selected for all auto-fixable issues
+            // Reset selection - default to selected for all issues
             selectedIssues = {};
             issues.forEach(function(issue, i) {
-                selectedIssues[i] = isAutoFixable(issue);
+                selectedIssues[i] = true;
             });
 
             var html = '<div class="issue-select-all">' +
                 '<label><input type="checkbox" id="select-all-issues" checked onchange="toggleAllIssues(this.checked)"> 全选</label>' +
                 '<span style="margin-left: 12px; font-size: 11px; color: #888;">' +
                 '<span style="color: #27ae60;">● 可修复</span> 自动修复 &nbsp; ' +
-                '<span style="color: #e94560;">● 需手动</span> 点击编辑' +
+                '<span style="color: #e94560;">● 需手动</span> 点击定位' +
                 '</span></div>';
 
             html += issues.map(function(issue, index) {
@@ -2367,8 +2451,10 @@ definitions:
 
                 if (canAutoFix) {
                     var fixableBadge = '<span class="issue-fixable fixable-yes" title="此问题可以自动修复">可修复</span>';
+                } else if (isManualLocatable(issue)) {
+                    var fixableBadge = '<button type="button" class="issue-fixable fixable-no" title="点击定位" onclick="event.stopPropagation(); event.preventDefault(); handleManualIssue(' + index + ');">需手动</button>';
                 } else {
-                    var fixableBadge = '<button type="button" class="issue-fixable fixable-no" title="点击编辑" onclick="event.stopPropagation(); event.preventDefault(); handleManualIssue(' + index + ');">需手动</button>';
+                    var fixableBadge = '<span class="issue-fixable fixable-manual-static" title="当前问题无法自动定位，请手动处理">需人工处理</span>';
                 }
 
                 return '<div class="issue ' + issue.severity + '">' +
@@ -2394,531 +2480,197 @@ definitions:
         }
 
         /**
-         * 处理"需手动"问题的点击 - 跳转到编辑位置或显示编辑弹窗
+         * 处理"需手动"问题的点击 - UI 仅负责定位，修复策略由 core 决定。
          */
         function handleManualIssue(index) {
-            console.log('handleManualIssue called with index:', index);
             var issue = window.currentIssues[index];
-            console.log('issue:', issue);
             if (!issue) {
-                console.error('No issue found at index:', index);
                 return;
             }
-
-            // 检查问题类型，提供对应的编辑功能
-            var msg = issue.message;
-            console.log('issue message:', msg);
-
-            // 如果是缺少 description 的问题，显示编辑弹窗
-            if (msg.includes('缺少 description')) {
-                console.log('Showing description editor');
-                showDescriptionEditor(issue);
-            }
-            // 如果是 x-java-class-annotations 问题，显示编辑弹窗
-            else if (msg.includes('x-java-class-annotations') || msg.includes('annotations')) {
-                console.log('Showing annotations editor');
-                showDescriptionEditor(issue);
-            }
-            // 如果是 minLength/maxLength 错误，跳转到对应位置
-            else if (msg.includes('minLength') || msg.includes('maxLength')) {
-                jumpToYamlLocation(issue);
-            }
-            // 其他情况，跳转到对应位置
-            else {
-                jumpToYamlLocation(issue);
-            }
+            jumpToYamlLocation(issue);
         }
 
-        /**
-         * 显示 description 编辑弹窗
-         */
-        function showDescriptionEditor(issue) {
-            var fieldName = '';
-            var fieldType = '';
-            var helpText = '';
-            var exampleText = '';
-
-            if (issue.message.includes('必填参数')) {
-                var match = issue.message.match(/必填参数 (\w+) 缺少/);
-                fieldName = match ? match[1] : '参数';
-                fieldType = '参数';
-                helpText = '请输入参数的描述信息，说明参数的用途和格式要求';
-                exampleText = '例如：用户ID，用于唯一标识用户';
-            } else if (issue.message.includes('requestBody')) {
-                fieldName = 'requestBody';
-                fieldType = 'requestBody';
-                helpText = '请输入请求体的描述信息，说明请求体的用途和包含的数据';
-                exampleText = '例如：创建用户的请求体，包含用户名、邮箱等基本信息';
-            } else if (issue.message.includes('x-java-class-annotations')) {
-                fieldName = 'x-java-class-annotations';
-                fieldType = 'annotations';
-                // 提取路径信息
-                var pathMatch = issue.message.match(/路径\s+(\/[^\s]+)\s+下/);
-                var pathStr = pathMatch ? pathMatch[1] : '未知路径';
-                var methodMatch = issue.message.match(/(\w+)\s+方法/);
-                var methodStr = methodMatch ? methodMatch[1] : '未知方法';
-
-                helpText = '<b>问题说明：</b><br>' +
-                    '在 Swagger/OpenAPI 中，您可以为路径（path）和方法（method）分别配置 x-java-class-annotations。<br><br>' +
-                    '<b>当前状态：</b><br>' +
-                    '• 路径：' + pathStr + '<br>' +
-                    '• 方法：' + methodStr + '<br>' +
-                    '• 问题：路径级别和方法级别的 x-java-class-annotations 注解配置不一致<br><br>' +
-                    '<b>解决方法：</b><br>' +
-                    '1. 在下方输入框中填写要统一使用的类级别注解（每行一个）<br>' +
-                    '2. 点击"应用"后，系统会自动在路径级别添加这些注解<br>' +
-                    '3. 如果需要修改方法级别的注解，请手动编辑 YAML 文件';
-                exampleText = '@Secured\n@AuditLog(action="USER_QUERY")';
+        function splitIssueApiRef(apiRef, locator) {
+            if (locator && locator.path) {
+                return {
+                    method: locator.method || '',
+                    target: String(locator.path).trim(),
+                    apiName: locator.apiName || ''
+                };
             }
 
-            var defaultValue = '';
-            var placeholder = '';
-            if (fieldType === 'annotations') {
-                placeholder = '@Secured\n@AuditLog(action="USER_QUERY")\n@Permission("admin:user:read")';
-            } else {
-                placeholder = exampleText;
+            var text = apiRef == null ? '' : String(apiRef).trim();
+            var match = text.match(/^([A-Z]+)\s+(.+)$/);
+            if (!match) {
+                return { method: '', target: text, apiName: '' };
             }
 
-            // 创建编辑弹窗 - annotations 使用更大的弹窗
-            var modalWidth = fieldType === 'annotations' ? '600px' : '500px';
-            var modalHtml = '<div class="edit-modal-overlay" onclick="closeEditModal(event)">' +
-                '<div class="edit-modal" onclick="event.stopPropagation()" style="max-width: ' + modalWidth + ';">' +
-                '<div class="edit-modal-header">' +
-                '<span>📝 编辑 ' + (fieldType === 'annotations' ? '类级别注解' : '描述') + '</span>' +
-                '<button class="edit-modal-close" onclick="closeEditModal()">&times;</button>' +
-                '</div>' +
-                '<div class="edit-modal-body">' +
-                '<div style="background: rgba(255,193,7,0.1); border: 1px solid rgba(255,193,7,0.3); border-radius: 4px; padding: 10px 12px; margin-bottom: 12px; font-size: 12px; color: #ffc107; line-height: 1.6;">' +
-                helpText +
-                '</div>' +
-                (fieldType !== 'annotations' ? '<label>' + fieldType + ': <strong>' + fieldName + '</strong></label>' : '') +
-                (issue.api ? '<label style="color: #888;">API: ' + issue.api + '</label>' : '') +
-                '<label style="margin-top: 12px; display: block;">' + (fieldType === 'annotations' ? '请输入要添加的类级别注解（每行一个）:' : '描述内容:') + '</label>' +
-                '<textarea id="edit-description-input" placeholder="' + placeholder + '" rows="' + (fieldType === 'annotations' ? '4' : '3') + '" style="font-family: ' + (fieldType === 'annotations' ? 'monospace' : 'inherit') + ';">' + defaultValue + '</textarea>' +
-                (fieldType === 'annotations' ? '<div style="font-size: 11px; color: #888; margin-top: 4px;">提示：注解格式为 @AnnotationName 或 @AnnotationName(param="value")</div>' : '') +
-                '</div>' +
-                '<div class="edit-modal-footer">' +
-                '<button class="btn btn-secondary" onclick="closeEditModal()">取消</button>' +
-                '<button class="btn btn-primary" onclick="applyDescriptionEdit(\'' + fieldName + '\', \'' + fieldType + '\', \'' + (issue.field || '') + '\', \'' + (issue.api || '') + '\')">应用</button>' +
-                '</div>' +
-                '</div>' +
-                '</div>';
-
-            // 添加到页面
-            var div = document.createElement('div');
-            div.id = 'edit-modal-container';
-            div.innerHTML = modalHtml;
-            document.body.appendChild(div);
-
-            // 聚焦输入框
-            setTimeout(function() {
-                var input = document.getElementById('edit-description-input');
-                if (input) {
-                    input.focus();
-                    input.select();
-                }
-            }, 100);
+            return {
+                method: match[1],
+                target: match[2],
+                apiName: ''
+            };
         }
 
-        /**
-         * 应用 description 编辑
-         */
-        function applyDescriptionEdit(fieldName, fieldType, issueField, issueApi) {
-            var description = document.getElementById('edit-description-input').value.trim();
-            if (!description) {
-                alert('请输入内容');
-                return;
+        function extractIssueFieldName(issue) {
+            if (issue && issue.locator && issue.locator.fieldName) {
+                return String(issue.locator.fieldName).trim();
             }
 
-            // 输入验证
-            if (fieldType === 'annotations') {
-                // 验证注解格式
-                var annotations = description.split('\n').filter(function(a) { return a.trim(); });
-                for (var i = 0; i < annotations.length; i++) {
-                    var ann = annotations[i].trim();
-                    if (!ann.startsWith('@')) {
-                        alert('注解格式错误：第 ' + (i + 1) + ' 行 "' + ann + '" 不以 @ 开头\n\n正确格式示例：\n@Secured\n@AuditLog(action="USER_QUERY")');
-                        return;
-                    }
-                    // 检查注解名称是否合法（字母开头，可包含字母数字下划线）
-                    var annName = ann.substring(1).split('(')[0].trim();
-                    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(annName)) {
-                        alert('注解名称不合法：第 ' + (i + 1) + ' 行 "' + annName + '"\n\n注解名称必须以字母开头，只能包含字母、数字和下划线');
-                        return;
-                    }
-                }
-            } else if (fieldType === '参数' || fieldType === 'requestBody') {
-                // 验证描述长度
-                if (description.length < 2) {
-                    alert('描述内容太短，请至少输入2个字符');
-                    return;
-                }
-                if (description.length > 500) {
-                    alert('描述内容太长，请限制在500字符以内');
-                    return;
-                }
+            if (!issue || !issue.field) {
+                return '';
             }
 
-            // 获取当前 YAML 内容
-            var yaml = yamlEditor.getValue();
-            var lines = yaml.split('\n');
-            var modified = false;
+            var field = String(issue.field).trim();
+            if (!field) {
+                return '';
+            }
 
-            // 解析 API 信息 (格式: "GET /api/v1/path")
-            var apiMethod = '';
-            var apiPath = '';
-            if (issueApi) {
-                var apiParts = issueApi.split(' ');
-                if (apiParts.length >= 2) {
-                    apiMethod = apiParts[0];
-                    apiPath = apiParts[1];
+            var parts = field.split('.');
+            return parts[parts.length - 1];
+        }
+
+        function findIssueLocationLine(lines, issue) {
+            if (!Array.isArray(lines) || !issue) {
+                return -1;
+            }
+
+            var locator = issue.locator || null;
+            var apiRef = splitIssueApiRef(issue.api || '', locator);
+            var issuePath = apiRef.target;
+            var fieldName = extractIssueFieldName(issue);
+            var apiName = locator && locator.apiName ? String(locator.apiName).trim() : '';
+            var property = locator && locator.property ? String(locator.property).trim() : '';
+            var section = locator && locator.section ? String(locator.section).trim() : '';
+            var pathLine = -1;
+            var methodLine = -1;
+            var anchorLine = -1;
+
+            if ((property === 'path' || issue.field === 'path') && issuePath) {
+                for (var i = 0; i < lines.length; i++) {
+                    var trimmedPathLine = lines[i].trim();
+                    if (trimmedPathLine === issuePath + ':' ||
+                        trimmedPathLine === 'path: "' + issuePath + '"' ||
+                        trimmedPathLine === 'path: ' + issuePath) {
+                        return i;
+                    }
                 }
             }
 
-            // 尝试找到对应位置并添加 description
-            if (fieldType === 'annotations') {
-                // 处理 x-java-class-annotations 编辑
-                // 从 issueApi 中提取路径
-                if (apiPath) {
-                    for (var i = 0; i < lines.length; i++) {
-                        if (lines[i].trim() === apiPath + ':') {
-                            // 找到路径，检查是否已有 x-java-class-annotations
-                            var baseIndent = lines[i].match(/^\s*/)[0];
-                            var j = i + 1;
-                            var foundAnnotations = false;
-
-                            while (j < lines.length) {
-                                var nextLine = lines[j];
-                                var lineIndent = nextLine.match(/^\s*/)[0];
-
-                                // 如果遇到同级或更高级别的元素，停止
-                                if (nextLine.trim() && lineIndent.length <= baseIndent.length) {
-                                    break;
-                                }
-
-                                if (nextLine.includes('x-java-class-annotations:')) {
-                                    // 更新现有注解
-                                    // 找到注解列表的结束位置
-                                    var annotationsIndent = lineIndent + '  ';
-                                    var k = j + 1;
-                                    var newLines = [];
-                                    var annotations = description.split('\n').filter(function(a) { return a.trim(); });
-                                    annotations.forEach(function(ann) {
-                                        newLines.push(annotationsIndent + '- "' + ann.trim() + '"');
-                                    });
-
-                                    // 删除旧的注解行
-                                    while (k < lines.length && (lines[k].match(/^\s*- "/) || lines[k].trim() === '')) {
-                                        var kIndent = lines[k].match(/^\s*/)[0];
-                                        if (kIndent.length <= lineIndent.length) break;
-                                        lines.splice(k, 1);
-                                    }
-
-                                    // 插入新的注解行
-                                    var insertIdx = j + 1;
-                                    for (var m = newLines.length - 1; m >= 0; m--) {
-                                        lines.splice(insertIdx, 0, newLines[m]);
-                                    }
-
-                                    foundAnnotations = true;
-                                    modified = true;
-                                    break;
-                                }
-                                j++;
-                            }
-
-                            if (!foundAnnotations) {
-                                // 添加新的 x-java-class-annotations
-                                var annotationsIndent = baseIndent + '  ';
-                                var newLines = [annotationsIndent + 'x-java-class-annotations:'];
-                                var annotations = description.split('\n').filter(function(a) { return a.trim(); });
-                                annotations.forEach(function(ann) {
-                                    newLines.push(annotationsIndent + '  - "' + ann.trim() + '"');
-                                });
-
-                                for (var m = newLines.length - 1; m >= 0; m--) {
-                                    lines.splice(i + 1, 0, newLines[m]);
-                                }
-                                modified = true;
-                            }
-                            break;
-                        }
-                    }
-                }
-            } else if (fieldType === 'requestBody') {
-                // 找到 requestBody 所在位置 - 需要根据 API 路径定位
-                // 首先从 YAML 中获取 basePath
-                var basePath = '';
-                for (var bi = 0; bi < lines.length; bi++) {
-                    if (lines[bi].trim().startsWith('basePath:')) {
-                        var basePathMatch = lines[bi].match(/basePath:\s*(['"]?)([^'"\s]+)\1/);
-                        if (basePathMatch) {
-                            basePath = basePathMatch[2];
-                        }
+            if (issuePath) {
+                for (var i = 0; i < lines.length; i++) {
+                    var trimmedLine = lines[i].trim();
+                    if (trimmedLine === issuePath + ':' ||
+                        trimmedLine === 'path: "' + issuePath + '"' ||
+                        trimmedLine === 'path: ' + issuePath) {
+                        pathLine = i;
                         break;
                     }
                 }
+            }
 
-                // 从 apiPath 中移除 basePath 前缀
-                var actualPath = apiPath;
-                if (basePath && apiPath && apiPath.startsWith(basePath)) {
-                    actualPath = apiPath.substring(basePath.length);
-                }
-
-                // 首先找到目标 API 路径
-                if (actualPath) {
-                    for (var i = 0; i < lines.length; i++) {
-                        if (lines[i].trim() === actualPath + ':') {
-                            // 找到路径，现在查找对应的方法
-                            var pathIndent = lines[i].match(/^\s*/)[0];
-                            var j = i + 1;
-
-                            while (j < lines.length) {
-                                var methodLine = lines[j];
-                                var methodIndent = methodLine.match(/^\s*/)[0];
-
-                                if (methodLine.trim() && methodIndent.length <= pathIndent.length) {
-                                    break;
-                                }
-
-                                if (methodLine.trim() === apiMethod.toLowerCase() + ':') {
-                                    // 找到方法，查找 requestBody
-                                    var k = j + 1;
-                                    while (k < lines.length) {
-                                        var rbLine = lines[k];
-                                        var rbIndent = rbLine.match(/^\s*/)[0];
-
-                                        if (rbLine.trim() && rbIndent.length <= methodIndent.length) {
-                                            break;
-                                        }
-
-                                        if (rbLine.includes('requestBody:')) {
-                                            var baseIndent = rbLine.match(/^\s*/)[0];
-                                            var descIndent = baseIndent + '  ';
-
-                                            var m = k + 1;
-                                            var foundDesc = false;
-
-                                            while (m < lines.length) {
-                                                var nextLine = lines[m];
-                                                var lineIndent = nextLine.match(/^\s*/)[0];
-
-                                                if (nextLine.trim() && lineIndent.length <= baseIndent.length) {
-                                                    break;
-                                                }
-                                                if (lineIndent === descIndent && nextLine.trim().startsWith('description:')) {
-                                                    lines[m] = descIndent + 'description: ' + description;
-                                                    foundDesc = true;
-                                                    modified = true;
-                                                    break;
-                                                }
-                                                m++;
-                                            }
-
-                                            if (!foundDesc) {
-                                                lines.splice(k + 1, 0, descIndent + 'description: ' + description);
-                                                modified = true;
-                                            }
-                                            break;
-                                        }
-                                        k++;
-                                    }
-                                    break;
-                                }
-                                j++;
-                            }
-                            break;
-                        }
+            if (pathLine >= 0 && apiRef.method) {
+                var pathIndent = lines[pathLine].match(/^\s*/)[0].length;
+                for (var i = pathLine + 1; i < lines.length; i++) {
+                    var currentLine = lines[i];
+                    if (!currentLine.trim()) {
+                        continue;
                     }
-                }
 
-                // 如果根据 API 定位失败，回退到简单查找
-                if (!modified) {
-                    for (var i = 0; i < lines.length; i++) {
-                        if (lines[i].includes('requestBody:')) {
-                            var baseIndent = lines[i].match(/^\s*/)[0];
-                            var descIndent = baseIndent + '  ';
-
-                            var j = i + 1;
-                            var foundDesc = false;
-
-                            while (j < lines.length) {
-                                var nextLine = lines[j];
-                                var lineIndent = nextLine.match(/^\s*/)[0];
-
-                                if (nextLine.trim() && lineIndent.length <= baseIndent.length) {
-                                    break;
-                                }
-                                if (lineIndent === descIndent && nextLine.trim().startsWith('description:')) {
-                                    lines[j] = descIndent + 'description: ' + description;
-                                    foundDesc = true;
-                                    modified = true;
-                                    break;
-                                }
-                                j++;
-                            }
-
-                            if (!foundDesc) {
-                                lines.splice(i + 1, 0, descIndent + 'description: ' + description);
-                                modified = true;
-                            }
-                            break;
-                        }
+                    var currentIndent = currentLine.match(/^\s*/)[0].length;
+                    if (currentIndent <= pathIndent) {
+                        break;
                     }
-                }
-            } else {
-                // 找到参数位置 - 需要根据 API 路径和方法定位正确的参数
-                var foundParam = false;
 
-                // 首先从 YAML 中获取 basePath
-                var basePath = '';
-                for (var bi = 0; bi < lines.length; bi++) {
-                    if (lines[bi].trim().startsWith('basePath:')) {
-                        var basePathMatch = lines[bi].match(/basePath:\s*(['"]?)([^'"\s]+)\1/);
-                        if (basePathMatch) {
-                            basePath = basePathMatch[2];
-                        }
+                    if (currentLine.trim() === String(apiRef.method).toLowerCase() + ':') {
+                        methodLine = i;
                         break;
                     }
                 }
+            }
 
-                // 从 apiPath 中移除 basePath 前缀
-                var actualPath = apiPath;
-                if (basePath && apiPath && apiPath.startsWith(basePath)) {
-                    actualPath = apiPath.substring(basePath.length);
+            if (apiName) {
+                for (var i = 0; i < lines.length; i++) {
+                    var trimmedLine = lines[i].trim();
+                    if (trimmedLine === 'operationId: ' + apiName ||
+                        trimmedLine === 'operationId: "' + apiName + '"' ||
+                        trimmedLine === '- name: ' + apiName ||
+                        trimmedLine === '- name: "' + apiName + '"' ||
+                        trimmedLine === 'name: ' + apiName ||
+                        trimmedLine === 'name: "' + apiName + '"') {
+                        anchorLine = i;
+                        break;
+                    }
                 }
+            }
 
-                // 首先找到目标 API 路径
-                if (actualPath) {
-                    for (var i = 0; i < lines.length; i++) {
-                        if (lines[i].trim() === actualPath + ':') {
-                            // 找到路径，现在查找对应的方法和参数
-                            var pathIndent = lines[i].match(/^\s*/)[0];
-                            var j = i + 1;
+            if (fieldName) {
+                var searchStart = anchorLine >= 0 ? anchorLine : (methodLine >= 0 ? methodLine : (pathLine >= 0 ? pathLine : 0));
+                var searchEnd = lines.length;
 
-                            // 查找方法块
-                            while (j < lines.length) {
-                                var methodLine = lines[j];
-                                var methodIndent = methodLine.match(/^\s*/)[0];
-
-                                // 如果遇到同级或更高级别的元素，停止
-                                if (methodLine.trim() && methodIndent.length <= pathIndent.length) {
-                                    break;
-                                }
-
-                                // 检查是否是目标方法
-                                if (methodLine.trim() === apiMethod.toLowerCase() + ':') {
-                                    // 找到方法，查找 parameters 块
-                                    var k = j + 1;
-                                    while (k < lines.length) {
-                                        var paramLine = lines[k];
-                                        var paramIndent = paramLine.match(/^\s*/)[0];
-
-                                        // 如果遇到同级或更高级别的元素，停止
-                                        if (paramLine.trim() && paramIndent.length <= methodIndent.length) {
-                                            break;
-                                        }
-
-                                        // 检查是否是目标参数
-                                        if (paramLine.match(/^\s*- name:\s*/) && paramLine.includes(fieldName)) {
-                                            // 找到参数，添加或更新 description
-                                            var currentIndent = paramLine.match(/^\s*/)[0];
-                                            var descIndent = currentIndent.replace(/- /, '') + '  ';
-
-                                            // 检查后续行是否已有 description
-                                            var m = k + 1;
-                                            var foundDesc = false;
-                                            while (m < lines.length) {
-                                                var nextLine = lines[m];
-                                                if (nextLine.match(/^\s*- name:/) ||
-                                                    (nextLine.trim() && nextLine.match(new RegExp('^.{0,' + currentIndent.length + '}\\S')))) {
-                                                    break;
-                                                }
-                                                if (nextLine.includes('description:')) {
-                                                    var existingIndent = nextLine.match(/^\s*/)[0];
-                                                    lines[m] = existingIndent + 'description: ' + description;
-                                                    foundDesc = true;
-                                                    modified = true;
-                                                    break;
-                                                }
-                                                m++;
-                                            }
-
-                                            if (!foundDesc) {
-                                                lines.splice(k + 1, 0, descIndent + 'description: ' + description);
-                                                modified = true;
-                                            }
-                                            foundParam = true;
-                                            break;
-                                        }
-                                        k++;
-                                    }
-                                    break;
-                                }
-                                j++;
-                            }
+                if (section && anchorLine >= 0) {
+                    for (var i = anchorLine + 1; i < lines.length; i++) {
+                        var sectionLine = lines[i].trim();
+                        if ((section === 'request' && sectionLine === 'parameters:') ||
+                            (section === 'response' && sectionLine === 'responses:') ||
+                            sectionLine === section + ':') {
+                            searchStart = i;
                             break;
                         }
                     }
                 }
 
-                // 如果根据 API 定位失败，回退到简单查找
-                if (!foundParam) {
-                    for (var i = 0; i < lines.length; i++) {
-                        var line = lines[i];
-
-                        if (line.match(/^\s*- name:\s*/) && line.includes(fieldName)) {
-                            var currentIndent = line.match(/^\s*/)[0];
-                            var descIndent = currentIndent.replace(/- /, '') + '  ';
-
-                            var j = i + 1;
-                            var foundDesc = false;
-                            while (j < lines.length) {
-                                var nextLine = lines[j];
-                                if (nextLine.match(/^\s*- name:/) ||
-                                    (nextLine.trim() && nextLine.match(new RegExp('^.{0,' + currentIndent.length + '}\\S')))) {
-                                    break;
-                                }
-                                if (nextLine.includes('description:')) {
-                                    var existingIndent = nextLine.match(/^\s*/)[0];
-                                    lines[j] = existingIndent + 'description: ' + description;
-                                    foundDesc = true;
-                                    modified = true;
-                                    break;
-                                }
-                                j++;
-                            }
-
-                            if (!foundDesc) {
-                                lines.splice(i + 1, 0, descIndent + 'description: ' + description);
-                                modified = true;
-                            }
+                if (anchorLine >= 0) {
+                    var anchorIndent = lines[anchorLine].match(/^\s*/)[0].length;
+                    for (var j = anchorLine + 1; j < lines.length; j++) {
+                        var currentLine = lines[j];
+                        if (!currentLine.trim()) {
+                            continue;
+                        }
+                        var currentIndent = currentLine.match(/^\s*/)[0].length;
+                        if (currentIndent <= anchorIndent &&
+                            (currentLine.trim().startsWith('operationId:') ||
+                                currentLine.trim().startsWith('- name:') ||
+                                currentLine.trim().startsWith('name:') ||
+                                currentLine.trim().match(/^(get|post|put|delete|patch|options|head):$/))) {
+                            searchEnd = j;
                             break;
                         }
                     }
                 }
+
+                for (var i = searchStart; i < searchEnd; i++) {
+                    var trimmedLine = lines[i].trim();
+                    if (trimmedLine === '- name: ' + fieldName ||
+                        trimmedLine === '- name: "' + fieldName + '"' ||
+                        trimmedLine === 'name: ' + fieldName ||
+                        trimmedLine === 'name: "' + fieldName + '"' ||
+                        trimmedLine === fieldName + ':') {
+                        return i;
+                    }
+                }
+
+                for (var i = 0; i < lines.length; i++) {
+                    var trimmedLine = lines[i].trim();
+                    if (trimmedLine === '- name: ' + fieldName ||
+                        trimmedLine === '- name: "' + fieldName + '"' ||
+                        trimmedLine === 'name: ' + fieldName ||
+                        trimmedLine === 'name: "' + fieldName + '"' ||
+                        trimmedLine === fieldName + ':') {
+                        return i;
+                    }
+                }
             }
 
-            if (modified) {
-                yamlEditor.setValue(lines.join('\n'));
-                closeEditModal();
-                analyze();
-                setMessage('已添加描述并重新分析');
-            } else {
-                alert('未能找到对应位置，请手动编辑 YAML 文件');
-                closeEditModal();
+            if (anchorLine >= 0) {
+                return anchorLine;
             }
-        }
 
-        /**
-         * 关闭编辑弹窗
-         */
-        function closeEditModal(event) {
-            if (event && event.target !== event.currentTarget) return;
-            var container = document.getElementById('edit-modal-container');
-            if (container) {
-                container.remove();
+            if (pathLine >= 0) {
+                return pathLine;
             }
+
+            return -1;
         }
 
         /**
@@ -2927,139 +2679,32 @@ definitions:
         function jumpToYamlLocation(issue) {
             var yaml = yamlEditor.getValue();
             var lines = yaml.split('\n');
-            var msg = issue.message || '';
+            var targetLine = findIssueLocationLine(lines, issue);
 
-            // 处理 x-java-class-annotations 不一致的情况
-            if (msg.includes('x-java-class-annotations') || msg.includes('注解') || msg.includes('annotations')) {
-                // 从 message 中提取路径
-                var pathMatch = msg.match(/路径\s+(\/[^\s]+)\s+下/);
-                if (pathMatch) {
-                    var targetPath = pathMatch[1];
-                    for (var i = 0; i < lines.length; i++) {
-                        if (lines[i].trim() === targetPath + ':') {
-                            yamlEditor.setCursor(i, 0);
-                            yamlEditor.scrollIntoView(null, 100);
-                            yamlEditor.focus();
-                            setMessage('已跳转到路径 ' + targetPath + '，行 ' + (i + 1));
-                            return;
-                        }
-                    }
-                }
-            }
-
-            if (!issue.field) {
-                // 尝试从 message 中提取路径
-                var pathMatch = msg.match(/API:\s*(\w+)\s+(\/[^\s]+)/);
-                if (pathMatch) {
-                    var method = pathMatch[1];
-                    var path = pathMatch[2];
-                    for (var i = 0; i < lines.length; i++) {
-                        if (lines[i].trim() === path + ':') {
-                            yamlEditor.setCursor(i, 0);
-                            yamlEditor.scrollIntoView(null, 100);
-                            yamlEditor.focus();
-                            setMessage('已跳转到路径 ' + path + '，行 ' + (i + 1));
-                            return;
-                        }
-                    }
-                }
+            if (targetLine < 0) {
                 setMessage('无法定位到具体位置，请手动查找');
                 return;
             }
 
-            // 根据 issue.field 查找对应行
-            // field 格式可能是: "GET /api/path parameters[0]" 或 "path.method.requestBody.field"
-            var searchTerm = '';
-
-            if (issue.field.includes('parameters[')) {
-                // 提取参数索引
-                var match = issue.field.match(/parameters\[(\d+)\]/);
-                if (match) {
-                    var paramIndex = parseInt(match[1]);
-                    var currentParamIndex = -1;
-                    for (var i = 0; i < lines.length; i++) {
-                        if (lines[i].match(/^\s*- name:/)) {
-                            currentParamIndex++;
-                            if (currentParamIndex === paramIndex) {
-                                yamlEditor.setCursor(i, 0);
-                                yamlEditor.scrollIntoView(null, 100);
-                                yamlEditor.focus();
-                                setMessage('已跳转到参数位置');
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 尝试从 message 中提取字段名
-            var fieldMatch = issue.message.match(/参数 (\w+) /);
-            if (fieldMatch) {
-                searchTerm = fieldMatch[1];
-                for (var i = 0; i < lines.length; i++) {
-                    if (lines[i].includes('name: ' + searchTerm) || lines[i].includes(searchTerm + ':')) {
-                        yamlEditor.setCursor(i, 0);
-                        yamlEditor.scrollIntoView(null, 100);
-                        yamlEditor.focus();
-                        setMessage('已跳转到位置，行 ' + (i + 1));
-                        return;
-                    }
-                }
-            }
-
-            setMessage('无法定位到具体位置，请手动查找');
+            yamlEditor.setCursor(targetLine, 0);
+            yamlEditor.scrollIntoView(null, 100);
+            yamlEditor.focus();
+            setMessage('已跳转到位置，行 ' + (targetLine + 1));
         }
 
         /**
          * 判断问题是否可以自动修复
          */
         function isAutoFixable(issue) {
-            var msg = issue.message || '';
+            return !!(issue && issue.fixable === true);
+        }
 
-            if (!msg) {
+        function isManualLocatable(issue) {
+            if (!issue || issue.fixable === true) {
                 return false;
             }
 
-            if ((issue.severity === 'error') && (msg.includes('重复的') || msg.includes('YAML 语法'))) {
-                return false;
-            }
-
-            var unfixablePatterns = [
-                '缺少 description',
-                '需手动添加描述',
-                'x-java-class-annotations',
-                'annotations',
-                '不一致'
-            ];
-            for (var i = 0; i < unfixablePatterns.length; i++) {
-                if (msg.includes(unfixablePatterns[i])) {
-                    return false;
-                }
-            }
-
-            return issue.field === 'path' ||
-                msg.includes('路径不能包含重复斜杠') ||
-                msg.includes('路径必须以 / 开头') ||
-                msg.includes('缺少 operationId') ||
-                msg.includes('缺少类型定义') ||
-                msg.includes('notNull') ||
-                msg.includes('@NotNull') ||
-                msg.includes('@Email') ||
-                msg.includes('邮箱') ||
-                msg.includes('正则') ||
-                msg.includes('pattern') ||
-                msg.includes('电话') ||
-                msg.includes('长度') ||
-                msg.includes('范围') ||
-                msg.includes('minLength') ||
-                msg.includes('maxLength') ||
-                msg.includes('minimum') ||
-                msg.includes('maximum') ||
-                msg.includes('@Past') ||
-                msg.includes('生日') ||
-                msg.includes('@Future') ||
-                msg.includes('计划') ||
-                msg.includes('预约');
+            return !!(issue.locator && typeof issue.locator === 'object');
         }
 
 
@@ -3084,35 +2729,43 @@ definitions:
             countEl.textContent = selected + '/' + total;
         }
 
-        function autoFix() {
+        async function autoFix() {
             try {
                 // 使用当前编辑器内容作为修复来源，避免分析后继续基于旧快照生成修复
-                var rawContent = yamlEditor.getValue();
-                var content = stripYamlComments(rawContent);
-                var analyzer = new ApiYamlAnalyzer();
+                var content = yamlEditor.getValue();
 
                 // Get selected issues and compute selective fix
                 var issues = window.currentIssues || [];
-                var selectedIndices = Object.keys(selectedIssues).filter(function(i) { return selectedIssues[i]; }).map(function(i) { return parseInt(i); });
+                var selectedIssueKeys = Object.keys(selectedIssues)
+                    .filter(function(i) { return selectedIssues[i]; })
+                    .map(function(i) { return getIssueKey(issues[parseInt(i)], parseInt(i)); });
 
                 // 如果没有选中任何问题，默认选择所有可自动修复的问题
-                if (selectedIndices.length === 0) {
+                if (selectedIssueKeys.length === 0) {
                     issues.forEach(function(issue, i) {
                         if (isAutoFixable(issue)) {
-                            selectedIndices.push(i);
+                            selectedIssueKeys.push(getIssueKey(issue, i));
                         }
                     });
                 }
 
-                var fixed = analyzer.fixSelective(content, selectedIndices);
+                var response = await callCoreApi('/api/fix', {
+                    yaml: content,
+                    selectedIssueKeys: selectedIssueKeys
+                });
 
-                // 获取修复统计
-                var fixStats = analyzer.fixStats || { paramsFixed: 0 };
-                window.currentFixStats = fixStats;
+                window.currentFixStats = {
+                    paramsFixed: response.fixedCount || 0
+                };
 
-                // Show diff preview - 使用去掉注释后的内容作为修复前
-                showDiffPreview(content, fixed);
-                setMessage('点击"应用修复"确认更改');
+                if (!response.fixedYaml || response.fixedYaml === content || (response.fixedCount || 0) === 0) {
+                    setMessage('当前选中的问题暂无可应用的自动修复内容');
+                    return;
+                }
+
+                // Show diff preview
+                showDiffPreview(content, response.fixedYaml || content);
+                setMessage('已生成修复预览，请点击右下角“应用修复”');
             } catch (e) {
                 console.error('AutoFix error:', e);
                 setMessage('自动修复出错: ' + e.message);
@@ -3285,269 +2938,122 @@ definitions:
         }
 
         /**
-         * Show diff preview modal - 统一视图显示 Java 代码风格对比
+         * Show diff preview modal - 只展示 core 返回 YAML 的左右对比
          */
         function showDiffPreview(before, after) {
             try {
-                // 解析YAML获取API列表
-                var beforeParsed, afterParsed;
-                try {
-                    beforeParsed = jsyaml.load(before);
-                    afterParsed = jsyaml.load(after);
-                } catch (e) {
-                    console.error('YAML parse error in showDiffPreview:', e);
-                    beforeParsed = null;
-                    afterParsed = null;
-                }
+                var diffHost = document.getElementById('diff-unified');
+                var diffStats = Diff.diffLines(before || '', after || '');
+                var addCount = 0;
+                var removeCount = 0;
 
-            // 路径标准化函数 - 用于匹配修复前后的路径
-            function normalizePath(path) {
-                return normalizePathForDiff(path);
-            }
-
-            // 构建标准化路径映射
-            var normalizedBeforePaths = {};
-            if (beforeParsed && beforeParsed.paths) {
-                for (var origPath in beforeParsed.paths) {
-                    var np = normalizePath(origPath);
-                    normalizedBeforePaths[np] = origPath;
-                }
-            }
-
-            var normalizedAfterPaths = {};
-            if (afterParsed && afterParsed.paths) {
-                for (var origPath in afterParsed.paths) {
-                    var np = normalizePath(origPath);
-                    normalizedAfterPaths[np] = origPath;
-                }
-            }
-
-            // 获取所有标准化路径
-            var allNormalizedPaths = new Set([
-                ...Object.keys(normalizedBeforePaths),
-                ...Object.keys(normalizedAfterPaths)
-            ]);
-
-            // 获取所有API路径（使用标准化路径匹配）
-            var apis = [];
-            allNormalizedPaths.forEach(function(np) {
-                var beforeOrigPath = normalizedBeforePaths[np];
-                var afterOrigPath = normalizedAfterPaths[np];
-                var beforeMethods = beforeOrigPath ? beforeParsed.paths[beforeOrigPath] : {};
-                var afterMethods = afterOrigPath ? afterParsed.paths[afterOrigPath] : {};
-
-                // 获取所有方法
-                var allMethods = new Set([
-                    ...Object.keys(beforeMethods || {}),
-                    ...Object.keys(afterMethods || {})
-                ]);
-
-                allMethods.forEach(function(method) {
-                    // 过滤掉 x- 开头的扩展字段（如 x-java-class-annotations）
-                    if (method.startsWith('x-')) return;
-                    // 过滤掉非 HTTP 方法
-                    var httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'];
-                    if (!httpMethods.includes(method.toLowerCase())) return;
-
-                    apis.push({
-                        normalizedPath: np,
-                        beforePath: beforeOrigPath,
-                        afterPath: afterOrigPath,
-                        method: method.toUpperCase(),
-                        before: beforeMethods ? (beforeMethods[method] || null) : null,
-                        after: afterMethods ? (afterMethods[method] || null) : null
-                    });
-                });
-            });
-
-            // 如果没有API或解析失败，回退到简单对比
-            if (apis.length === 0) {
-                var diff = Diff.diffLines(before, after);
-                var unifiedHtml = '<div class="diff-api-unified"><div class="diff-api-code-section">';
-                unifiedHtml += '<div class="diff-code-block">' + renderUnifiedDiff(before, after, diff) + '</div>';
-                unifiedHtml += '</div></div>';
-                document.getElementById('diff-unified').innerHTML = unifiedHtml;
-
-                var addCount = 0, removeCount = 0;
-                diff.forEach(function(part) {
+                diffStats.forEach(function(part) {
                     var lines = (part.value.match(/\n/g) || []).length || 1;
                     if (part.added) addCount += lines;
                     if (part.removed) removeCount += lines;
                 });
-                document.getElementById('diff-adds').textContent = '+' + addCount + ' 行';
-                document.getElementById('diff-removes').textContent = '-' + removeCount + ' 行';
-            } else {
-                // 统一视图渲染 - 只显示有变化的 API
-                var unifiedHtml = '';
-                var changeCount = 0;
 
-                apis.forEach(function(api, index) {
-                    var method = api.method;
-                    var beforePath = api.beforePath || '';
-                    var afterPath = api.afterPath || '';
-
-                    // 生成该API的 Java 代码
-                    var beforeJava = api.before ? generateJavaCode(beforePath, method, api.before) : '';
-                    var afterJava = api.after ? generateJavaCode(afterPath, method, api.after) : '';
-
-                    // 判断是否有变化
-                    var changeType = '';
-                    var hasChange = false;
-                    if (api.before && !api.after) {
-                        changeType = 'removed';
-                        hasChange = true;
-                    } else if (!api.before && api.after) {
-                        changeType = 'added';
-                        hasChange = true;
-                    } else if (beforePath !== afterPath) {
-                        changeType = 'path-fixed';
-                        hasChange = true;
-                    } else {
-                        var beforeStr = JSON.stringify(api.before);
-                        var afterStr = JSON.stringify(api.after);
-                        if (beforeStr !== afterStr) {
-                            changeType = 'modified';
-                            hasChange = true;
-                        }
-                    }
-
-                    // 只显示有变化的 API
-                    if (!hasChange) return;
-                    changeCount++;
-
-                    // 开始渲染统一块
-                    unifiedHtml += '<div class="diff-api-unified">';
-
-                    // 头部：显示方法和路径变化
-                    unifiedHtml += '<div class="diff-api-unified-header">';
-                    unifiedHtml += '<span class="diff-api-unified-badge ' + method.toLowerCase() + '">' + method + '</span>';
-
-                    if (changeType === 'path-fixed') {
-                        unifiedHtml += '<span class="diff-api-path-before">' + escapeHtml(beforePath) + '</span>';
-                        unifiedHtml += '<span class="diff-api-path-arrow">→</span>';
-                        unifiedHtml += '<span class="diff-api-path-after">' + escapeHtml(afterPath) + '</span>';
-                        unifiedHtml += '<span class="diff-api-change-type path-fixed">路径修复</span>';
-                    } else {
-                        unifiedHtml += '<span class="diff-api-path-unchanged">' + escapeHtml(afterPath || beforePath) + '</span>';
-                        if (changeType === 'added') {
-                            unifiedHtml += '<span class="diff-api-change-type added">新增</span>';
-                        } else if (changeType === 'removed') {
-                            unifiedHtml += '<span class="diff-api-change-type removed">已删除</span>';
-                        } else if (changeType === 'modified') {
-                            unifiedHtml += '<span class="diff-api-change-type modified">参数修改</span>';
-                        }
-                    }
-                    unifiedHtml += '</div>';
-
-                    // 行级 diff 视图
-                    unifiedHtml += '<div class="diff-line-by-line">';
-
-                    if (changeType === 'path-fixed') {
-                        // 路径修复：只显示修复后的代码
-                        unifiedHtml += '<div class="diff-code-block add">';
-                        unifiedHtml += renderLineByLineDiff('', afterJava);
-                        unifiedHtml += '</div>';
-                    } else {
-                        // 其他修改：显示行级对比
-                        unifiedHtml += renderLineByLineDiff(beforeJava, afterJava);
-                    }
-
-                    unifiedHtml += '</div>';
-                    unifiedHtml += '</div>';
-                });
-
-                // 如果没有变化
-                if (changeCount === 0) {
-                    if (before !== after) {
-                        var impact = computeImpact(before, after);
-                        var hasStructuredChanges = (impact.apis && impact.apis.length > 0) || (impact.fields && impact.fields.length > 0);
-                        var fallbackDiff = Diff.diffLines(before, after);
-
-                        unifiedHtml = '<div class="diff-api-unified"><div class="diff-api-code-section">';
-
-                        if (hasStructuredChanges) {
-                            unifiedHtml += '<div class="diff-changes">';
-
-                            if (impact.apis && impact.apis.length > 0) {
-                                unifiedHtml += '<div style="margin-bottom: 8px; color: #79c0ff; font-weight: 600;">接口/请求变更</div>';
-                                impact.apis.forEach(function(api) {
-                                    var apiLabel = escapeHtml((api.method || '').toUpperCase() + ' ' + (api.path || api.originalPath || api.name || ''));
-                                    unifiedHtml += '<div style="margin-bottom: 6px; color: #c9d1d9;">• ' + apiLabel + '</div>';
-                                    (api.changes || []).forEach(function(change) {
-                                        unifiedHtml += '<div style="padding-left: 16px; color: #8b949e;">- <span class="diff-prop">' + escapeHtml(change.prop) + '</span>: <span class="diff-old-val">' + escapeHtml(String(change.before)) + '</span> → <span class="diff-new-val">' + escapeHtml(String(change.after)) + '</span></div>';
-                                    });
-                                });
-                            }
-
-                            if (impact.fields && impact.fields.length > 0) {
-                                if (impact.apis && impact.apis.length > 0) {
-                                    unifiedHtml += '<div style="height: 8px;"></div>';
-                                }
-                                unifiedHtml += '<div style="margin-bottom: 8px; color: #79c0ff; font-weight: 600;">模型/字段变更</div>';
-                                impact.fields.forEach(function(field) {
-                                    var fieldLabel = escapeHtml((field.className || 'Model') + '.' + (field.field || 'field'));
-                                    var fieldType = field.fieldType ? ' <span class="diff-field-type">(' + escapeHtml(field.fieldType) + ')</span>' : '';
-                                    unifiedHtml += '<div style="margin-bottom: 6px; color: #c9d1d9;">• ' + fieldLabel + fieldType + '</div>';
-                                    (field.changes || []).forEach(function(change) {
-                                        unifiedHtml += '<div style="padding-left: 16px; color: #8b949e;">- ' + escapeHtml(String(change)) + '</div>';
-                                    });
-                                });
-                            }
-
-                            unifiedHtml += '</div>';
-                        }
-
-                        unifiedHtml += '<div class="diff-code-block">' + renderUnifiedDiff(before, after, fallbackDiff) + '</div>';
-                        unifiedHtml += '</div></div>';
-                    } else {
-                        unifiedHtml = '<div class="diff-no-changes"><div class="diff-no-changes-icon">✓</div><div class="diff-no-changes-text">没有需要修复的问题</div></div>';
-                    }
-                }
-
-                // 渲染到统一容器
-                document.getElementById('diff-unified').innerHTML = unifiedHtml;
-
-                // 统计变化数量
-                var addCount = 0, removeCount = 0, modifyCount = 0;
-                apis.forEach(function(api) {
-                    if (api.before && !api.after) {
-                        removeCount++;
-                    } else if (!api.before && api.after) {
-                        addCount++;
-                    } else if (api.before && api.after) {
-                        var beforeStr = JSON.stringify(api.before);
-                        var afterStr = JSON.stringify(api.after);
-                        if (beforeStr !== afterStr || api.beforePath !== api.afterPath) {
-                            modifyCount++;
-                        }
-                    }
-                });
-
-                // 显示修复统计 - 优先显示实际修复的参数数量
-                var fixStats = window.currentFixStats || {};
-                if (fixStats.paramsFixed > 0) {
-                    document.getElementById('diff-adds').textContent = fixStats.paramsFixed + ' 个参数已修复';
-                } else if (changeCount === 0 && before !== after) {
-                    var fallbackDiff = Diff.diffLines(before, after);
-                    var fallbackAddCount = 0;
-                    fallbackDiff.forEach(function(part) {
-                        if (part.added) {
-                            fallbackAddCount += (part.value.match(/\n/g) || []).length || 1;
-                        }
-                    });
-                    document.getElementById('diff-adds').textContent = fallbackAddCount + ' 处修改';
+                if (before === after) {
+                    diffHost.innerHTML = '<div class="diff-no-changes"><div class="diff-no-changes-icon">✓</div><div class="diff-no-changes-text">没有需要修复的问题</div></div>';
+                    document.getElementById('diff-adds').textContent = '0 处修改';
+                    document.getElementById('diff-removes').textContent = '0 处删除';
                 } else {
-                    document.getElementById('diff-adds').textContent = modifyCount + ' 处修改';
-                }
-                document.getElementById('diff-removes').textContent = removeCount + ' 处删除';
-            }
+                    var thirdPartyDiffHtml = renderThirdPartyDiff(before, after);
+                    if (thirdPartyDiffHtml) {
+                        diffHost.innerHTML = thirdPartyDiffHtml;
+                    } else {
+                        diffHost.innerHTML = '<div class="diff-code-block">' + renderUnifiedDiff(before, after, diffStats) + '</div>';
+                    }
 
-            window.pendingFixedContent = after;
-            setupScrollSync();
-            document.getElementById('diff-modal').classList.add('active');
+                    var fixStats = window.currentFixStats || {};
+                    if (fixStats.paramsFixed > 0) {
+                        document.getElementById('diff-adds').textContent = fixStats.paramsFixed + ' 个参数已修复';
+                    } else {
+                        document.getElementById('diff-adds').textContent = '+' + addCount + ' 行';
+                    }
+                    document.getElementById('diff-removes').textContent = '-' + removeCount + ' 行';
+                }
+
+                window.pendingFixedContent = after;
+                setupScrollSync();
+                document.getElementById('diff-modal').classList.add('active');
             } catch (e) {
                 console.error('showDiffPreview error:', e);
                 setMessage('显示预览出错: ' + e.message);
+            }
+        }
+
+        function renderUnifiedDiff(before, after, diff) {
+            var html = '';
+            var beforeLine = 1;
+            var afterLine = 1;
+
+            (diff || []).forEach(function(part) {
+                var lines = part.value.split('\n');
+                lines.forEach(function(line, index) {
+                    if (index === lines.length - 1 && line === '') {
+                        return;
+                    }
+
+                    var state = '';
+                    var prefix = ' ';
+                    var leftLine = beforeLine;
+                    var rightLine = afterLine;
+
+                    if (part.added) {
+                        state = ' add';
+                        prefix = '+';
+                        leftLine = '';
+                        afterLine++;
+                    } else if (part.removed) {
+                        state = ' remove';
+                        prefix = '-';
+                        rightLine = '';
+                        beforeLine++;
+                    } else {
+                        beforeLine++;
+                        afterLine++;
+                    }
+
+                    html += '<div class="diff-line' + state + '">';
+                    html += '<div class="diff-line-prefix">' + prefix + '</div>';
+                    html += '<div class="diff-line-num">' + leftLine + '</div>';
+                    html += '<div class="diff-line-num">' + rightLine + '</div>';
+                    html += '<div class="diff-line-content">' + escapeHtml(line) + '</div>';
+                    html += '</div>';
+                });
+            });
+
+            return html;
+        }
+
+        function renderThirdPartyDiff(before, after) {
+            if (typeof Diff === 'undefined' || typeof Diff.createTwoFilesPatch !== 'function' ||
+                typeof Diff2Html === 'undefined' || typeof Diff2Html.html !== 'function') {
+                return '';
+            }
+
+            try {
+                var patch = Diff.createTwoFilesPatch('before.yaml', 'after.yaml', before || '', after || '', '', '', {
+                    context: 3
+                });
+
+                var html = Diff2Html.html(patch, {
+                    drawFileList: false,
+                    matching: 'lines',
+                    outputFormat: 'side-by-side'
+                });
+
+                return '<div class="diff-third-party-shell">' +
+                    '<div class="diff-third-party-header">' +
+                    '<span class="diff-third-party-title">完整 YAML 对比</span>' +
+                    '<span class="diff-third-party-badge">左右对比</span>' +
+                    '</div>' +
+                    '<div class="diff-third-party-body">' + html + '</div>' +
+                    '</div>';
+            } catch (e) {
+                console.error('renderThirdPartyDiff error:', e);
+                return '';
             }
         }
 
@@ -3875,13 +3381,18 @@ definitions:
                 var fixedPath = api.path || '';
                 var originalPath = api.originalPath || api.path || '';
                 var apiName = api.name || api.summary || api.operationId || fixedPath.replace(/\//g, '').replace(/\{|\}/g, '') || 'api';
-                var annotations = api.annotations || [];
+                var annotations = {
+                    classAnnotations: api.classAnnotations || [],
+                    methodAnnotations: api.methodAnnotations || [],
+                    legacyAnnotations: api.annotations || []
+                };
                 var params = api.parameters || [];
                 var originalParams = api.originalParameters || api.parameters || [];
 
                 // 生成Java代码
                 var javaCode = generateJavaControllerCode(fixedPath, method, apiName, annotations, api.description, params);
                 var originalJavaCode = generateJavaControllerCode(originalPath, method, apiName, annotations, api.description, originalParams);
+                var resourceSummary = renderResourceAnnotationSummary(annotations);
 
                 // 方法颜色
                 var methodColor = method === 'GET' ? '#61affe' : method === 'POST' ? '#49cc90' : method === 'PUT' ? '#fca130' : method === 'DELETE' ? '#f93e3e' : '#9012fe';
@@ -3921,6 +3432,7 @@ definitions:
                         '<div class="diff-api-block-content">' +
                         '<div class="diff-api-block-after" style="flex:1">' +
                         '<div class="diff-api-block-label" style="color:#2ed573">+ 新增</div>' +
+                        resourceSummary +
                         '<pre class="diff-java-code">' + javaCode + '</pre>' +
                         '</div>' +
                         '</div></div>';
@@ -3935,6 +3447,7 @@ definitions:
                         '<div class="diff-api-block-content">' +
                         '<div class="diff-api-block-before" style="flex:1">' +
                         '<div class="diff-api-block-label" style="color:#ff4757">- 删除</div>' +
+                        resourceSummary +
                         '<pre class="diff-java-code">' + originalJavaCode + '</pre>' +
                         '</div>' +
                         '</div></div>';
@@ -3949,6 +3462,7 @@ definitions:
                         '<div class="diff-api-block-content">' +
                         '<div class="diff-api-block-before" style="flex:1">' +
                         '<div class="diff-api-block-label" style="color:#ff4757">修改前</div>' +
+                        resourceSummary +
                         changesSummary +
                         '<pre class="diff-java-code">' + originalJavaCode + '</pre>' +
                         '</div>' +
@@ -3959,6 +3473,7 @@ definitions:
                         '<div class="diff-api-block-content">' +
                         '<div class="diff-api-block-after" style="flex:1">' +
                         '<div class="diff-api-block-label" style="color:#2ed573">修改后</div>' +
+                        resourceSummary +
                         changesSummary +
                         '<pre class="diff-java-code">' + javaCode + '</pre>' +
                         '</div>' +
@@ -3974,13 +3489,58 @@ definitions:
             afterContainer.innerHTML = afterBlocksHtml;
         }
 
+        function normalizeAnnotationBundle(annotations) {
+            if (Array.isArray(annotations)) {
+                return {
+                    classAnnotations: [],
+                    methodAnnotations: [],
+                    legacyAnnotations: annotations
+                };
+            }
+
+            annotations = annotations || {};
+            return {
+                classAnnotations: annotations.classAnnotations || [],
+                methodAnnotations: annotations.methodAnnotations || [],
+                legacyAnnotations: annotations.legacyAnnotations || annotations.annotations || []
+            };
+        }
+
+        function renderResourceAnnotationSummary(annotationBundle) {
+            var normalized = normalizeAnnotationBundle(annotationBundle);
+            if (normalized.classAnnotations.length === 0 && normalized.methodAnnotations.length === 0 && normalized.legacyAnnotations.length === 0) {
+                return '';
+            }
+
+            var html = '<div class="diff-resource-summary">';
+            if (normalized.classAnnotations.length > 0) {
+                html += '<div class="diff-resource-row"><span class="diff-resource-label">资源组</span>';
+                normalized.classAnnotations.forEach(function(annotation) {
+                    html += '<span class="diff-resource-chip type-class">' + escapeHtml(annotation) + '</span>';
+                });
+                html += '</div>';
+            }
+
+            var methodAnnotations = normalized.methodAnnotations.concat(normalized.legacyAnnotations);
+            if (methodAnnotations.length > 0) {
+                html += '<div class="diff-resource-row"><span class="diff-resource-label">方法</span>';
+                methodAnnotations.forEach(function(annotation) {
+                    html += '<span class="diff-resource-chip type-method">' + escapeHtml(annotation) + '</span>';
+                });
+                html += '</div>';
+            }
+
+            html += '</div>';
+            return html;
+        }
+
         /**
          * 生成 Java Controller 代码风格（完整方法预览，带语法高亮）
          */
         function generateJavaControllerCode(path, httpMethod, apiName, annotations, description, params) {
             var methodName = toCamelCase(apiName);
             var returnType = 'Response';
-            annotations = annotations || [];
+            var annotationBundle = normalizeAnnotationBundle(annotations);
             description = description || apiName;
             params = params || [];
 
@@ -4004,8 +3564,24 @@ definitions:
 
             // 生成自定义注解（带语法高亮）
             var customAnnotationsHtml = '';
-            if (annotations && annotations.length > 0) {
-                annotations.forEach(function(ann) {
+            if (annotationBundle.classAnnotations.length > 0) {
+                customAnnotationsHtml += '    <span class="syntax-comment">// 资源组注解</span>\n';
+                annotationBundle.classAnnotations.forEach(function(ann) {
+                    var highlighted = ann
+                        .replace(/(@\w+)/g, '<span class="syntax-keyword">$1</span>')
+                        .replace(/(\w+)=/g, '<span class="syntax-field">$1</span>=')
+                        .replace(/(".*?")/g, '<span class="syntax-string">$1</span>');
+                    customAnnotationsHtml += '    <span class="syntax-annotation">' + highlighted + '</span>\n';
+                });
+            }
+
+            var methodAnnotations = annotationBundle.methodAnnotations.concat(annotationBundle.legacyAnnotations);
+            if (methodAnnotations.length > 0) {
+                if (customAnnotationsHtml) {
+                    customAnnotationsHtml += '\n';
+                }
+                customAnnotationsHtml += '    <span class="syntax-comment">// 方法注解</span>\n';
+                methodAnnotations.forEach(function(ann) {
                     var highlighted = ann
                         .replace(/(@\w+)/g, '<span class="syntax-keyword">$1</span>')
                         .replace(/(\w+)=/g, '<span class="syntax-field">$1</span>=')
@@ -4483,6 +4059,12 @@ definitions:
                 var isSwagger = (beforeParsed.swagger || beforeParsed.openapi || beforeParsed.paths);
 
                 if (isSwagger) {
+                    // Swagger/OpenAPI 的结构化比较只在两边都仍是 paths 结构时成立。
+                    // 如果修复后已经归一化成 core apis YAML，则回退到通用文本 diff，不误报结构化变更。
+                    if (!!beforeParsed.paths !== !!afterParsed.paths) {
+                        return result;
+                    }
+
                     // Swagger/OpenAPI format - compare paths/APIs
                     var beforePaths = beforeParsed.paths || {};
                     var afterPaths = afterParsed.paths || {};
@@ -4594,11 +4176,34 @@ definitions:
                         return collectSchemaChanges(beforeParsed, beforeSchema, afterParsed, afterSchema, 'requestBody');
                     }
 
+                    function getOperationAnnotationBundle(pathItem, operation) {
+                        return {
+                            classAnnotations: Array.isArray(pathItem && pathItem['x-java-class-annotations']) ? pathItem['x-java-class-annotations'] : [],
+                            methodAnnotations: Array.isArray(operation && operation['x-java-method-annotations']) ? operation['x-java-method-annotations'] : [],
+                            annotations: Array.isArray(operation && operation.annotations) ? operation.annotations : []
+                        };
+                    }
+
+                    function getFirstHttpMethodKey(pathItem) {
+                        var httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'];
+                        for (var i = 0; i < httpMethods.length; i++) {
+                            if (pathItem && pathItem[httpMethods[i]]) {
+                                return httpMethods[i];
+                            }
+                        }
+                        return Object.keys(pathItem || {})[0];
+                    }
+
                     // Build normalized map for before paths
                     var normalizedBeforePaths = {};
                     for (var origPath in beforePaths) {
                         var np = normalizePath(origPath);
                         normalizedBeforePaths[np] = origPath;
+                    }
+
+                    var normalizedAfterPaths = {};
+                    for (var afterOrigPath in afterPaths) {
+                        normalizedAfterPaths[normalizePath(afterOrigPath)] = afterOrigPath;
                     }
 
                     // Compare each path in after
@@ -4618,17 +4223,22 @@ definitions:
                         if (!beforePath && originalPath === path) {
                             // New API path added - check if it's truly new (not just normalized difference)
                             if (!normalizedBeforePaths[np]) {
-                                var afterOp = afterPath[Object.keys(afterPath)[0]];
+                                var addedMethodKey = getFirstHttpMethodKey(afterPath);
+                                var afterOp = afterPath[addedMethodKey];
+                                var addedAnnotations = getOperationAnnotationBundle(afterPath, afterOp);
                                 // Only add if there's actual content
                                 if (afterOp.summary || afterOp.operationId || (afterOp.parameters && afterOp.parameters.length > 0)) {
                                     result.apis.push({
                                         path: path,
                                         originalPath: path,
-                                        method: Object.keys(afterPath)[0],
+                                        method: addedMethodKey,
                                         name: afterOp.operationId || afterOp.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
                                         summary: afterOp.summary || '',
                                         operationId: afterOp.operationId || '',
                                         parameters: afterOp.parameters || [],
+                                        classAnnotations: addedAnnotations.classAnnotations,
+                                        methodAnnotations: addedAnnotations.methodAnnotations,
+                                        annotations: addedAnnotations.annotations,
                                         type: 'added',
                                         changes: [{ prop: 'API', before: '(无)', after: '新增接口' }]
                                     });
@@ -4636,9 +4246,10 @@ definitions:
                             }
                         } else if (originalPath !== path) {
                             // Path was fixed (//users -> /users or users -> /users)
-                            var methodKey = Object.keys(afterPath)[0];
+                            var methodKey = getFirstHttpMethodKey(afterPath);
                             var afterOpFixed = afterPath[methodKey];
                             var beforeOpFixed = beforePath[methodKey] || {};
+                            var fixedAnnotations = getOperationAnnotationBundle(afterPath, afterOpFixed);
                             var changes = [{ prop: 'path', before: originalPath, after: path }];
 
                             if (!beforeOpFixed.operationId && afterOpFixed.operationId) {
@@ -4710,6 +4321,9 @@ definitions:
                                 operationId: afterOpFixed.operationId || '',
                                 parameters: afterOpFixed.parameters || [],
                                 originalParameters: beforeOpFixed.parameters || [],
+                                classAnnotations: fixedAnnotations.classAnnotations,
+                                methodAnnotations: fixedAnnotations.methodAnnotations,
+                                annotations: fixedAnnotations.annotations,
                                 type: 'modified',
                                 changes: changes
                             });
@@ -4824,17 +4438,22 @@ definitions:
 
                             // Only add to result if there are actual changes
                             if (hasActualChange) {
-                                var firstAfterMethod = afterPath[Object.keys(afterPath)[0]];
-                                var firstBeforeMethod = beforePath[Object.keys(beforePath)[0]] || {};
+                                var firstMethodKey = getFirstHttpMethodKey(afterPath);
+                                var firstAfterMethod = afterPath[firstMethodKey];
+                                var firstBeforeMethod = beforePath[firstMethodKey] || {};
+                                var modifiedAnnotations = getOperationAnnotationBundle(afterPath, firstAfterMethod);
                                 result.apis.push({
                                     path: path,
                                     originalPath: originalPath,
-                                    method: Object.keys(afterPath)[0],
+                                    method: firstMethodKey,
                                     name: firstAfterMethod.operationId || firstAfterMethod.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
                                     summary: firstAfterMethod.summary || '',
                                     operationId: firstAfterMethod.operationId || '',
                                     parameters: firstAfterMethod.parameters || [],
                                     originalParameters: firstBeforeMethod.parameters || [],
+                                    classAnnotations: modifiedAnnotations.classAnnotations,
+                                    methodAnnotations: modifiedAnnotations.methodAnnotations,
+                                    annotations: modifiedAnnotations.annotations,
                                     type: (originalPath !== path || pathChanges.some(function(c) { return c.prop === 'path'; })) ? 'modified' : 'modified',
                                     changes: pathChanges
                                 });
@@ -4844,16 +4463,25 @@ definitions:
 
                     // Check for deleted paths
                     for (var path in beforePaths) {
+                        var normalizedDeletedPath = normalizePath(path);
+                        if (normalizedAfterPaths[normalizedDeletedPath]) {
+                            continue;
+                        }
                         if (!afterPaths[path]) {
-                            var beforeOp = beforePaths[path][Object.keys(beforePaths[path])[0]];
+                            var deletedMethodKey = getFirstHttpMethodKey(beforePaths[path]);
+                            var beforeOp = beforePaths[path][deletedMethodKey];
+                            var deletedAnnotations = getOperationAnnotationBundle(beforePaths[path], beforeOp);
                             result.apis.push({
                                 path: path,
                                 originalPath: path,
-                                method: Object.keys(beforePaths[path])[0],
+                                method: deletedMethodKey,
                                 name: beforeOp.operationId || beforeOp.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
                                 summary: beforeOp.summary || '',
                                 operationId: beforeOp.operationId || '',
                                 parameters: beforeOp.parameters || [],
+                                classAnnotations: deletedAnnotations.classAnnotations,
+                                methodAnnotations: deletedAnnotations.methodAnnotations,
+                                annotations: deletedAnnotations.annotations,
                                 type: 'deleted',
                                 changes: []
                             });

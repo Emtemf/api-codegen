@@ -15,6 +15,63 @@ const path = require('path');
 // Load js-yaml npm package
 const jsyaml = require('js-yaml');
 
+function createWordDiffShim() {
+    function findCommonPrefixLength(a, b) {
+        var max = Math.min(a.length, b.length);
+        var i = 0;
+        while (i < max && a[i] === b[i]) {
+            i++;
+        }
+        return i;
+    }
+
+    function findCommonSuffixLength(a, b, prefixLength) {
+        var aIndex = a.length - 1;
+        var bIndex = b.length - 1;
+        var suffix = 0;
+        while (aIndex >= prefixLength && bIndex >= prefixLength && a[aIndex] === b[bIndex]) {
+            suffix++;
+            aIndex--;
+            bIndex--;
+        }
+        return suffix;
+    }
+
+    return {
+        diffWords(before, after) {
+            if (before === after) {
+                return [{ value: before, added: false, removed: false }];
+            }
+
+            var prefixLength = findCommonPrefixLength(before, after);
+            var suffixLength = findCommonSuffixLength(before, after, prefixLength);
+
+            var parts = [];
+            var prefix = before.slice(0, prefixLength);
+            var beforeMiddle = before.slice(prefixLength, before.length - suffixLength);
+            var afterMiddle = after.slice(prefixLength, after.length - suffixLength);
+            var suffix = suffixLength > 0 ? before.slice(before.length - suffixLength) : '';
+
+            if (prefix) {
+                parts.push({ value: prefix, added: false, removed: false });
+            }
+            if (beforeMiddle) {
+                parts.push({ value: beforeMiddle, added: false, removed: true });
+            }
+            if (afterMiddle) {
+                parts.push({ value: afterMiddle, added: true, removed: false });
+            }
+            if (suffix) {
+                parts.push({ value: suffix, added: false, removed: false });
+            }
+
+            return parts;
+        }
+    };
+}
+
+global.Diff = createWordDiffShim();
+
 // ============================================
 // 测试框架
 // ============================================
@@ -53,445 +110,48 @@ function assertContains(arr, item, msg) {
 // Diff 核心函数（从 index.html 提取）
 // ============================================
 
-/**
- * Compute line-by-line diff using improved LCS
- */
-function computeDiff(before, after) {
-    var beforeLines = before.split('\n');
-    var afterLines = after.split('\n');
+function extractFunctionSource(fileContent, functionName) {
+    const startToken = `function ${functionName}`;
+    const startIndex = fileContent.indexOf(startToken);
+    if (startIndex === -1) {
+        throw new Error(`未在 index.html 中找到函数: ${functionName}`);
+    }
 
-    // Build LCS matrix
-    var lcs = [];
-    for (var i = 0; i <= beforeLines.length; i++) {
-        lcs[i] = [];
-        for (var j = 0; j <= afterLines.length; j++) {
-            if (i === 0 || j === 0) {
-                lcs[i][j] = 0;
-            } else if (beforeLines[i - 1] === afterLines[j - 1]) {
-                lcs[i][j] = lcs[i - 1][j - 1] + 1;
-            } else {
-                lcs[i][j] = Math.max(lcs[i - 1][j], lcs[i][j - 1]);
-            }
+    const bodyStart = fileContent.indexOf('{', startIndex);
+    if (bodyStart === -1) {
+        throw new Error(`函数 ${functionName} 缺少函数体`);
+    }
+
+    let depth = 0;
+    for (let i = bodyStart; i < fileContent.length; i++) {
+        const char = fileContent[i];
+        if (char === '{') depth++;
+        if (char === '}') depth--;
+        if (depth === 0) {
+            return fileContent.slice(startIndex, i + 1);
         }
     }
 
-    // Backtrack to build diff with line numbers
-    var diff = [];
-    var i = beforeLines.length;
-    var j = afterLines.length;
-
-    while (i > 0 || j > 0) {
-        if (i > 0 && j > 0 && beforeLines[i - 1] === afterLines[j - 1]) {
-            diff.unshift({
-                type: 'equal',
-                beforeLine: i - 1,
-                afterLine: j - 1,
-                content: beforeLines[i - 1]
-            });
-            i--;
-            j--;
-        } else if (j > 0 && (i === 0 || lcs[i][j - 1] >= lcs[i - 1][j])) {
-            diff.unshift({
-                type: 'add',
-                beforeLine: null,
-                afterLine: j - 1,
-                content: afterLines[j - 1]
-            });
-            j--;
-        } else if (i > 0 && (j === 0 || lcs[i][j - 1] < lcs[i - 1][j])) {
-            diff.unshift({
-                type: 'remove',
-                beforeLine: i - 1,
-                afterLine: null,
-                content: beforeLines[i - 1]
-            });
-            i--;
-        }
-    }
-
-    return diff;
+    throw new Error(`函数 ${functionName} 提取失败，括号未闭合`);
 }
 
-/**
- * Compute impact summary - API level changes
- */
-function computeImpact(before, after) {
-    var result = {
-        apis: [],
-        fields: []
-    };
+function loadDiffHelpersFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const normalizePathForDiffSource = extractFunctionSource(indexHtml, 'normalizePathForDiff');
+    const getSwaggerFieldChangesSource = extractFunctionSource(indexHtml, 'getSwaggerFieldChanges');
+    const computeImpactSource = extractFunctionSource(indexHtml, 'computeImpact');
+    const computeDiffSource = extractFunctionSource(indexHtml, 'computeDiff');
 
-    try {
-        var beforeParsed = jsyaml.load(before);
-        var afterParsed = jsyaml.load(after);
-
-        if (!beforeParsed || !afterParsed) {
-            return result;
-        }
-
-        // Check if it's Swagger/OpenAPI format
-        var isSwagger = (beforeParsed.swagger || beforeParsed.openapi || beforeParsed.paths);
-
-        if (isSwagger) {
-            var beforePaths = beforeParsed.paths || {};
-            var afterPaths = afterParsed.paths || {};
-
-            // Normalize path: convert backslashes, collapse duplicate separators, ensure leading /
-            function normalizePath(path) {
-                if (!path) return path;
-                var normalized = String(path).replace(/[\\/]+/g, '/');
-                normalized = normalized.replace(/^\/[A-Z][A-Z0-9_]*\//, '/');
-                if (!normalized.startsWith('/')) {
-                    normalized = '/' + normalized;
-                }
-                return normalized;
-            }
-
-            function getRefSchema(doc, ref) {
-                if (!doc || !ref || ref.charAt(0) !== '#') {
-                    return null;
-                }
-                var parts = ref.substring(2).split('/');
-                var current = doc;
-                for (var i = 0; i < parts.length; i++) {
-                    if (!current) {
-                        return null;
-                    }
-                    current = current[parts[i]];
-                }
-                return current || null;
-            }
-
-            function resolveSchema(doc, schema, seenRefs) {
-                if (!schema) {
-                    return null;
-                }
-                if (schema.$ref) {
-                    seenRefs = seenRefs || {};
-                    if (seenRefs[schema.$ref]) {
-                        return null;
-                    }
-                    seenRefs[schema.$ref] = true;
-                    var refSchema = getRefSchema(doc, schema.$ref);
-                    return refSchema ? resolveSchema(doc, refSchema, seenRefs) : null;
-                }
-                return schema;
-            }
-
-            function getRequestBodySchema(doc, operation) {
-                if (!operation || !operation.requestBody || !operation.requestBody.content) {
-                    return null;
-                }
-                var jsonContent = operation.requestBody.content['application/json'];
-                if (!jsonContent || !jsonContent.schema) {
-                    return null;
-                }
-                return resolveSchema(doc, jsonContent.schema, {});
-            }
-
-            function collectSchemaChanges(beforeDoc, beforeSchema, afterDoc, afterSchema, prefix) {
-                var changes = [];
-                var resolvedBefore = resolveSchema(beforeDoc, beforeSchema, {});
-                var resolvedAfter = resolveSchema(afterDoc, afterSchema, {});
-
-                if (!resolvedAfter) {
-                    return changes;
-                }
-
-                var beforeProperties = resolvedBefore && resolvedBefore.properties ? resolvedBefore.properties : {};
-                var afterProperties = resolvedAfter.properties || {};
-
-                for (var propName in afterProperties) {
-                    var beforeProp = beforeProperties[propName];
-                    var afterProp = afterProperties[propName];
-                    var currentPrefix = prefix ? prefix + '.' + propName : propName;
-                    var resolvedBeforeProp = resolveSchema(beforeDoc, beforeProp, {});
-                    var resolvedAfterProp = resolveSchema(afterDoc, afterProp, {});
-
-                    if (resolvedAfterProp && resolvedAfterProp.properties) {
-                        changes = changes.concat(collectSchemaChanges(beforeDoc, beforeProp, afterDoc, afterProp, currentPrefix));
-                    }
-
-                    if (resolvedAfterProp && resolvedAfterProp.type === 'array' && resolvedAfterProp.items) {
-                        var beforeItems = resolvedBeforeProp && resolvedBeforeProp.items ? resolvedBeforeProp.items : null;
-                        changes = changes.concat(collectSchemaChanges(beforeDoc, beforeItems, afterDoc, resolvedAfterProp.items, currentPrefix + '[]'));
-                    }
-
-                    var propsToCompare = ['type', 'format', 'minimum', 'maximum', 'minLength', 'maxLength', 'pattern'];
-                    propsToCompare.forEach(function(prop) {
-                        var beforeValue = resolvedBeforeProp ? resolvedBeforeProp[prop] : undefined;
-                        var afterValue = resolvedAfterProp ? resolvedAfterProp[prop] : undefined;
-                        if (beforeValue !== afterValue && afterValue !== undefined) {
-                            changes.push({ prop: prefix + '.' + propName + ' ' + prop, before: beforeValue === undefined ? '(无)' : beforeValue, after: afterValue });
-                        }
-                    });
-
-                    var beforeValidation = resolvedBeforeProp && resolvedBeforeProp['x-java-validation'] ? resolvedBeforeProp['x-java-validation'] : {};
-                    var afterValidation = resolvedAfterProp && resolvedAfterProp['x-java-validation'] ? resolvedAfterProp['x-java-validation'] : {};
-                    ['past', 'future'].forEach(function(rule) {
-                        var beforeValue = beforeValidation[rule];
-                        var afterValue = afterValidation[rule];
-                        if (beforeValue !== afterValue && afterValue !== undefined) {
-                            changes.push({ prop: prefix + '.' + propName + ' ' + rule, before: beforeValue === undefined ? '(无)' : beforeValue, after: afterValue });
-                        }
-                    });
-                }
-
-                return changes;
-            }
-
-            function collectRequestBodyChanges(beforeMethod, afterMethod) {
-                var beforeSchema = getRequestBodySchema(beforeParsed, beforeMethod);
-                var afterSchema = getRequestBodySchema(afterParsed, afterMethod);
-                if (!afterSchema) {
-                    return [];
-                }
-                return collectSchemaChanges(beforeParsed, beforeSchema, afterParsed, afterSchema, 'requestBody');
-            }
-
-            // Build normalized map for before paths
-            var normalizedBeforePaths = {};
-            for (var origPath in beforePaths) {
-                var np = normalizePath(origPath);
-                normalizedBeforePaths[np] = origPath;
-            }
-
-            // Compare each path in after
-            for (var path in afterPaths) {
-                var np = normalizePath(path);
-                var originalPath = path;
-                var beforePath = beforePaths[path];
-                var afterPath = afterPaths[path];
-
-                // 先检查规范化路径是否匹配
-                if (!beforePath && normalizedBeforePaths[np]) {
-                    originalPath = normalizedBeforePaths[np];
-                    beforePath = beforePaths[originalPath];
-                }
-
-                if (!beforePath && originalPath === path) {
-                    // New API path added
-                    if (!normalizedBeforePaths[np]) {
-                        var afterOp = afterPath[Object.keys(afterPath)[0]];
-                        if (afterOp.summary || afterOp.operationId || (afterOp.parameters && afterOp.parameters.length > 0)) {
-                            result.apis.push({
-                                path: path,
-                                originalPath: path,
-                                method: Object.keys(afterPath)[0],
-                                name: afterOp.operationId || afterOp.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
-                                summary: afterOp.summary || '',
-                                operationId: afterOp.operationId || '',
-                                parameters: afterOp.parameters || [],
-                                type: 'added',
-                                changes: [{ prop: 'API', before: '(无)', after: '新增接口' }]
-                            });
-                        }
-                    }
-                } else if (originalPath !== path) {
-                    // Path was fixed
-                    var methodKey = Object.keys(afterPath)[0];
-                    var afterOpFixed = afterPath[methodKey];
-                    var beforeOpFixed = beforePath[methodKey] || {};
-                    var changes = [{ prop: 'path', before: originalPath, after: path }];
-
-                    if (!beforeOpFixed.operationId && afterOpFixed.operationId) {
-                        changes.push({ prop: 'operationId', before: '(无)', after: afterOpFixed.operationId });
-                    }
-                    if (!beforeOpFixed.description && afterOpFixed.description) {
-                        changes.push({ prop: 'description', before: '(无)', after: afterOpFixed.description });
-                    }
-
-                    // 比较参数变化
-                    if (afterOpFixed.parameters && afterOpFixed.parameters.length > 0) {
-                        var beforeParamMap = {};
-                        if (beforeOpFixed.parameters) {
-                            beforeOpFixed.parameters.forEach(function(p) { beforeParamMap[p.name] = p; });
-                        }
-                        afterOpFixed.parameters.forEach(function(param) {
-                            var beforeParam = beforeParamMap[param.name];
-                            if (!beforeParam) {
-                                changes.push({ prop: '参数 ' + param.name, before: '(无)', after: '新增' });
-                            } else {
-                                // 检查description变化
-                                if (!beforeParam.description && param.description) {
-                                    changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
-                                }
-                                // 检查type变化（支持 param.type 和 param.schema.type）
-                                var beforeType = beforeParam.type || (beforeParam.schema && beforeParam.schema.type);
-                                var afterType = param.type || (param.schema && param.schema.type);
-                                if (!beforeType && afterType) {
-                                    changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: afterType });
-                                }
-                                // 检查校验规则变化
-                                var beforeMinLength = beforeParam.minLength || (beforeParam.schema && beforeParam.schema.minLength);
-                                var afterMinLength = param.minLength || (param.schema && param.schema.minLength);
-                                if (!beforeMinLength && afterMinLength !== undefined) {
-                                    changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: afterMinLength });
-                                }
-                                var beforeMaxLength = beforeParam.maxLength || (beforeParam.schema && beforeParam.schema.maxLength);
-                                var afterMaxLength = param.maxLength || (param.schema && param.schema.maxLength);
-                                if (!beforeMaxLength && afterMaxLength !== undefined) {
-                                    changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: afterMaxLength });
-                                }
-                                var beforeMinimum = beforeParam.minimum || (beforeParam.schema && beforeParam.schema.minimum);
-                                var afterMinimum = param.minimum || (param.schema && param.schema.minimum);
-                                if (!beforeMinimum && afterMinimum !== undefined) {
-                                    changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: afterMinimum });
-                                }
-                                var beforeMaximum = beforeParam.maximum || (beforeParam.schema && beforeParam.schema.maximum);
-                                var afterMaximum = param.maximum || (param.schema && param.schema.maximum);
-                                if (!beforeMaximum && afterMaximum !== undefined) {
-                                    changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: afterMaximum });
-                                }
-                                var beforePattern = beforeParam.pattern || (beforeParam.schema && beforeParam.schema.pattern);
-                                var afterPattern = param.pattern || (param.schema && param.schema.pattern);
-                                if (!beforePattern && afterPattern) {
-                                    changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: afterPattern });
-                                }
-                            }
-                        });
-                    }
-
-                    changes = changes.concat(collectRequestBodyChanges(beforeOpFixed, afterOpFixed));
-
-                    result.apis.push({
-                        path: path,
-                        originalPath: originalPath,
-                        method: methodKey,
-                        name: afterOpFixed.operationId || afterOpFixed.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
-                        summary: afterOpFixed.summary || '',
-                        operationId: afterOpFixed.operationId || '',
-                        parameters: afterOpFixed.parameters || [],
-                        originalParameters: beforeOpFixed.parameters || [],
-                        type: 'modified',
-                        changes: changes
-                    });
-                } else {
-                    var hasActualChange = false;
-                    var pathChanges = [];
-
-                    if (originalPath !== path) {
-                        hasActualChange = true;
-                        pathChanges.push({ prop: 'path', before: originalPath, after: path });
-                    }
-
-                    for (var method in afterPath) {
-                        var beforeMethod = beforePath[method];
-                        var afterMethod = afterPath[method];
-
-                        if (!beforeMethod) {
-                            hasActualChange = true;
-                        } else {
-                            var changes = [];
-
-                            if (!beforeMethod.operationId && afterMethod.operationId) {
-                                changes.push({ prop: 'operationId', before: '(无)', after: afterMethod.operationId });
-                            }
-                            if (!beforeMethod.description && afterMethod.description) {
-                                changes.push({ prop: 'description', before: '(无)', after: afterMethod.description });
-                            }
-
-                            // Check parameters - compare by name
-                            if (afterMethod.parameters && afterMethod.parameters.length > 0) {
-                                var beforeParamMap = {};
-                                if (beforeMethod.parameters) {
-                                    beforeMethod.parameters.forEach(function(p) { beforeParamMap[p.name] = p; });
-                                }
-                                afterMethod.parameters.forEach(function(param) {
-                                    var beforeParam = beforeParamMap[param.name];
-                                    if (!beforeParam) {
-                                        changes.push({ prop: '参数 ' + param.name, before: '(无)', after: '新增' });
-                                    } else {
-                                        // 检查description变化
-                                        if (!beforeParam.description && param.description) {
-                                            changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
-                                        }
-                                        // 检查type变化（支持 param.type 和 param.schema.type）
-                                        var beforeType = beforeParam.type || (beforeParam.schema && beforeParam.schema.type);
-                                        var afterType = param.type || (param.schema && param.schema.type);
-                                        if (!beforeType && afterType) {
-                                            changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: afterType });
-                                        }
-                                        // 检查校验规则变化 - 需要检查 param 和 schema 两层
-                                        var beforeRequired = beforeParam.required || (beforeParam.schema && beforeParam.schema.required);
-                                        var afterRequired = param.required || (param.schema && param.schema.required);
-                                        if (!beforeRequired && afterRequired === true) {
-                                            changes.push({ prop: '参数 ' + param.name + ' required', before: '(无)', after: true });
-                                        }
-                                        // 检查 minLength
-                                        var beforeMinLength = beforeParam.minLength || (beforeParam.schema && beforeParam.schema.minLength);
-                                        var afterMinLength = param.minLength || (param.schema && param.schema.minLength);
-                                        if (!beforeMinLength && afterMinLength !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: afterMinLength });
-                                        }
-                                        // 检查 maxLength
-                                        var beforeMaxLength = beforeParam.maxLength || (beforeParam.schema && beforeParam.schema.maxLength);
-                                        var afterMaxLength = param.maxLength || (param.schema && param.schema.maxLength);
-                                        if (!beforeMaxLength && afterMaxLength !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: afterMaxLength });
-                                        }
-                                        // 检查 minimum
-                                        var beforeMinimum = beforeParam.minimum || (beforeParam.schema && beforeParam.schema.minimum);
-                                        var afterMinimum = param.minimum || (param.schema && param.schema.minimum);
-                                        if (!beforeMinimum && afterMinimum !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: afterMinimum });
-                                        }
-                                        // 检查 maximum
-                                        var beforeMaximum = beforeParam.maximum || (beforeParam.schema && beforeParam.schema.maximum);
-                                        var afterMaximum = param.maximum || (param.schema && param.schema.maximum);
-                                        if (!beforeMaximum && afterMaximum !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: afterMaximum });
-                                        }
-                                        // 检查 pattern
-                                        var beforePattern = beforeParam.pattern || (beforeParam.schema && beforeParam.schema.pattern);
-                                        var afterPattern = param.pattern || (param.schema && param.schema.pattern);
-                                        if (!beforePattern && afterPattern) {
-                                            changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: afterPattern });
-                                        }
-                                        // 检查 format (如 email)
-                                        var beforeFormat = beforeParam.format || (beforeParam.schema && beforeParam.schema.format);
-                                        var afterFormat = param.format || (param.schema && param.schema.format);
-                                        if (!beforeFormat && afterFormat) {
-                                            changes.push({ prop: '参数 ' + param.name + ' format', before: '(无)', after: afterFormat });
-                                        }
-                                    }
-                                });
-                            }
-
-                            changes = changes.concat(collectRequestBodyChanges(beforeMethod, afterMethod));
-
-                            if (changes.length > 0) {
-                                hasActualChange = true;
-                                pathChanges = pathChanges.concat(changes);
-                            }
-                        }
-                    }
-
-                    if (hasActualChange) {
-                        var firstAfterMethod = afterPath[Object.keys(afterPath)[0]];
-                        var firstBeforeMethod = beforePath[Object.keys(beforePath)[0]] || {};
-                        result.apis.push({
-                            path: path,
-                            originalPath: originalPath,
-                            method: Object.keys(afterPath)[0],
-                            name: firstAfterMethod.operationId || firstAfterMethod.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
-                            summary: firstAfterMethod.summary || '',
-                            operationId: firstAfterMethod.operationId || '',
-                            parameters: firstAfterMethod.parameters || [],
-                            originalParameters: firstBeforeMethod.parameters || [],
-                            type: 'modified',
-                            changes: pathChanges
-                        });
-                    }
-                }
-            }
-        }
-    } catch (e) {
-        console.error('Error computing impact:', e);
-    }
-
-    return result;
+    return eval(`(() => {
+        ${normalizePathForDiffSource}
+        ${getSwaggerFieldChangesSource}
+        ${computeImpactSource}
+        ${computeDiffSource}
+        return { computeDiff, computeImpact };
+    })()`);
 }
+
+const { computeDiff, computeImpact } = loadDiffHelpersFromIndex();
 
 // ============================================
 // 测试用例
@@ -506,9 +166,9 @@ test('computeDiff: 应检测到新增的行', () => {
     const after = 'a\nb\nc\nd';
     const diff = computeDiff(before, after);
 
-    const adds = diff.filter(d => d.type === 'add');
+    const adds = diff.filter(d => d.added);
     assertEqual(adds.length, 1, '应该有一条新增');
-    assertEqual(adds[0].content, 'd', '新增内容应该是 d');
+    assertEqual(adds[0].value, '\nd', '新增内容应该是换行后的 d');
 });
 
 test('computeDiff: 应检测到删除的行', () => {
@@ -516,9 +176,9 @@ test('computeDiff: 应检测到删除的行', () => {
     const after = 'a\nc';
     const diff = computeDiff(before, after);
 
-    const removes = diff.filter(d => d.type === 'remove');
+    const removes = diff.filter(d => d.removed);
     assertEqual(removes.length, 1, '应该有一条删除');
-    assertEqual(removes[0].content, 'b', '删除内容应该是 b');
+    assertEqual(removes[0].value, 'b\n', '删除内容应该是带换行的 b');
 });
 
 test('computeDiff: 相同内容应标记为 equal', () => {
@@ -526,8 +186,9 @@ test('computeDiff: 相同内容应标记为 equal', () => {
     const after = 'a\nb\nc';
     const diff = computeDiff(before, after);
 
-    const equal = diff.filter(d => d.type === 'equal');
-    assertEqual(equal.length, 3, '应该有三条相等');
+    const equal = diff.filter(d => !d.added && !d.removed);
+    assertEqual(equal.length, 1, '相同内容应合并为一段 unchanged diff');
+    assertEqual(equal[0].value, before, 'unchanged diff 内容应保留原始文本');
 });
 
 console.log('\n========================================');

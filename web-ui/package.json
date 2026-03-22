@@ -8,17 +8,18 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node test/analyzer-test.js",
-    "test:ci": "node test/analyzer-test.js && node test/diff-test.js && node test/render-test.js",
+    "test": "node test/core-bridge-test.js",
+    "test:ci": "node test/core-bridge-test.js && node test/diff-test.js && node test/render-test.js",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "serve": "serve . -l 8080"
+    "serve": "node server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "diff2html": "^3.4.56",
     "js-yaml": "^4.1.1"
   },
   "devDependencies": {

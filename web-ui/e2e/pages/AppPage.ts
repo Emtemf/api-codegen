@@ -43,7 +43,7 @@ export class AppPage {
     this.yamlEditor = page.locator('.api-panel .CodeMirror');
     this.outputEditor = page.locator('.output-panel .CodeMirror');
 
-    this.statusMessage = page.locator('.status');
+    this.statusMessage = page.locator('#status-message');
   }
 
   /**
@@ -165,51 +165,4 @@ export class AppPage {
     }
   }
 
-  /**
-   * Get "需手动" button for a specific issue by index
-   */
-  getManualFixButton(index: number): Locator {
-    return this.page.locator('.issue').nth(index).locator('button.issue-fixable.fixable-no');
-  }
-
-  /**
-   * Get edit modal
-   */
-  getEditModal(): Locator {
-    return this.page.locator('.edit-modal-overlay');
-  }
-
-  /**
-   * Check if edit modal is visible
-   */
-  async isEditModalVisible(): Promise<boolean> {
-    try {
-      const modal = this.getEditModal();
-      await modal.waitFor({ state: 'visible', timeout: 2000 });
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /**
-   * Get description input in edit modal
-   */
-  getDescriptionInput(): Locator {
-    return this.page.locator('#edit-description-input');
-  }
-
-  /**
-   * Click apply button in edit modal
-   */
-  async clickApplyInEditModal() {
-    await this.page.locator('.edit-modal-footer button.btn-primary').click();
-  }
-
-  /**
-   * Close edit modal
-   */
-  async closeEditModal() {
-    await this.page.locator('.edit-modal-close').click();
-  }
 }

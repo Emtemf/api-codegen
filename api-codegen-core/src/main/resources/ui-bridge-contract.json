@@ -1,0 +1,12 @@
+{
+  "bridge": "api-codegen-ui-bridge",
+  "contractVersion": 1,
+  "commands": {
+    "analyze": "analyze",
+    "fix": "fix"
+  },
+  "formats": {
+    "custom": "custom",
+    "swagger": "swagger"
+  }
+}
