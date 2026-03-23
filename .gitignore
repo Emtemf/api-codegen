@@ -72,6 +72,8 @@ web-ui/*
 !web-ui/e2e/
 !web-ui/playwright.config.ts
 !web-ui/artifacts/
+web-ui/artifacts/*
+!web-ui/artifacts/.gitkeep
 project-requirements.md
 .claude/
 CLAUDE.md
