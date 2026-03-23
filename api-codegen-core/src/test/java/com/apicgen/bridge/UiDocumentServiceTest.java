@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -225,6 +227,180 @@ class UiDocumentServiceTest {
     }
 
     @Test
+    @DisplayName("should_not_report_missing_notnull_for_swagger_required_parameter_when_required_is_already_explicit")
+    void shouldNotReportMissingNotNullForSwaggerRequiredParameterWhenRequiredIsAlreadyExplicit() throws IOException {
+        String swaggerContent = """
+            swagger: "2.0"
+            info:
+              title: Test API
+              version: "1.0"
+            paths:
+              /users/detail:
+                get:
+                  operationId: getUserDetail
+                  parameters:
+                    - name: id
+                      in: query
+                      required: true
+                      schema:
+                        type: integer
+                        minimum: 1
+                        maximum: 10
+                  responses:
+                    200:
+                      description: Success
+            """;
+
+        UiDocumentService.AnalysisResponse response = service.analyze(swaggerContent);
+
+        assertTrue(response.issues().stream().noneMatch(issue ->
+                "getUserDetail".equals(issue.locator() == null ? "" : issue.locator().apiName())
+                        && issue.message().contains("必填字段缺少 @NotNull/@NotBlank 校验")),
+            "Swagger required=true 已可生成 @NotNull，不应继续报 DFX-003");
+    }
+
+    @Test
+    @DisplayName("should_not_mark_swagger_query_string_length_issue_fixable_when_parameter_type_is_missing")
+    void shouldNotMarkSwaggerQueryStringLengthIssueFixableWhenParameterTypeIsMissing() throws IOException {
+        String swaggerContent = """
+            swagger: "2.0"
+            info:
+              title: Test API
+              version: "1.0"
+            paths:
+              /users/detail:
+                get:
+                  operationId: getUserDetail
+                  parameters:
+                    - name: id
+                      in: query
+                      required: true
+                  responses:
+                    200:
+                      description: Success
+            """;
+
+        UiDocumentService.AnalysisResponse response = service.analyze(swaggerContent);
+
+        UiDocumentService.UiIssue lengthIssue = response.issues().stream()
+            .filter(issue -> "getUserDetail".equals(issue.locator() == null ? "" : issue.locator().apiName()))
+            .filter(issue -> issue.message().contains("String 字段缺少长度校验"))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("缺少 type 的 query string 参数仍应返回长度问题"));
+
+        assertFalse(lengthIssue.fixable(), "缺少显式 type 时，core 不应把长度问题标为可自动修复");
+    }
+
+    @Test
+    @DisplayName("should_fix_swagger_request_body_property_issues_through_source_yaml_patch")
+    void shouldFixSwaggerRequestBodyPropertyIssuesThroughSourceYamlPatch() throws IOException {
+        String swaggerContent = """
+            openapi: "3.0.0"
+            info:
+              title: Test API
+              version: "1.0"
+            paths:
+              /users:
+                post:
+                  operationId: createUser
+                  requestBody:
+                    required: true
+                    content:
+                      application/json:
+                        schema:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            tags:
+                              type: array
+                              items:
+                                type: string
+                            birthday:
+                              type: string
+                              format: date
+                            appointmentDate:
+                              type: string
+                              format: date
+                  responses:
+                    200:
+                      description: Success
+            """;
+
+        UiDocumentService.AnalysisResponse analysis = service.analyze(swaggerContent);
+        List<String> selectedIssueKeys = analysis.issues().stream()
+            .filter(UiDocumentService.UiIssue::fixable)
+            .map(UiDocumentService.UiIssue::key)
+            .toList();
+
+        UiDocumentService.FixResponse fixed = service.fix(swaggerContent, selectedIssueKeys);
+
+        assertTrue(fixed.fixedYaml().contains("minLength: 1"), "requestBody string 字段应补 minLength");
+        assertTrue(fixed.fixedYaml().contains("maxLength: 255"), "requestBody string 字段应补 maxLength");
+        assertTrue(fixed.fixedYaml().contains("minItems: 1"), "requestBody list 字段应补 minItems");
+        assertTrue(fixed.fixedYaml().contains("maxItems: 100"), "requestBody list 字段应补 maxItems");
+        assertTrue(fixed.fixedYaml().contains("past: true"), "生日字段应补 past");
+        assertTrue(fixed.fixedYaml().contains("future: true"), "预约字段应补 future");
+    }
+
+    @Test
+    @DisplayName("should_fix_swagger2_body_ref_model_issues_in_definitions")
+    void shouldFixSwagger2BodyRefModelIssuesInDefinitions() throws IOException {
+        String swaggerContent = """
+            swagger: "2.0"
+            info:
+              title: Test API
+              version: "1.0"
+            definitions:
+              UserModel:
+                type: object
+                required:
+                  - username
+                properties:
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  tags:
+                    type: array
+                    items:
+                      type: string
+                  birthday:
+                    type: string
+                    format: date
+            paths:
+              /model/users:
+                post:
+                  operationId: createUserModel
+                  parameters:
+                    - name: body
+                      in: body
+                      required: true
+                      schema:
+                        $ref: '#/definitions/UserModel'
+                  responses:
+                    200:
+                      description: Success
+            """;
+
+        UiDocumentService.AnalysisResponse analysis = service.analyze(swaggerContent);
+        List<String> selectedIssueKeys = analysis.issues().stream()
+            .filter(UiDocumentService.UiIssue::fixable)
+            .map(UiDocumentService.UiIssue::key)
+            .toList();
+
+        UiDocumentService.FixResponse fixed = service.fix(swaggerContent, selectedIssueKeys);
+
+        assertTrue(fixed.fixedYaml().contains("username:"), "definitions 中原字段应保留");
+        assertTrue(fixed.fixedYaml().contains("minLength: 1"), "definitions 中 string 字段应补 minLength");
+        assertTrue(fixed.fixedYaml().contains("maxLength: 255"), "definitions 中 string 字段应补 maxLength");
+        assertTrue(fixed.fixedYaml().contains("format: email"), "definitions 中 email 字段应补 format");
+        assertTrue(fixed.fixedYaml().contains("minItems: 1"), "definitions 中 list 字段应补 minItems");
+        assertTrue(fixed.fixedYaml().contains("maxItems: 100"), "definitions 中 list 字段应补 maxItems");
+        assertTrue(fixed.fixedYaml().contains("past: true"), "definitions 中生日字段应补 past");
+    }
+
+    @Test
     @DisplayName("should_fix_selected_swagger_path_issue_through_core_normalization")
     void shouldFixSelectedSwaggerPathIssueThroughCoreNormalization() throws IOException {
         String swaggerContent = """
@@ -249,21 +425,119 @@ class UiDocumentServiceTest {
             .orElseThrow(() -> new AssertionError("应返回路径重复斜杠问题"));
 
         UiDocumentService.FixResponse fixed = service.fix(swaggerContent, List.of(pathIssueKey));
+        String expectedYaml = """
+            swagger: "2.0"
+            info:
+              title: Test API
+              version: "1.0"
+            paths:
+              /users:
+                get:
+                  operationId: getUsers
+                  responses:
+                    200:
+                      description: Success
+            """;
 
         assertEquals(UiBridgeContract.BRIDGE_NAME, fixed.bridge());
         assertEquals(UiBridgeContract.CONTRACT_VERSION, fixed.contractVersion());
         assertEquals(UiBridgeContract.COMMAND_FIX, fixed.command());
         assertEquals("swagger", fixed.sourceFormat());
         assertEquals("swagger", fixed.inputFormat());
-        assertEquals("custom", fixed.outputFormat());
+        assertEquals("swagger", fixed.outputFormat());
         assertNotNull(fixed.fixedYaml());
-        assertTrue(fixed.fixedYaml().contains("apis:"), "core 修复输出应以统一 ApiDefinition YAML 为准");
-        assertFalse(fixed.fixedYaml().contains("//users"));
-        ApiDefinition fixedDefinition = YamlParser.parse(fixed.fixedYaml());
-        assertEquals("/users", fixedDefinition.getApis().getFirst().getPath());
+        assertEquals(expectedYaml.trim(), fixed.fixedYaml().trim(), "路径修复应保持原始 Swagger 文本风格，只改目标路径");
 
         UiDocumentService.AnalysisResponse reanalyzed = service.analyze(fixed.fixedYaml());
         assertTrue(reanalyzed.issues().stream().noneMatch(issue ->
             issue.message().contains("路径不能包含重复斜杠")));
+    }
+
+    @Test
+    @DisplayName("should_fix_selected_swagger_range_issue_without_exposing_custom_yaml")
+    void shouldFixSelectedSwaggerRangeIssueWithoutExposingCustomYaml() throws IOException {
+        String swaggerContent = """
+            swagger: "2.0"
+            info:
+              title: Test API
+              version: "1.0"
+            paths:
+              /search:
+                get:
+                  operationId: searchInvalidLength
+                  parameters:
+                    - name: keyword
+                      in: query
+                      schema:
+                        type: string
+                        minLength: 100
+                        maxLength: 10
+                    - name: age
+                      in: query
+                      schema:
+                        type: integer
+                        minimum: 100
+                        maximum: 10
+                  responses:
+                    200:
+                      description: Success
+            """;
+
+        UiDocumentService.AnalysisResponse analysis = service.analyze(swaggerContent);
+        List<String> issueKeys = analysis.issues().stream()
+            .filter(UiDocumentService.UiIssue::fixable)
+            .map(UiDocumentService.UiIssue::key)
+            .toList();
+
+        UiDocumentService.FixResponse fixed = service.fix(swaggerContent, issueKeys);
+        String expectedYaml = """
+            swagger: "2.0"
+            info:
+              title: Test API
+              version: "1.0"
+            paths:
+              /search:
+                get:
+                  operationId: searchInvalidLength
+                  parameters:
+                    - name: keyword
+                      in: query
+                      schema:
+                        type: string
+                        minLength: 1
+                        maxLength: 255
+                    - name: age
+                      in: query
+                      schema:
+                        type: integer
+                        minimum: 0
+                        maximum: 2147483647
+                  responses:
+                    200:
+                      description: Success
+            """;
+
+        assertEquals("swagger", fixed.outputFormat());
+        assertEquals(expectedYaml.trim(), fixed.fixedYaml().trim(), "范围修复应只改目标值，不应把整份 Swagger 重新格式化");
+    }
+
+    @Test
+    @DisplayName("should_not_report_remaining_swagger_example_issues_as_fixable_when_core_cannot_apply_second_pass_fix")
+    void shouldNotReportRemainingSwaggerExampleIssuesAsFixableWhenCoreCannotApplySecondPassFix() throws IOException {
+        String swaggerContent = Files.readString(Path.of("..", "swagger2-example.yaml"));
+
+        UiDocumentService.AnalysisResponse initialAnalysis = service.analyze(swaggerContent);
+        List<String> initialFixableKeys = initialAnalysis.issues().stream()
+            .filter(UiDocumentService.UiIssue::fixable)
+            .map(UiDocumentService.UiIssue::key)
+            .toList();
+
+        UiDocumentService.FixResponse firstFix = service.fix(swaggerContent, initialFixableKeys);
+        assertTrue(firstFix.fixedCount() > 0, "第一轮应至少修复一部分 Swagger 示例问题");
+
+        UiDocumentService.AnalysisResponse secondAnalysis = service.analyze(firstFix.fixedYaml());
+        assertFalse(secondAnalysis.issues().isEmpty(), "第二轮分析后仍应保留剩余问题");
+        assertEquals(0, secondAnalysis.issues().stream().filter(UiDocumentService.UiIssue::fixable).count(),
+            "第二轮剩余问题如果当前 core 无法继续修复，就不应再标记为可修复");
     }
 }

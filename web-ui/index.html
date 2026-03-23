@@ -48,6 +48,13 @@
             font-weight: 500;
             transition: all 0.2s;
         }
+        .btn.btn-inactive {
+            background: #4b5563;
+            color: #cbd5e1;
+        }
+        .btn.btn-inactive:hover {
+            background: #5b6677;
+        }
         .btn-primary { background: #e94560; color: white; }
         .btn-secondary { background: #0f3460; color: #eee; }
         .btn-success { background: #27ae60; color: white; }
@@ -172,22 +179,40 @@
             min-width: 0;
         }
         .issue-select-all {
-            padding: 10px 12px;
-            background: rgba(233, 69, 96, 0.1);
-            border-bottom: 1px solid #0f3460;
+            padding: 10px 12px 12px;
+            background: linear-gradient(180deg, rgba(154, 168, 182, 0.08) 0%, rgba(86, 102, 118, 0.06) 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
             font-size: 13px;
+        }
+        .issue-select-all-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
         .issue-select-all label {
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
-            color: #e94560;
+            color: #f2f4f8;
+            font-weight: 600;
         }
         .issue-select-all input[type="checkbox"] {
             width: 16px;
             height: 16px;
-            accent-color: #e94560;
+            accent-color: #f97316;
+        }
+        .issue-select-all-legend {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(148, 163, 184, 0.18);
+            font-size: 11px;
+            color: #94a3b8;
         }
         .issue-title { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
         .issue-icon { width: 8px; height: 8px; border-radius: 50%; }
@@ -237,8 +262,44 @@
             color: #94a3b8;
             cursor: default;
         }
+        .issue-fixable.fixable-manual-linked {
+            background: rgba(255, 184, 108, 0.16);
+            color: #ffb86c;
+            cursor: default;
+        }
         .issue-message { font-size: 13px; color: #ccc; line-height: 1.4; }
         .issue-api { font-size: 11px; color: #666; margin-top: 4px; font-family: monospace; }
+        .issue-group-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .issue-group-item {
+            border-top: 1px dashed rgba(255, 255, 255, 0.08);
+            padding-top: 10px;
+        }
+        .issue-group-item:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+        .issue-group-item-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 6px;
+        }
+        .issue-group-item-head.error .issue-icon { background: #e74c3c; }
+        .issue-group-item-head.warn .issue-icon { background: #f39c12; }
+        .issue-group-item-head.info .issue-icon { background: #3498db; }
+        .issue-group-item-head.error .issue-type { color: #e74c3c; }
+        .issue-group-item-head.warn .issue-type { color: #f39c12; }
+        .issue-group-item-head.info .issue-type { color: #3498db; }
+        .issue-group-note {
+            font-size: 11px;
+            color: #8b949e;
+            margin-top: 8px;
+        }
 
         .tab-content { display: none; flex: 1; overflow: hidden; }
         .tab-content.active { display: flex; }
@@ -289,8 +350,106 @@
             justify-content: stretch;
         }
 
-        .diff-container {
+        .manual-fix-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.78);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .manual-fix-modal.active {
+            display: flex;
+        }
+        .manual-fix-container {
+            width: min(560px, calc(100vw - 32px));
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+        }
+        .manual-fix-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #30363d;
             background: #0d1117;
+        }
+        .manual-fix-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+        .manual-fix-subtitle {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #8b949e;
+            line-height: 1.5;
+        }
+        .manual-fix-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .manual-fix-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 16px;
+        }
+        .manual-fix-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .manual-fix-field label {
+            font-size: 12px;
+            color: #8b949e;
+            font-weight: 600;
+        }
+        .manual-fix-field input,
+        .manual-fix-field select {
+            width: 100%;
+            padding: 9px 10px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #e6edf3;
+            font-size: 13px;
+            outline: none;
+        }
+        .manual-fix-field input:focus,
+        .manual-fix-field select:focus {
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+        }
+        .manual-fix-hint {
+            padding: 12px 14px;
+            border-radius: 8px;
+            background: rgba(56, 139, 253, 0.12);
+            border: 1px solid rgba(56, 139, 253, 0.22);
+            color: #bfdbfe;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .manual-fix-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            background: #0d1117;
+        }
+        .manual-fix-hidden {
+            display: none;
+        }
+
+        .diff-container {
+            background: #10161d;
             width: 100vw;
             height: 100vh;
             min-width: 100vw;
@@ -303,6 +462,18 @@
             border-radius: 0;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             overflow: hidden;
+        }
+        .diff-container.diff-container-compact {
+            width: min(1360px, calc(100vw - 40px));
+            height: min(92vh, calc(100vh - 28px));
+            min-width: 0;
+            min-height: 0;
+            max-width: min(1360px, calc(100vw - 40px));
+            max-height: min(92vh, calc(100vh - 28px));
+            margin: auto;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 16px;
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
         }
 
         /* 改进的 Diff 区块样式 */
@@ -429,12 +600,12 @@
 
         /* 头部 - 简洁风格 */
         .diff-header {
-            padding: 12px 24px;
-            border-bottom: 1px solid #21262d;
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: #161b22;
+            background: linear-gradient(180deg, #16202a 0%, #111820 100%);
             flex-shrink: 0;
         }
         .diff-title {
@@ -452,24 +623,24 @@
         /* 统计 - 更柔和的颜色 */
         .diff-stats {
             display: flex;
-            gap: 12px;
+            gap: 10px;
         }
         .diff-stat {
-            padding: 5px 12px;
-            border-radius: 6px;
-            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
             font-weight: 500;
             display: flex;
             align-items: center;
             gap: 5px;
         }
         .diff-stat-add {
-            background: rgba(56, 139, 253, 0.15);
-            color: #58a6ff;
+            background: rgba(58, 138, 122, 0.16);
+            color: #86efac;
         }
         .diff-stat-remove {
-            background: rgba(248, 81, 73, 0.12);
-            color: #f85149;
+            background: rgba(158, 84, 69, 0.18);
+            color: #fdba74;
         }
 
         /* 主体 - 全屏高度 */
@@ -504,10 +675,11 @@
             flex: 1;
             overflow-y: auto;
             overflow-x: auto;
-            padding: 16px 20px;
+            padding: 10px 12px;
             font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 12.5px;
+            line-height: 1.45;
+            background: linear-gradient(180deg, #0f151b 0%, #0d1319 100%);
         }
         .diff-unified-content::-webkit-scrollbar {
             width: 8px;
@@ -920,65 +1092,126 @@
         }
         .diff-unified-content .d2h-wrapper {
             font-family: 'JetBrains Mono', 'Consolas', monospace !important;
-            font-size: 13px !important;
-            background: #0d1117 !important;
-            color: #c9d1d9 !important;
+            font-size: 12.5px !important;
+            background: #0f151b !important;
+            color: #e6edf3 !important;
         }
         .diff-unified-content .d2h-file-header { display: none; }
+        .diff-unified-content .d2h-file-collapse,
+        .diff-unified-content .d2h-tag {
+            display: none !important;
+        }
         .diff-unified-content .d2h-files-diff,
         .diff-unified-content .d2h-file-wrapper,
         .diff-unified-content .d2h-file-side-diff,
         .diff-unified-content .d2h-code-wrapper,
         .diff-unified-content .d2h-diff-table,
         .diff-unified-content .d2h-diff-tbody {
-            background: #0d1117 !important;
+            background: #0f151b !important;
+        }
+        .diff-unified-content .d2h-code-wrapper {
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
         }
         .diff-unified-content .d2h-file-wrapper {
             border: none !important;
             box-shadow: none !important;
         }
         .diff-unified-content .d2h-file-side-diff {
-            background: #0d1117 !important;
+            background: #0f151b !important;
+        }
+        .diff-unified-content .d2h-file-side-diff:first-child {
+            border-right: 1px solid rgba(148, 163, 184, 0.2) !important;
         }
         .diff-unified-content .d2h-code-side-linenumber {
-            width: 52px !important;
-            min-width: 52px !important;
-            padding: 0 10px !important;
-            color: #6e7681 !important;
-            background: #0d1117 !important;
-            border-color: #21262d !important;
+            position: static !important;
+            display: table-cell !important;
+            width: 38px !important;
+            min-width: 38px !important;
+            padding: 0 6px 0 4px !important;
+            text-align: right !important;
+            color: #8ea0b5 !important;
+            background: #17212b !important;
+            border-color: rgba(148, 163, 184, 0.18) !important;
+            line-height: 18px !important;
+            white-space: nowrap !important;
+            vertical-align: top !important;
+            font-variant-numeric: tabular-nums !important;
         }
         .diff-unified-content .d2h-code-side-line {
-            line-height: 20px !important;
-            color: #c9d1d9 !important;
-            background: transparent !important;
+            display: block !important;
+            width: auto !important;
+            line-height: 18px !important;
+            color: #d8e1ea !important;
+            background: #17212b !important;
+            padding: 0 8px !important;
+            white-space: pre !important;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+            font-variant-numeric: tabular-nums !important;
+            font-weight: 450 !important;
+        }
+        .diff-unified-content .d2h-code-line-ctn {
+            color: #d8e1ea !important;
+            white-space: pre !important;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+        }
+        .diff-unified-content .d2h-diff-table td {
+            vertical-align: top !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
         }
         .diff-unified-content .d2h-code-line-prefix,
         .diff-unified-content .d2h-code-line-ctn {
             color: inherit !important;
         }
+        .diff-unified-content .d2h-code-line-prefix {
+            color: #b9c6d4 !important;
+        }
         .diff-unified-content .d2h-info,
         .diff-unified-content .d2h-cntx {
-            background: #11161d !important;
-            color: #8b949e !important;
+            background: #17212b !important;
+            color: #d8e1ea !important;
+        }
+        .diff-unified-content td.d2h-cntx,
+        .diff-unified-content td.d2h-cntx + td,
+        .diff-unified-content td.d2h-cntx ~ td {
+            background: #17212b !important;
+        }
+        .diff-unified-content td.d2h-info,
+        .diff-unified-content td.d2h-info + td,
+        .diff-unified-content td.d2h-info ~ td {
+            background: #111920 !important;
+        }
+        .diff-unified-content .d2h-info .d2h-code-side-line,
+        .diff-unified-content .d2h-info .d2h-code-line-ctn,
+        .diff-unified-content .d2h-cntx .d2h-code-side-line,
+        .diff-unified-content .d2h-cntx .d2h-code-line-ctn {
+            color: #f0f6fc !important;
+            background: transparent !important;
+            font-weight: 500 !important;
+        }
+        .diff-unified-content .d2h-info .d2h-code-line-prefix,
+        .diff-unified-content .d2h-cntx .d2h-code-line-prefix {
+            color: #b9c6d4 !important;
         }
         .diff-unified-content .d2h-del,
         .diff-unified-content .d2h-del .d2h-code-side-line {
-            background: rgba(248, 81, 73, 0.16) !important;
-            color: #ffb4ad !important;
+            background: rgba(120, 72, 58, 0.28) !important;
+            color: #ffd3bf !important;
         }
         .diff-unified-content .d2h-ins,
         .diff-unified-content .d2h-ins .d2h-code-side-line {
-            background: rgba(63, 185, 80, 0.16) !important;
-            color: #b6f0c2 !important;
+            background: rgba(44, 95, 82, 0.3) !important;
+            color: #c8f2df !important;
         }
         .diff-unified-content .d2h-change {
             border-color: #21262d !important;
         }
         .diff-unified-content .d2h-emptyplaceholder,
         .diff-unified-content .d2h-code-side-emptyplaceholder {
-            background: #11161d !important;
-            border-color: #21262d !important;
+            background: #11171d !important;
+            border-color: rgba(148, 163, 184, 0.12) !important;
         }
         .diff-unified-content .d2h-ins .d2h-code-line-ctn del,
         .diff-unified-content .d2h-del .d2h-code-line-ctn del {
@@ -1654,7 +1887,7 @@
                 <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
                 <button class="btn btn-secondary" onclick="saveFile()">保存</button>
                 <button class="btn btn-primary" onclick="analyze()">分析</button>
-                <button class="btn btn-success" onclick="autoFix()">自动修复</button>
+                <button class="btn btn-success btn-inactive" id="auto-fix-btn" onclick="autoFix()" title="当前没有可自动修复的问题">自动修复 (0)</button>
             </div>
         </header>
 
@@ -1699,7 +1932,7 @@
 
     <!-- Diff Preview Modal -->
     <div class="diff-modal" id="diff-modal">
-        <div class="diff-container">
+        <div class="diff-container diff-container-compact">
             <div class="diff-header">
                 <div class="diff-title">
                     <span class="diff-title-icon">&#128293;</span>
@@ -1742,6 +1975,44 @@
                 </div>
                 <button class="btn btn-secondary" onclick="closeDiffModal()">取消</button>
                 <button class="btn btn-success" onclick="applyFix()">应用修复</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="manual-fix-modal" id="manual-fix-modal">
+        <div class="manual-fix-container">
+            <div class="manual-fix-header">
+                <div class="manual-fix-title" id="manual-fix-title">手动补全</div>
+                <div class="manual-fix-subtitle" id="manual-fix-subtitle">补全缺失的类型与校验信息，写回 YAML 后自动重新分析。</div>
+            </div>
+            <div class="manual-fix-body">
+                <div class="manual-fix-grid">
+                    <div class="manual-fix-field">
+                        <label for="manual-fix-type">字段类型</label>
+                        <select id="manual-fix-type" onchange="updateManualFixFormVisibility()">
+                            <option value="string">String</option>
+                            <option value="integer">Integer</option>
+                            <option value="long">Long</option>
+                            <option value="double">Double</option>
+                            <option value="boolean">Boolean</option>
+                        </select>
+                    </div>
+                    <div class="manual-fix-field" id="manual-fix-min-field">
+                        <label for="manual-fix-min" id="manual-fix-min-label">最小值</label>
+                        <input id="manual-fix-min" type="number" step="1">
+                    </div>
+                    <div class="manual-fix-field" id="manual-fix-max-field">
+                        <label for="manual-fix-max" id="manual-fix-max-label">最大值</label>
+                        <input id="manual-fix-max" type="number" step="1">
+                    </div>
+                </div>
+                <div class="manual-fix-hint" id="manual-fix-hint">
+                    `required: true` 会原样保留。补全类型与长度后，会直接回写 YAML 并自动重新分析。
+                </div>
+            </div>
+            <div class="manual-fix-footer">
+                <button class="btn btn-secondary" onclick="closeManualFixModal()">取消</button>
+                <button class="btn btn-success" id="manual-fix-apply" onclick="applyManualFix()">应用并重分析</button>
             </div>
         </div>
     </div>
@@ -2207,9 +2478,11 @@ definitions:
                 document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">内容已变更，请重新分析</div></div>';
                 document.getElementById('issue-count').textContent = '0';
                 document.getElementById('issue-count').className = 'issue-count';
+                updateAutoFixButton(0, 0, 0);
             });
 
             updateStatus();
+            updateAutoFixButton(0, 0, 0);
         }
 
         function updateStatus() {
@@ -2273,6 +2546,7 @@ definitions:
                         document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
                         document.getElementById('issue-count').textContent = '0';
                         document.getElementById('issue-count').className = 'issue-count';
+                        updateAutoFixButton(0, 0, 0);
                         document.getElementById('yaml-info').textContent = example.name;
                         setMessage('已加载: ' + example.name);
                     } else {
@@ -2381,19 +2655,22 @@ definitions:
                 originalYaml = content;  // 保存当前内容作为原始版本，用于预览对比
                 var response = await callCoreApi('/api/analyze', { yaml: content });
                 var issues = response.issues || [];
-
-                document.getElementById('issue-count').textContent = issues.length;
                 renderIssues(issues);
 
                 var errorCount = issues.filter(function(i) { return i.severity === 'error'; }).length;
                 var warnCount = issues.filter(function(i) { return i.severity === 'warn'; }).length;
+                var fixableCount = issues.filter(function(issue) { return isAutoFixable(issue); }).length;
 
                 var countEl = document.getElementById('issue-count');
                 countEl.className = 'issue-count';
                 if (errorCount > 0) countEl.classList.add('error');
                 else if (warnCount > 0) countEl.classList.add('warn');
 
-                setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告');
+                if (issues.length > 0 && fixableCount === 0) {
+                    setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告，' + issues.length + ' 个问题需手动处理');
+                } else {
+                    setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告');
+                }
             } catch (e) {
                 console.error('Analyze error:', e);
                 document.getElementById('issue-count').textContent = '0';
@@ -2405,6 +2682,7 @@ definitions:
 
         // Store issues with selection state
         var selectedIssues = {};
+        var currentManualFixContext = null;
 
         function getIssueKey(issue, fallbackIndex) {
             if (issue && issue.key) return issue.key;
@@ -2425,7 +2703,10 @@ definitions:
             var container = document.getElementById('issue-list');
 
             if (issues.length === 0) {
+                window.currentIssues = [];
+                selectedIssues = {};
                 container.innerHTML = '<div class="empty"><div class="empty-icon">&#10004;</div><div class="empty-text">没有发现问题！</div></div>';
+                updateAutoFixButton(0, 0, 0);
                 return;
             }
 
@@ -2435,12 +2716,21 @@ definitions:
                 selectedIssues[i] = true;
             });
 
+            var manualActionPlan = buildManualActionPlan(issues);
+            var totalFixable = issues.filter(function(issue) { return isAutoFixable(issue); }).length;
+            var totalManualActions = countManualActionEntries(issues);
+            var totalManualStatic = countManualStaticEntries(issues);
+            var totalManualEntries = totalManualActions + totalManualStatic;
+
             var html = '<div class="issue-select-all">' +
+                '<div class="issue-select-all-meta">' +
                 '<label><input type="checkbox" id="select-all-issues" checked onchange="toggleAllIssues(this.checked)"> 全选</label>' +
-                '<span style="margin-left: 12px; font-size: 11px; color: #888;">' +
+                '<span id="selected-issue-summary" style="font-size: 11px; color: #cbd5e1;">' + formatSelectedIssueSummary(totalFixable, totalFixable, totalManualEntries, totalManualEntries) + '</span>' +
+                '</div>' +
+                '<div class="issue-select-all-legend">' +
                 '<span style="color: #27ae60;">● 可修复</span> 自动修复 &nbsp; ' +
-                '<span style="color: #e94560;">● 需手动</span> 点击定位' +
-                '</span></div>';
+                '<span style="color: #e94560;">● 需手动</span> 补全/定位' +
+                '</div></div>';
 
             html += issues.map(function(issue, index) {
                 var checked = selectedIssues[index] ? 'checked' : '';
@@ -2448,13 +2738,26 @@ definitions:
 
                 // 判断是否可以自动修复
                 var canAutoFix = isAutoFixable(issue);
+                var manualGroupKey = getManualActionGroupKey(issue);
+                var relatedManualCount = manualGroupKey ? (manualActionPlan.relatedCountByGroup[manualGroupKey] || 0) : 0;
+                var isPrimaryManualAction = !!manualActionPlan.primaryIndexSet[index];
 
                 if (canAutoFix) {
                     var fixableBadge = '<span class="issue-fixable fixable-yes" title="此问题可以自动修复">可修复</span>';
+                } else if (isManualLocatable(issue) && isPrimaryManualAction) {
+                    var buttonText = relatedManualCount > 1 ? ('需手动 (' + relatedManualCount + ')') : '需手动';
+                    var buttonTitle = relatedManualCount > 1
+                        ? ('当前字段关联 ' + relatedManualCount + ' 个问题，点击一次统一处理')
+                        : '点击补全或定位';
+                    var fixableBadge = '<button type="button" class="issue-fixable fixable-no" title="' + buttonTitle + '" onclick="event.stopPropagation(); event.preventDefault(); handleManualIssue(' + index + ');">' + buttonText + '</button>';
                 } else if (isManualLocatable(issue)) {
-                    var fixableBadge = '<button type="button" class="issue-fixable fixable-no" title="点击定位" onclick="event.stopPropagation(); event.preventDefault(); handleManualIssue(' + index + ');">需手动</button>';
+                    return '';
                 } else {
                     var fixableBadge = '<span class="issue-fixable fixable-manual-static" title="当前问题无法自动定位，请手动处理">需人工处理</span>';
+                }
+
+                if (isManualLocatable(issue) && relatedManualCount > 1) {
+                    return renderGroupedManualIssue(issues, index, issue, checked, fixableBadge, manualGroupKey);
                 }
 
                 return '<div class="issue ' + issue.severity + '">' +
@@ -2479,12 +2782,610 @@ definitions:
             updateIssueCount();
         }
 
+        function extractYamlKeyFromLine(trimmedLine) {
+            if (!trimmedLine || trimmedLine.startsWith('- ')) {
+                return null;
+            }
+            var colonIndex = trimmedLine.indexOf(':');
+            if (colonIndex <= 0) {
+                return null;
+            }
+            var key = trimmedLine.substring(0, colonIndex).trim();
+            if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+                return key.substring(1, key.length - 1);
+            }
+            return key;
+        }
+
+        function indent(line) {
+            var count = 0;
+            while (count < line.length && /\s/.test(line.charAt(count))) {
+                count++;
+            }
+            return count;
+        }
+
+        function indentText(size) {
+            return ' '.repeat(Math.max(size, 0));
+        }
+
+        function normalizeSwaggerPathInUi(path) {
+            if (!path) {
+                return '/';
+            }
+            var normalized = String(path).replace(/\\/g, '/').replace(/\/+/g, '/');
+            if (!normalized.startsWith('/')) {
+                normalized = '/' + normalized;
+            }
+            return normalized;
+        }
+
+        function findBlockEndInYaml(lines, startLine, limitExclusive) {
+            if (startLine < 0 || startLine >= lines.length) {
+                return startLine;
+            }
+            var limit = typeof limitExclusive === 'number' ? Math.min(limitExclusive, lines.length) : lines.length;
+            var baseIndent = indent(lines[startLine]);
+            for (var i = startLine + 1; i < limit; i++) {
+                if (!lines[i].trim()) {
+                    continue;
+                }
+                if (indent(lines[i]) <= baseIndent) {
+                    return i;
+                }
+            }
+            return limit;
+        }
+
+        function findSiblingBlockEndInYaml(lines, startLine, itemIndent, limitExclusive) {
+            var limit = typeof limitExclusive === 'number' ? Math.min(limitExclusive, lines.length) : lines.length;
+            for (var i = startLine + 1; i < limit; i++) {
+                if (!lines[i].trim()) {
+                    continue;
+                }
+                var currentIndent = indent(lines[i]);
+                if (currentIndent < itemIndent) {
+                    return i;
+                }
+                if (currentIndent === itemIndent && lines[i].trim().startsWith('- ')) {
+                    return i;
+                }
+            }
+            return limit;
+        }
+
+        function findSwaggerOperationContextInYaml(lines, locator) {
+            if (!locator) {
+                return null;
+            }
+
+            var pathLine = -1;
+            var targetPath = normalizeSwaggerPathInUi(locator.path || '');
+            if (targetPath) {
+                for (var i = 0; i < lines.length; i++) {
+                    var key = extractYamlKeyFromLine(lines[i].trim());
+                    if (key && normalizeSwaggerPathInUi(key) === targetPath) {
+                        pathLine = i;
+                        break;
+                    }
+                }
+            }
+
+            if (pathLine < 0 && locator.apiName) {
+                for (var i = 0; i < lines.length; i++) {
+                    var trimmed = lines[i].trim();
+                    if (trimmed === 'operationId: ' + locator.apiName || trimmed === 'operationId: "' + locator.apiName + '"') {
+                        for (var j = i - 1; j >= 0; j--) {
+                            var candidateKey = extractYamlKeyFromLine(lines[j].trim());
+                            if (candidateKey && candidateKey.startsWith('/')) {
+                                pathLine = j;
+                                break;
+                            }
+                        }
+                        if (pathLine >= 0) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (pathLine < 0) {
+                return null;
+            }
+
+            var pathIndent = indent(lines[pathLine]);
+            var methodToken = String(locator.method || '').toLowerCase() + ':';
+            var methodLine = -1;
+            for (var i = pathLine + 1; i < lines.length; i++) {
+                if (!lines[i].trim()) {
+                    continue;
+                }
+                var currentIndent = indent(lines[i]);
+                if (currentIndent <= pathIndent) {
+                    break;
+                }
+                if (lines[i].trim() === methodToken) {
+                    methodLine = i;
+                    break;
+                }
+            }
+
+            if (methodLine < 0) {
+                return null;
+            }
+
+            return {
+                pathLine: pathLine,
+                methodLine: methodLine,
+                operationEnd: findBlockEndInYaml(lines, methodLine)
+            };
+        }
+
+        function findSwaggerParameterContextInYaml(lines, operationContext, fieldName) {
+            if (!operationContext || !fieldName) {
+                return null;
+            }
+
+            var parametersLine = -1;
+            for (var i = operationContext.methodLine; i < operationContext.operationEnd; i++) {
+                if (lines[i].trim() === 'parameters:') {
+                    parametersLine = i;
+                    break;
+                }
+            }
+            if (parametersLine < 0) {
+                return null;
+            }
+
+            var parametersIndent = indent(lines[parametersLine]);
+            for (var i = parametersLine + 1; i < operationContext.operationEnd; i++) {
+                if (!lines[i].trim()) {
+                    continue;
+                }
+                var currentIndent = indent(lines[i]);
+                if (currentIndent <= parametersIndent) {
+                    break;
+                }
+                var trimmed = lines[i].trim();
+                if (trimmed === '- name: ' + fieldName || trimmed === '- name: "' + fieldName + '"') {
+                    var itemEnd = findSiblingBlockEndInYaml(lines, i, currentIndent, operationContext.operationEnd);
+                    var schemaLine = -1;
+                    var typeLine = -1;
+                    var parameterIn = '';
+                    for (var j = i + 1; j < itemEnd; j++) {
+                        var childTrimmed = lines[j].trim();
+                        if (childTrimmed === 'schema:') {
+                            schemaLine = j;
+                        } else if (childTrimmed === 'in: body') {
+                            parameterIn = 'body';
+                        } else if (childTrimmed.indexOf('in: ') === 0) {
+                            parameterIn = childTrimmed.substring(4).trim();
+                        } else if (childTrimmed.startsWith('type:')) {
+                            typeLine = j;
+                        }
+                    }
+                    if (schemaLine >= 0) {
+                        var schemaEnd = findBlockEndInYaml(lines, schemaLine, itemEnd);
+                        for (var k = schemaLine + 1; k < schemaEnd; k++) {
+                            if (lines[k].trim().startsWith('type:')) {
+                                typeLine = k;
+                                break;
+                            }
+                        }
+                    }
+                    return {
+                        itemStart: i,
+                        itemIndent: currentIndent,
+                        itemEnd: itemEnd,
+                        schemaLine: schemaLine,
+                        typeLine: typeLine,
+                        targetStyle: schemaLine >= 0 || parameterIn === 'body' ? 'schema' : 'parameter',
+                        parameterIn: parameterIn,
+                        operationEnd: operationContext.operationEnd
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        function findRelatedIssues(issue) {
+            if (!issue || !issue.locator) {
+                return [];
+            }
+            return (window.currentIssues || []).filter(function(other) {
+                if (!other || !other.locator) {
+                    return false;
+                }
+                return String(other.locator.apiName || '') === String(issue.locator.apiName || '') &&
+                    String(other.locator.fieldName || '') === String(issue.locator.fieldName || '') &&
+                    String(other.locator.section || '') === String(issue.locator.section || '');
+            });
+        }
+
+        function getManualActionGroupKey(issue) {
+            if (!isManualLocatable(issue)) {
+                return '';
+            }
+            var locator = issue.locator || {};
+            return [
+                locator.kind || '',
+                locator.apiName || issue.api || '',
+                locator.path || '',
+                locator.method || '',
+                locator.section || '',
+                locator.className || '',
+                locator.fieldName || ''
+            ].join('|');
+        }
+
+        function countManualActionEntries(issues, selectedState) {
+            var count = 0;
+            var seen = {};
+            (issues || []).forEach(function(issue, index) {
+                if (selectedState && !selectedState[index]) {
+                    return;
+                }
+                var groupKey = getManualActionGroupKey(issue);
+                if (!groupKey || seen[groupKey]) {
+                    return;
+                }
+                seen[groupKey] = true;
+                count++;
+            });
+            return count;
+        }
+
+        function issueSeverityWeight(issue) {
+            if (!issue) {
+                return 0;
+            }
+            if (issue.severity === 'error') {
+                return 3;
+            }
+            if (issue.severity === 'warn') {
+                return 2;
+            }
+            return 1;
+        }
+
+        function buildManualActionPlan(issues) {
+            var primaryByGroup = {};
+            var relatedCountByGroup = {};
+            (issues || []).forEach(function(issue, index) {
+                var groupKey = getManualActionGroupKey(issue);
+                if (!groupKey) {
+                    return;
+                }
+                relatedCountByGroup[groupKey] = (relatedCountByGroup[groupKey] || 0) + 1;
+                var currentPrimaryIndex = primaryByGroup[groupKey];
+                if (currentPrimaryIndex === undefined) {
+                    primaryByGroup[groupKey] = index;
+                    return;
+                }
+                var currentPrimaryIssue = issues[currentPrimaryIndex];
+                var currentWeight = issueSeverityWeight(currentPrimaryIssue);
+                var nextWeight = issueSeverityWeight(issue);
+                if (nextWeight > currentWeight || (nextWeight === currentWeight && index < currentPrimaryIndex)) {
+                    primaryByGroup[groupKey] = index;
+                }
+            });
+
+            var primaryIndexSet = {};
+            Object.keys(primaryByGroup).forEach(function(groupKey) {
+                primaryIndexSet[primaryByGroup[groupKey]] = true;
+            });
+
+            return {
+                primaryByGroup: primaryByGroup,
+                relatedCountByGroup: relatedCountByGroup,
+                primaryIndexSet: primaryIndexSet
+            };
+        }
+
+        function getManualGroupIssues(issues, groupKey) {
+            if (!groupKey) {
+                return [];
+            }
+            return (issues || []).filter(function(issue) {
+                return getManualActionGroupKey(issue) === groupKey;
+            });
+        }
+
+        function renderGroupedManualIssue(issues, index, issue, checked, fixableBadge, groupKey) {
+            var groupIssues = getManualGroupIssues(issues, groupKey);
+            var apiText = issue.api !== undefined ? '<div class="issue-api">API: ' + issue.api + '</div>' : '';
+            var groupHtml = groupIssues.map(function(groupIssue) {
+                var severityText = groupIssue.severity === 'error' ? '错误' : (groupIssue.severity === 'warn' ? '警告' : '提示');
+                return '<div class="issue-group-item">' +
+                    '<div class="issue-group-item-head ' + groupIssue.severity + '">' +
+                    '<span class="issue-icon"></span>' +
+                    '<span class="issue-type">' + severityText + '</span>' +
+                    '<span class="issue-rule" title="规则依据">' + (groupIssue.rule || '') + '</span>' +
+                    '</div>' +
+                    '<div class="issue-message">' + groupIssue.message + '</div>' +
+                    '</div>';
+            }).join('');
+
+            return '<div class="issue ' + issue.severity + '">' +
+                '<div class="issue-checkbox">' +
+                '<input type="checkbox" ' + checked + ' onchange="toggleManualActionGroup(' + index + ', this.checked)">' +
+                '</div>' +
+                '<div class="issue-content">' +
+                '<div class="issue-title">' +
+                '<span class="issue-icon"></span>' +
+                '<span class="issue-type">手动处理组</span>' +
+                '<span class="issue-rule" title="同字段关联问题">同字段关联问题</span>' +
+                fixableBadge +
+                '</div>' +
+                '<div class="issue-group-list">' + groupHtml + '</div>' +
+                '<div class="issue-group-note">补全一次后，本组问题会一起重新分析并消失。</div>' +
+                apiText +
+                '</div>' +
+                '</div>';
+        }
+
+        function formatFixOutcomeMessage(options) {
+            var parts = ['已应用修复'];
+            if (options && options.directFixed > 0) {
+                parts.push('自动修复 ' + options.directFixed + ' 项');
+            }
+            if (options && options.indirectResolved > 0) {
+                parts.push('连带消除 ' + options.indirectResolved + ' 个关联问题');
+            }
+            if (options && options.remaining > 0) {
+                parts.push('剩余 ' + options.remaining + ' 个问题需手动处理');
+            } else {
+                parts.push('当前问题已全部清除');
+            }
+            return parts.join('，');
+        }
+
+        function countManualStaticEntries(issues, selectedState) {
+            var count = 0;
+            (issues || []).forEach(function(issue, index) {
+                if (selectedState && !selectedState[index]) {
+                    return;
+                }
+                if (!isAutoFixable(issue) && !isManualLocatable(issue)) {
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        function formatSelectedIssueSummary(fixableSelected, totalFixable, manualEntrySelected, totalManualEntries) {
+            if (totalFixable > 0) {
+                var autoParts = ['已选自动修复项 ' + fixableSelected + '/' + totalFixable];
+                if (totalManualEntries > 0) {
+                    autoParts.push('手动项将在自动修复后重新计算');
+                }
+                return autoParts.join('，');
+            }
+            return '已选手动处理项 ' + manualEntrySelected + '/' + totalManualEntries;
+        }
+
+        function inferManualFixType(issue) {
+            var issues = findRelatedIssues(issue);
+            for (var i = 0; i < issues.length; i++) {
+                var message = String(issues[i].message || '');
+                if (message.indexOf('String') >= 0) {
+                    return 'string';
+                }
+                if (message.indexOf('数值') >= 0 || message.indexOf('min ') >= 0 || message.indexOf('max ') >= 0) {
+                    return 'integer';
+                }
+            }
+            return 'string';
+        }
+
+        function buildManualFixDefaults(issue) {
+            var type = inferManualFixType(issue);
+            if (type === 'string') {
+                return { type: type, min: '1', max: '255' };
+            }
+            if (type === 'double') {
+                return { type: type, min: '0', max: '9999999999' };
+            }
+            return { type: type, min: '0', max: '2147483647' };
+        }
+
+        function buildManualFixContext(issue) {
+            if (!issue || !issue.locator || issue.locator.kind !== 'swagger-field' || issue.locator.section !== 'request') {
+                return null;
+            }
+
+            var lines = yamlEditor.getValue().split('\n');
+            var operationContext = findSwaggerOperationContextInYaml(lines, issue.locator);
+            var parameterContext = findSwaggerParameterContextInYaml(lines, operationContext, issue.locator.fieldName);
+            if (!parameterContext) {
+                return null;
+            }
+
+            if (parameterContext.typeLine >= 0) {
+                return null;
+            }
+
+            return {
+                issue: issue,
+                defaults: buildManualFixDefaults(issue),
+                targetStyle: parameterContext.targetStyle,
+                relatedIssueCount: findRelatedIssues(issue).length
+            };
+        }
+
+        function updateManualFixFormVisibility() {
+            var type = document.getElementById('manual-fix-type').value;
+            var minField = document.getElementById('manual-fix-min-field');
+            var maxField = document.getElementById('manual-fix-max-field');
+            var minLabel = document.getElementById('manual-fix-min-label');
+            var maxLabel = document.getElementById('manual-fix-max-label');
+            var hint = document.getElementById('manual-fix-hint');
+
+            var isString = type === 'string';
+            var isNumeric = type === 'integer' || type === 'long' || type === 'double';
+            var showRange = isString || isNumeric;
+
+            minField.classList.toggle('manual-fix-hidden', !showRange);
+            maxField.classList.toggle('manual-fix-hidden', !showRange);
+
+            var targetStyle = currentManualFixContext && currentManualFixContext.targetStyle ? currentManualFixContext.targetStyle : 'schema';
+            var typePath = targetStyle === 'parameter' ? 'type/minLength/maxLength' : 'schema.type/minLength/maxLength';
+            if (isString) {
+                minLabel.textContent = '最小长度';
+                maxLabel.textContent = '最大长度';
+                hint.textContent = '`required: true` 会原样保留。String 默认用 minLength >= 1 表达 @NotBlank，并写回 ' + typePath + '。';
+            } else if (isNumeric) {
+                minLabel.textContent = '最小值';
+                maxLabel.textContent = '最大值';
+                hint.textContent = '数值类型会补齐 ' + (targetStyle === 'parameter' ? 'type、minimum、maximum' : 'schema.type、minimum、maximum') + '，然后自动重新分析。';
+            } else {
+                hint.textContent = 'Boolean 只会补齐 ' + (targetStyle === 'parameter' ? 'type' : 'schema.type') + '。应用后会自动重新分析。';
+            }
+        }
+
+        function openManualFixModal(issue) {
+            var context = buildManualFixContext(issue);
+            if (!context) {
+                return false;
+            }
+
+            currentManualFixContext = context;
+            document.getElementById('manual-fix-title').textContent = '手动补全 · ' + (issue.locator.apiName || issue.api || '未命名 API') + ' / ' + (issue.locator.fieldName || '字段');
+            var subtitle = context.targetStyle === 'parameter'
+                ? '当前参数缺少显式 type，core 无法安全猜测。补全后会直接写回参数 YAML 并自动重新分析。'
+                : '当前字段缺少 schema/type，core 无法安全猜测。补全后会直接写回 YAML 并自动重新分析。';
+            if (context.relatedIssueCount > 1) {
+                subtitle += ' 当前字段关联 ' + context.relatedIssueCount + ' 个问题，本次补全会一起处理。';
+            }
+            document.getElementById('manual-fix-subtitle').textContent = subtitle;
+            document.getElementById('manual-fix-type').value = context.defaults.type;
+            document.getElementById('manual-fix-min').value = context.defaults.min;
+            document.getElementById('manual-fix-max').value = context.defaults.max;
+            updateManualFixFormVisibility();
+            document.getElementById('manual-fix-modal').classList.add('active');
+            return true;
+        }
+
+        function closeManualFixModal() {
+            currentManualFixContext = null;
+            document.getElementById('manual-fix-modal').classList.remove('active');
+        }
+
+        function upsertYamlScalarInLines(lines, blockStart, blockEnd, fieldName, value) {
+            for (var i = blockStart + 1; i < blockEnd; i++) {
+                if (lines[i].trim().startsWith(fieldName + ':')) {
+                    var currentLine = lines[i];
+                    var nextLine = currentLine.replace(/^(\s*[^:]+:\s*).*/, '$1' + value);
+                    if (nextLine === currentLine) {
+                        return false;
+                    }
+                    lines[i] = nextLine;
+                    return true;
+                }
+            }
+
+            var insertIndex = blockEnd;
+            var blockIndent = indent(lines[blockStart]);
+            for (var j = blockStart + 1; j < blockEnd; j++) {
+                if (!lines[j].trim()) {
+                    continue;
+                }
+                if (indent(lines[j]) > blockIndent) {
+                    insertIndex = j + 1;
+                }
+            }
+
+            lines.splice(insertIndex, 0, indentText(blockIndent + 2) + fieldName + ': ' + value);
+            return true;
+        }
+
+        function applyManualParameterFix(lines, issue, values) {
+            var operationContext = findSwaggerOperationContextInYaml(lines, issue.locator);
+            var parameterContext = findSwaggerParameterContextInYaml(lines, operationContext, issue.locator.fieldName);
+            if (!parameterContext) {
+                return false;
+            }
+
+            var changed = false;
+            var targetLine = parameterContext.itemStart;
+            var targetEnd = parameterContext.itemEnd;
+            if (parameterContext.targetStyle === 'schema') {
+                targetLine = parameterContext.schemaLine;
+                if (targetLine < 0) {
+                    targetLine = parameterContext.itemEnd;
+                    lines.splice(targetLine, 0, indentText(parameterContext.itemIndent + 2) + 'schema:');
+                    changed = true;
+                }
+                targetEnd = findSiblingBlockEndInYaml(lines, parameterContext.itemStart, parameterContext.itemIndent, operationContext.operationEnd + (changed ? 8 : 0));
+                targetEnd = findBlockEndInYaml(lines, targetLine, targetEnd);
+            }
+
+            changed = upsertYamlScalarInLines(lines, targetLine, targetEnd, 'type', values.type) || changed;
+            targetEnd = findSiblingBlockEndInYaml(lines, parameterContext.itemStart, parameterContext.itemIndent, lines.length);
+            targetEnd = parameterContext.targetStyle === 'schema' ? findBlockEndInYaml(lines, targetLine, targetEnd) : targetEnd;
+
+            if (values.type === 'string') {
+                changed = upsertYamlScalarInLines(lines, targetLine, targetEnd, 'minLength', values.min || '1') || changed;
+                targetEnd = findSiblingBlockEndInYaml(lines, parameterContext.itemStart, parameterContext.itemIndent, lines.length);
+                targetEnd = parameterContext.targetStyle === 'schema' ? findBlockEndInYaml(lines, targetLine, targetEnd) : targetEnd;
+                changed = upsertYamlScalarInLines(lines, targetLine, targetEnd, 'maxLength', values.max || '255') || changed;
+            } else if (values.type === 'integer' || values.type === 'long' || values.type === 'double') {
+                changed = upsertYamlScalarInLines(lines, targetLine, targetEnd, 'minimum', values.min || '0') || changed;
+                targetEnd = findSiblingBlockEndInYaml(lines, parameterContext.itemStart, parameterContext.itemIndent, lines.length);
+                targetEnd = parameterContext.targetStyle === 'schema' ? findBlockEndInYaml(lines, targetLine, targetEnd) : targetEnd;
+                changed = upsertYamlScalarInLines(lines, targetLine, targetEnd, 'maximum', values.max || '2147483647') || changed;
+            }
+
+            return changed;
+        }
+
+        async function applyManualFix() {
+            if (!currentManualFixContext || !currentManualFixContext.issue) {
+                return;
+            }
+
+            var issue = currentManualFixContext.issue;
+            var relatedIssueCount = currentManualFixContext.relatedIssueCount || 0;
+            var values = {
+                type: document.getElementById('manual-fix-type').value,
+                min: document.getElementById('manual-fix-min').value.trim(),
+                max: document.getElementById('manual-fix-max').value.trim()
+            };
+
+            var lines = yamlEditor.getValue().split('\n');
+            var changed = applyManualParameterFix(lines, issue, values);
+            if (!changed) {
+                closeManualFixModal();
+                jumpToYamlLocation(issue);
+                setMessage('当前问题暂不支持表单补全，已跳转到定位位置');
+                return;
+            }
+
+            yamlEditor.setValue(lines.join('\n'));
+            closeManualFixModal();
+            setMessage('已应用手动补全，正在重新分析');
+            try {
+                await analyze();
+                var message = '已应用手动补全并重新分析';
+                if (relatedIssueCount > 1) {
+                    message += '，已同时处理 ' + relatedIssueCount + ' 个关联问题';
+                }
+                setMessage(message);
+            } catch (e) {
+                setMessage('手动补全已写入，但重新分析失败: ' + e.message);
+            }
+        }
+
         /**
-         * 处理"需手动"问题的点击 - UI 仅负责定位，修复策略由 core 决定。
+         * 处理"需手动"问题的点击 - 可补全时弹表单，否则退回定位。
          */
         function handleManualIssue(index) {
             var issue = window.currentIssues[index];
             if (!issue) {
+                return;
+            }
+            if (openManualFixModal(issue)) {
                 return;
             }
             jumpToYamlLocation(issue);
@@ -2713,20 +3614,94 @@ definitions:
             updateIssueCount();
         }
 
-        function toggleAllIssues(checked) {
-            var checkboxes = document.querySelectorAll('#issue-list input[type="checkbox"]:not(#select-all-issues)');
-            checkboxes.forEach(function(cb, i) {
-                cb.checked = checked;
-                selectedIssues[i] = checked;
+        function toggleManualActionGroup(index, checked) {
+            var issues = window.currentIssues || [];
+            var issue = issues[index];
+            var groupKey = getManualActionGroupKey(issue);
+            if (!groupKey) {
+                toggleIssue(index, checked);
+                return;
+            }
+            issues.forEach(function(candidate, candidateIndex) {
+                if (getManualActionGroupKey(candidate) === groupKey) {
+                    selectedIssues[candidateIndex] = checked;
+                }
             });
             updateIssueCount();
         }
 
+        function toggleAllIssues(checked) {
+            var checkboxes = document.querySelectorAll('#issue-list input[type="checkbox"]:not(#select-all-issues)');
+            checkboxes.forEach(function(cb, i) {
+                cb.checked = checked;
+            });
+            Object.keys(selectedIssues).forEach(function(index) {
+                selectedIssues[index] = checked;
+            });
+            updateIssueCount();
+        }
+
+        function formatIssueCount(total) {
+            return total > 0 ? ('总 ' + total) : '0';
+        }
+
+        function updateAutoFixButton(fixableSelected, totalIssues, manualSelected) {
+            var button = document.getElementById('auto-fix-btn');
+            if (!button) {
+                return;
+            }
+
+            var fixableCount = Math.max(0, fixableSelected || 0);
+            var total = Math.max(0, totalIssues || 0);
+            var manualCount = Math.max(0, manualSelected || 0);
+
+            button.textContent = '自动修复 (' + fixableCount + ')';
+            button.classList.toggle('btn-inactive', fixableCount === 0);
+
+            if (fixableCount > 0) {
+                button.title = '当前选中 ' + fixableCount + ' 个问题可自动修复';
+            } else if (total > 0 && manualCount > 0) {
+                button.title = '当前剩余 ' + manualCount + ' 个问题需手动处理';
+            } else {
+                button.title = '当前没有可自动修复的问题';
+            }
+        }
+
         function updateIssueCount() {
-            var total = Object.keys(selectedIssues).length;
-            var selected = Object.values(selectedIssues).filter(function(v) { return v; }).length;
+            var issues = window.currentIssues || [];
+            var total = issues.length;
+            var fixableSelected = Object.keys(selectedIssues).filter(function(index) {
+                var issue = issues[parseInt(index, 10)];
+                return selectedIssues[index] && isAutoFixable(issue);
+            }).length;
+            var totalFixable = issues.filter(function(issue) { return isAutoFixable(issue); }).length;
+            var totalManualActions = countManualActionEntries(issues);
+            var totalManualStatic = countManualStaticEntries(issues);
+            var manualActionSelected = countManualActionEntries(issues, selectedIssues);
+            var manualStaticSelected = countManualStaticEntries(issues, selectedIssues);
+            var manualEntrySelected = manualActionSelected + manualStaticSelected;
+            var totalManualEntries = totalManualActions + totalManualStatic;
+
             var countEl = document.getElementById('issue-count');
-            countEl.textContent = selected + '/' + total;
+            countEl.textContent = formatIssueCount(total);
+
+            var summaryEl = document.getElementById('selected-issue-summary');
+            if (summaryEl) {
+                summaryEl.textContent = formatSelectedIssueSummary(fixableSelected, totalFixable, manualEntrySelected, totalManualEntries);
+            }
+
+            var selectAllEl = document.getElementById('select-all-issues');
+            if (selectAllEl) {
+                if (totalFixable > 0) {
+                    selectAllEl.checked = totalFixable > 0 && fixableSelected === totalFixable;
+                    selectAllEl.indeterminate = fixableSelected > 0 && fixableSelected < totalFixable;
+                } else {
+                    selectAllEl.checked = totalManualEntries > 0 && manualEntrySelected === totalManualEntries;
+                    selectAllEl.indeterminate = manualEntrySelected > 0 && manualEntrySelected < totalManualEntries;
+                }
+            }
+
+            updateAutoFixButton(fixableSelected, total, manualEntrySelected);
         }
 
         async function autoFix() {
@@ -2736,17 +3711,35 @@ definitions:
 
                 // Get selected issues and compute selective fix
                 var issues = window.currentIssues || [];
-                var selectedIssueKeys = Object.keys(selectedIssues)
+                var selectedIndexes = Object.keys(selectedIssues)
                     .filter(function(i) { return selectedIssues[i]; })
-                    .map(function(i) { return getIssueKey(issues[parseInt(i)], parseInt(i)); });
+                    .map(function(i) { return parseInt(i, 10); });
+
+                var selectedIssueKeys = selectedIndexes
+                    .filter(function(i) { return isAutoFixable(issues[i]); })
+                    .map(function(i) { return getIssueKey(issues[i], i); });
 
                 // 如果没有选中任何问题，默认选择所有可自动修复的问题
-                if (selectedIssueKeys.length === 0) {
+                if (selectedIndexes.length === 0) {
                     issues.forEach(function(issue, i) {
                         if (isAutoFixable(issue)) {
                             selectedIssueKeys.push(getIssueKey(issue, i));
                         }
                     });
+                }
+
+                if (selectedIssueKeys.length === 0) {
+                    var hasAnyFixable = issues.some(function(issue) {
+                        return isAutoFixable(issue);
+                    });
+                    if (hasAnyFixable) {
+                        setMessage('当前选中的问题没有可自动修复项');
+                    } else if (issues.length > 0) {
+                        setMessage('当前没有可自动修复的问题，剩余 ' + issues.length + ' 个问题需手动处理');
+                    } else {
+                        setMessage('当前没有可自动修复的问题');
+                    }
+                    return;
                 }
 
                 var response = await callCoreApi('/api/fix', {
@@ -2943,17 +3936,24 @@ definitions:
         function showDiffPreview(before, after) {
             try {
                 var diffHost = document.getElementById('diff-unified');
-                var diffStats = Diff.diffLines(before || '', after || '');
+                var diffStats = computePreviewDiff(before || '', after || '');
                 var addCount = 0;
                 var removeCount = 0;
+                var hasVisibleChanges = false;
 
                 diffStats.forEach(function(part) {
                     var lines = (part.value.match(/\n/g) || []).length || 1;
-                    if (part.added) addCount += lines;
-                    if (part.removed) removeCount += lines;
+                    if (part.added) {
+                        addCount += lines;
+                        hasVisibleChanges = true;
+                    }
+                    if (part.removed) {
+                        removeCount += lines;
+                        hasVisibleChanges = true;
+                    }
                 });
 
-                if (before === after) {
+                if (!hasVisibleChanges) {
                     diffHost.innerHTML = '<div class="diff-no-changes"><div class="diff-no-changes-icon">✓</div><div class="diff-no-changes-text">没有需要修复的问题</div></div>';
                     document.getElementById('diff-adds').textContent = '0 处修改';
                     document.getElementById('diff-removes').textContent = '0 处删除';
@@ -3034,8 +4034,9 @@ definitions:
             }
 
             try {
-                var patch = Diff.createTwoFilesPatch('before.yaml', 'after.yaml', before || '', after || '', '', '', {
-                    context: 3
+                var patch = Diff.createTwoFilesPatch('api.yaml', 'api.yaml', before || '', after || '', '', '', {
+                    context: 3,
+                    ignoreWhitespace: true
                 });
 
                 var html = Diff2Html.html(patch, {
@@ -3043,6 +4044,8 @@ definitions:
                     matching: 'lines',
                     outputFormat: 'side-by-side'
                 });
+                html = html.replace(/d2h-light-color-scheme/g, 'd2h-dark-color-scheme');
+                html = normalizeThirdPartyDiffHtml(html);
 
                 return '<div class="diff-third-party-shell">' +
                     '<div class="diff-third-party-header">' +
@@ -3055,6 +4058,62 @@ definitions:
                 console.error('renderThirdPartyDiff error:', e);
                 return '';
             }
+        }
+
+        function normalizeThirdPartyDiffHtml(html) {
+            if (!html) {
+                return html;
+            }
+
+            var host = document.createElement('div');
+            host.innerHTML = html;
+
+            Array.from(host.querySelectorAll('td.d2h-info')).forEach(function(cell) {
+                var row = cell.closest('tr');
+                if (row && row.parentNode) {
+                    row.parentNode.removeChild(row);
+                }
+            });
+
+            Array.from(host.querySelectorAll('.d2h-file-side-diff')).forEach(function(sideTable) {
+                var visibleLineNumber = 1;
+                Array.from(sideTable.querySelectorAll('tr')).forEach(function(row) {
+                    var numberCell = row.querySelector('td.d2h-code-side-linenumber');
+                    var contentCell = row.querySelector('td:not(.d2h-code-side-linenumber)');
+                    if (!numberCell || !contentCell) {
+                        return;
+                    }
+
+                    var isPlaceholder = contentCell.classList.contains('d2h-code-side-emptyplaceholder') ||
+                        contentCell.classList.contains('d2h-emptyplaceholder');
+                    var text = (contentCell.textContent || '').replace(/\s+/g, ' ').trim();
+
+                    if (isPlaceholder || text === '') {
+                        numberCell.textContent = '';
+                        return;
+                    }
+
+                    numberCell.textContent = String(visibleLineNumber++);
+                });
+            });
+
+            return host.innerHTML;
+        }
+
+        function computePreviewDiff(before, after) {
+            if (typeof Diff === 'undefined' || typeof Diff.diffLines !== 'function') {
+                if ((before || '') === (after || '')) {
+                    return [{ value: before || '', added: false, removed: false }];
+                }
+                return [
+                    { value: before || '', removed: true, added: false },
+                    { value: after || '', removed: false, added: true }
+                ];
+            }
+
+            return Diff.diffLines(before || '', after || '', {
+                ignoreWhitespace: true
+            });
         }
 
         // 简单渲染：显示所有行，变化的标颜色
@@ -4888,12 +5947,26 @@ definitions:
         /**
          * Apply the fixed content
          */
-        function applyFix() {
+        async function applyFix() {
             if (window.pendingFixedContent) {
+                var beforeIssueCount = (window.currentIssues || []).length;
+                var fixStats = window.currentFixStats || {};
                 yamlEditor.setValue(window.pendingFixedContent);
-                analyze();
                 closeDiffModal();
-                setMessage('已应用修复');
+                setMessage('已应用修复，正在重新分析');
+                try {
+                    await analyze();
+                    var remaining = (window.currentIssues || []).length;
+                    var directFixed = fixStats.paramsFixed || 0;
+                    var indirectResolved = Math.max(0, beforeIssueCount - remaining - directFixed);
+                    setMessage(formatFixOutcomeMessage({
+                        directFixed: directFixed,
+                        indirectResolved: indirectResolved,
+                        remaining: remaining
+                    }));
+                } catch (e) {
+                    setMessage('修复内容已写入，但重新分析失败: ' + e.message);
+                }
             }
         }
 

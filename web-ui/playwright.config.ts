@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const DEFAULT_PORT = process.env.PORT || '18080';
+const BASE_URL = `http://localhost:${DEFAULT_PORT}`;
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -11,7 +14,7 @@ export default defineConfig({
     ['list']
   ],
   use: {
-    baseURL: 'http://localhost:8080',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -24,8 +27,8 @@ export default defineConfig({
   ],
   // Use existing server if running
   webServer: {
-    command: 'node server.js',
-    url: 'http://localhost:8080',
+    command: `PORT=${DEFAULT_PORT} node server.js`,
+    url: BASE_URL,
     reuseExistingServer: true,
     timeout: 120000,
   },

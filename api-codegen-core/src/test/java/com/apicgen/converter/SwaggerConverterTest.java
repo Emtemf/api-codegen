@@ -112,6 +112,57 @@ class SwaggerConverterTest {
             assertEquals("/users", api.getPath());
             assertEquals("POST", api.getMethod().name());
         }
+
+        @Test
+        @DisplayName("should_resolve_swagger_20_body_ref_fields_from_definitions")
+        void shouldResolveSwagger20BodyRefFieldsFromDefinitions() throws IOException {
+            String swaggerContent = """
+                swagger: "2.0"
+                info:
+                  title: User API
+                  version: "1.0"
+                definitions:
+                  UserModel:
+                    type: object
+                    required:
+                      - username
+                    properties:
+                      username:
+                        type: string
+                      tags:
+                        type: array
+                        minItems: 1
+                        maxItems: 10
+                        items:
+                          type: string
+                paths:
+                  /users:
+                    post:
+                      operationId: createUser
+                      parameters:
+                        - name: body
+                          in: body
+                          required: true
+                          schema:
+                            $ref: '#/definitions/UserModel'
+                      responses:
+                        201:
+                          description: Created
+                """;
+
+            ApiDefinition apiDefinition = YamlParser.parse(swaggerContent);
+
+            assertNotNull(apiDefinition);
+            var api = apiDefinition.getApis().get(0);
+            assertNotNull(api.getRequest());
+            assertEquals(2, api.getRequest().getFields().size());
+            assertEquals("username", api.getRequest().getFields().get(0).getName());
+            assertTrue(api.getRequest().getFields().get(0).isRequired());
+            assertEquals("tags", api.getRequest().getFields().get(1).getName());
+            assertNotNull(api.getRequest().getFields().get(1).getValidation());
+            assertEquals(1, api.getRequest().getFields().get(1).getValidation().getMinSize());
+            assertEquals(10, api.getRequest().getFields().get(1).getValidation().getMaxSize());
+        }
     }
 
     @Nested
@@ -198,6 +249,71 @@ class SwaggerConverterTest {
             assertEquals("getUser", api.getName());
             assertEquals("/users/{id}", api.getPath());
             assertEquals("GET", api.getMethod().name());
+        }
+
+        @Test
+        @DisplayName("should_convert_openapi_30_request_body_properties_with_required_and_validation")
+        void shouldConvertOpenApi30RequestBodyPropertiesWithRequiredAndValidation() throws IOException {
+            String openapiContent = """
+                openapi: "3.0.0"
+                info:
+                  title: User API
+                  version: "1.0"
+                paths:
+                  /users:
+                    post:
+                      operationId: createUser
+                      requestBody:
+                        required: true
+                        content:
+                          application/json:
+                            schema:
+                              type: object
+                              required:
+                                - username
+                              properties:
+                                username:
+                                  type: string
+                                  minLength: 4
+                                  maxLength: 20
+                                email:
+                                  type: string
+                                  format: email
+                                tags:
+                                  type: array
+                                  minItems: 1
+                                  maxItems: 10
+                                  items:
+                                    type: string
+                      responses:
+                        200:
+                          description: Success
+                """;
+
+            ApiDefinition apiDefinition = YamlParser.parse(openapiContent);
+
+            assertNotNull(apiDefinition);
+            var api = apiDefinition.getApis().get(0);
+            assertNotNull(api.getRequest());
+            assertEquals(3, api.getRequest().getFields().size());
+
+            var username = api.getRequest().getFields().get(0);
+            assertEquals("username", username.getName());
+            assertTrue(username.isRequired());
+            assertNotNull(username.getValidation());
+            assertEquals(4, username.getValidation().getMinLength());
+            assertEquals(20, username.getValidation().getMaxLength());
+
+            var email = api.getRequest().getFields().get(1);
+            assertEquals("email", email.getName());
+            assertNotNull(email.getValidation());
+            assertTrue(Boolean.TRUE.equals(email.getValidation().getEmail()));
+
+            var tags = api.getRequest().getFields().get(2);
+            assertEquals("tags", tags.getName());
+            assertNotNull(tags.getValidation());
+            assertEquals(1, tags.getValidation().getMinSize());
+            assertEquals(10, tags.getValidation().getMaxSize());
         }
     }
 

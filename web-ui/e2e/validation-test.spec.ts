@@ -377,9 +377,10 @@ paths:
       await applyFixButton.click();
       await expect(diffModal).not.toBeVisible();
 
-      await expect.poll(async () => await appPage.getYamlContent()).toContain('apis:');
+      await expect.poll(async () => await appPage.getYamlContent()).toContain('paths:');
       const fixedYaml = await appPage.getYamlContent();
-      expect(fixedYaml).toContain('path: "/users"');
+      expect(fixedYaml).toContain('/users:');
+      expect(fixedYaml).not.toContain('apis:');
       expect(fixedYaml).not.toContain('//users');
 
       await appPage.analyze();
@@ -444,7 +445,7 @@ paths:
       expect(hasDiffModal).toBe(true);
     });
 
-    test('Diff预览布局：Swagger 归一化到 core YAML 后应回退到通用差异视图', async ({ page }) => {
+    test('Diff预览布局：Swagger 自动修复预览应保持 Swagger 结构而不是泄漏 core YAML', async ({ page }) => {
       const appPage = new AppPage(page);
       await appPage.goto();
       await appPage.waitForLoad();
@@ -483,12 +484,52 @@ paths:
       await diffModal.waitFor({ state: 'visible', timeout: 20000 });
       expect(await diffModal.isVisible()).toBe(true);
 
-      // 归一化后结构从 paths: 切到 apis:，预览应显示为单一左右 YAML diff
+      // 预览应保持 Swagger 结构，不应泄漏 core 的 apis YAML
       await expect(page.locator('#diff-unified .d2h-wrapper')).toHaveCount(1);
       await expect(page.locator('#diff-unified .diff-api-unified')).toHaveCount(0);
-      await expect(page.locator('#diff-unified')).toContainText('apis:');
+      await expect(page.locator('#diff-unified')).toContainText('//users:');
       await expect(page.locator('#diff-unified')).toContainText('/users');
+      await expect(page.locator('#diff-unified')).not.toContainText('apis:');
       await expect(page.locator('#diff-unified .d2h-file-side-diff').first()).toBeVisible();
+    });
+
+    test('Diff预览布局：仅缩进差异不应被渲染为可见变更', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const before = `
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+`.trim();
+
+      const after = `
+swagger: "2.0"
+info:
+ title: Test API
+ version: "1.0"
+paths:
+ /users:
+   get:
+     operationId: getUsers
+`.trim();
+
+      await page.evaluate(({ beforeYaml, afterYaml }) => {
+        (window as any).showDiffPreview(beforeYaml, afterYaml);
+      }, { beforeYaml: before, afterYaml: after });
+
+      await expect(page.locator('#diff-modal')).toBeVisible({ timeout: 20000 });
+      await expect(page.locator('#diff-unified .diff-no-changes')).toBeVisible();
+      await expect(page.locator('#diff-unified .d2h-wrapper')).toHaveCount(0);
+      await expect(page.locator('#diff-unified')).toContainText('没有需要修复的问题');
+      await expect(page.locator('#diff-adds')).toHaveText('0 处修改');
+      await expect(page.locator('#diff-removes')).toHaveText('0 处删除');
     });
 
     test('Diff预览布局：不应有重复的参数表格', async ({ page }) => {
@@ -528,12 +569,16 @@ paths:
       const diffModal = page.locator('.diff-modal');
       await diffModal.waitFor({ state: 'visible', timeout: 20000 });
       expect(await diffModal.isVisible()).toBe(true);
+      await expect(page.locator('.diff-container.diff-container-compact')).toHaveCount(1);
 
       // 验证：只展示一个左右 diff 预览，不再追加旧预览
       await expect(page.locator('#diff-unified .d2h-wrapper')).toHaveCount(1);
       await expect(page.locator('#diff-unified .diff-api-unified')).toHaveCount(0);
-      await expect(page.locator('#diff-unified')).toContainText('apis:');
-      await expect(page.locator('#diff-unified')).toContainText('keyword');
+      await expect(page.locator('#diff-unified')).toContainText('//users:');
+      await expect(page.locator('#diff-unified')).toContainText('/users:');
+      await expect(page.locator('#diff-unified')).not.toContainText('apis:');
+      await expect(page.locator('#diff-unified')).toContainText('maxLength: 255');
+      await expect(page.locator('#diff-unified')).toContainText('minLength: 1');
     });
 
     test('Diff预览布局：多个 Swagger API 归一化后仍应展示差异内容', async ({ page }) => {
@@ -584,7 +629,13 @@ paths:
       await expect(page.locator('#diff-unified')).toContainText('getUsers');
       await expect(page.locator('#diff-unified')).toContainText('getOrders');
       await expect(page.locator('#diff-unified')).toContainText('getProducts');
-      await expect(page.locator('#diff-unified')).toContainText('apis:');
+      await expect(page.locator('#diff-unified')).toContainText('//users:');
+      await expect(page.locator('#diff-unified')).toContainText('/users:');
+      await expect(page.locator('#diff-unified')).toContainText('//orders:');
+      await expect(page.locator('#diff-unified')).toContainText('/orders:');
+      await expect(page.locator('#diff-unified')).toContainText('//products:');
+      await expect(page.locator('#diff-unified')).toContainText('/products:');
+      await expect(page.locator('#diff-unified')).not.toContainText('apis:');
     });
 
     test('非法范围问题应只保留可修复项，并在应用修复后消失', async ({ page }) => {
@@ -637,9 +688,20 @@ paths:
       await expect(page.locator('#diff-modal')).toBeVisible({ timeout: 20000 });
       await expect(page.locator('#diff-unified .d2h-wrapper')).toHaveCount(1);
       await expect(page.locator('#diff-unified .diff-api-unified')).toHaveCount(0);
+      await expect(page.locator('#diff-unified')).toContainText('minLength: 100');
+      await expect(page.locator('#diff-unified')).toContainText('maxLength: 10');
+      await expect(page.locator('#diff-unified')).toContainText('minimum: 100');
+      await expect(page.locator('#diff-unified')).toContainText('maximum: 10');
+      await expect(page.locator('#diff-unified')).toContainText('minLength: 1');
+      await expect(page.locator('#diff-unified')).toContainText('maxLength: 255');
+      await expect(page.locator('#diff-unified')).toContainText('minimum: 0');
+      await expect(page.locator('#diff-unified')).toContainText('maximum: 2147483647');
+      await expect(page.locator('#diff-unified')).not.toContainText('apis:');
 
       await page.locator('#diff-modal button:has-text("应用修复")').click();
       await expect(appPage.statusMessage).toContainText('已应用修复');
+      await expect.poll(async () => await appPage.getYamlContent()).toContain('paths:');
+      await expect.poll(async () => await appPage.getYamlContent()).not.toContain('apis:');
       await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBe(0);
     });
   });
@@ -819,6 +881,76 @@ apis:
       await expect(page.locator('.issue-fixable.fixable-manual-static')).toContainText('需人工处理');
     });
 
+    test('仅剩手动问题时不应显示误导性的选中计数，自动修复应明确提示无可修复项', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const invalidYaml = `
+apis:
+  - name: broken
+    path: /broken
+    method: GET
+    request:
+      className: BrokenReq
+      fields:
+        - name: keyword
+          type: String
+          validation:
+            minLength: [1
+`.trim();
+
+      await appPage.setYamlContent(invalidYaml);
+      await appPage.analyze();
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBeGreaterThan(0);
+
+      await expect(page.locator('#issue-count')).not.toContainText('/');
+      await expect(page.locator('.issue-fixable.fixable-yes')).toHaveCount(0);
+      await expect(page.locator('#selected-issue-summary')).toContainText('已选手动处理项 1/1');
+      await appPage.autoFix();
+      await expect(appPage.statusMessage).toContainText('当前没有可自动修复的问题，剩余 1 个问题需手动处理');
+      await expect(page.locator('#diff-modal')).not.toBeVisible();
+    });
+
+    test('Swagger 二次分析仅剩手动问题时应明确展示手动处理数量', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const response = await page.request.get('/swagger2-example.yaml');
+      const yaml = await response.text();
+      await appPage.setYamlContent(yaml);
+
+      await appPage.analyze();
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBeGreaterThan(0);
+      await expect(page.locator('#selected-issue-summary')).toContainText('已选自动修复项 38/38');
+      await expect(page.locator('#selected-issue-summary')).toContainText('手动项将在自动修复后重新计算');
+      await expect(page.locator('.issue-select-all-meta')).toHaveCount(1);
+      await expect(page.locator('.issue-select-all-legend')).toHaveCount(1);
+
+      await appPage.autoFix();
+      await expect(page.locator('#diff-modal')).toBeVisible({ timeout: 20000 });
+      await page.locator('#diff-modal button:has-text("应用修复")').click();
+      await expect(page.locator('#diff-modal')).not.toBeVisible();
+
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBe(2);
+      await expect(appPage.statusMessage).toContainText('自动修复 38 项');
+      await expect(appPage.statusMessage).toContainText('连带消除 14 个关联问题');
+      await expect(appPage.statusMessage).toContainText('剩余 2 个问题需手动处理');
+      await expect(page.locator('#issue-count')).toContainText('总 2');
+      await expect(page.locator('#selected-issue-summary')).toContainText('已选手动处理项 1/1');
+      await expect(appPage.autoFixButton).toContainText('自动修复 (0)');
+      await expect(page.locator('#issue-list .issue')).toHaveCount(1);
+      await expect(page.locator('.issue-fixable.fixable-no')).toHaveCount(1);
+      await expect(page.locator('.issue-fixable.fixable-manual-linked')).toHaveCount(0);
+      await expect(page.locator('#issue-list .issue').first()).toContainText('必填字段缺少 @NotNull/@NotBlank 校验');
+      await expect(page.locator('#issue-list .issue').first()).toContainText('String 字段缺少长度校验');
+
+      await appPage.autoFix();
+      await expect(appPage.statusMessage).toContainText('当前没有可自动修复的问题，剩余 2 个问题需手动处理');
+      await expect(page.locator('#diff-modal')).not.toBeVisible();
+    });
+
     test('core 提供 locator 的人工问题应支持点击定位', async ({ page }) => {
       const appPage = new AppPage(page);
       await appPage.goto();
@@ -844,6 +976,127 @@ apis:
       await expect(manualButton).toHaveCount(1);
       await manualButton.click();
       await expect(appPage.statusMessage).toContainText('已跳转到位置，行 3');
+    });
+
+    test('Swagger 手动问题应支持补全类型和长度并自动重新分析', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users/detail:
+    get:
+      operationId: getUserDetail
+      parameters:
+        - name: id
+          in: query
+          required: true
+      responses:
+        200:
+          description: Success
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.analyze();
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBe(2);
+      await expect(page.locator('#issue-list .issue')).toHaveCount(1);
+      await expect(page.locator('.issue-fixable.fixable-yes')).toHaveCount(0);
+      await expect(page.locator('.issue-fixable.fixable-no')).toHaveCount(1);
+      await expect(page.locator('.issue-fixable.fixable-no')).toContainText('需手动');
+      await expect(page.locator('.issue-fixable.fixable-manual-linked')).toHaveCount(0);
+      await expect(page.locator('#issue-list .issue').first()).toContainText('必填字段缺少 @NotNull/@NotBlank 校验');
+      await expect(page.locator('#issue-list .issue').first()).toContainText('String 字段缺少长度校验');
+
+      const manualButton = page.locator('.issue-fixable.fixable-no').first();
+      await manualButton.click();
+
+      await expect(page.locator('#manual-fix-modal')).toBeVisible();
+      await expect(page.locator('#manual-fix-title')).toContainText('getUserDetail');
+      await expect(page.locator('#manual-fix-subtitle')).toContainText('当前字段关联 2 个问题');
+      await expect(page.locator('#manual-fix-type')).toHaveValue('string');
+      await expect(page.locator('#manual-fix-min')).toHaveValue('1');
+      await expect(page.locator('#manual-fix-max')).toHaveValue('255');
+
+      await page.locator('#manual-fix-max').fill('64');
+      await page.locator('#manual-fix-apply').click();
+
+      await expect(page.locator('#manual-fix-modal')).not.toBeVisible();
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBe(0);
+
+      const updatedYaml = await appPage.getYamlContent();
+      expect(updatedYaml).not.toContain('schema:');
+      expect(updatedYaml).toContain('in: query');
+      expect(updatedYaml).toContain('type: string');
+      expect(updatedYaml).toContain('minLength: 1');
+      expect(updatedYaml).toContain('maxLength: 64');
+      await expect(appPage.statusMessage).toContainText('已应用手动补全并重新分析');
+      await expect(appPage.statusMessage).toContainText('已同时处理 2 个关联问题');
+    });
+
+    test('关联手动问题重渲染时应始终保留一个主入口', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      await page.evaluate(() => {
+        const issues = [
+          {
+            severity: 'warn',
+            message: 'String 字段缺少长度校验',
+            line: 0,
+            api: 'getUserDetail',
+            field: 'request.Request.id',
+            rule: 'DFX-004',
+            ruleCode: 'DFX-004',
+            key: 'warn-1',
+            fixable: false,
+            locator: {
+              kind: 'swagger-field',
+              apiName: 'getUserDetail',
+              path: '/users/detail',
+              method: 'GET',
+              section: 'request',
+              className: 'Request',
+              fieldName: 'id',
+              property: 'validation'
+            }
+          },
+          {
+            severity: 'error',
+            message: '必填字段缺少 @NotNull/@NotBlank 校验',
+            line: 0,
+            api: 'getUserDetail',
+            field: 'request.Request.id',
+            rule: 'DFX-003',
+            ruleCode: 'DFX-003',
+            key: 'error-1',
+            fixable: false,
+            locator: {
+              kind: 'swagger-field',
+              apiName: 'getUserDetail',
+              path: '/users/detail',
+              method: 'GET',
+              section: 'request',
+              className: 'Request',
+              fieldName: 'id',
+              property: 'validation'
+            }
+          }
+        ];
+        (window as any).renderIssues(issues);
+      });
+
+      await expect(page.locator('#issue-list .issue')).toHaveCount(1);
+      await expect(page.locator('.issue-fixable.fixable-no')).toHaveCount(1);
+      await expect(page.locator('.issue-fixable.fixable-no')).toContainText('需手动 (2)');
+      await expect(page.locator('.issue-fixable.fixable-manual-linked')).toHaveCount(0);
+      await expect(page.locator('#issue-list .issue').first()).toContainText('必填字段缺少 @NotNull/@NotBlank 校验');
+      await expect(page.locator('#issue-list .issue').first()).toContainText('String 字段缺少长度校验');
     });
   });
 });

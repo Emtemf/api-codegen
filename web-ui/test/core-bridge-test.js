@@ -221,7 +221,7 @@ paths:
       assert.equal(rangeIssue.locator.fieldName, 'keyword');
     });
 
-    await test('fix 接口应返回 core 归一化后的 YAML', async () => {
+    await test('fix 接口应在 Swagger 输入下返回同格式 YAML', async () => {
       const swaggerYaml = `
 swagger: "2.0"
 info:
@@ -251,10 +251,11 @@ paths:
       assert.equal(fixed.command, contract.commands.fix);
       assert.equal(fixed.sourceFormat, contract.formats.swagger);
       assert.equal(fixed.inputFormat, contract.formats.swagger);
-      assert.equal(fixed.outputFormat, contract.formats.custom);
+      assert.equal(fixed.outputFormat, contract.formats.swagger);
       assert.equal(fixed.fixedCount, 1);
-      assert.ok((fixed.fixedYaml || '').includes('apis:'), '修复结果未归一化到 core YAML');
-      assert.ok((fixed.fixedYaml || '').includes('path: "/users"'), '修复结果未规范化路径');
+      assert.ok((fixed.fixedYaml || '').includes('paths:'), '修复结果应保持 Swagger 结构');
+      assert.ok(!(fixed.fixedYaml || '').includes('apis:'), '修复结果不应泄漏 core 内部 YAML');
+      assert.ok((fixed.fixedYaml || '').includes('/users:'), '修复结果未规范化路径');
       assert.ok(!(fixed.fixedYaml || '').includes('//users'), '修复结果仍包含重复斜杠');
     });
 

@@ -1,12 +1,17 @@
 const http = require('http');
+const net = require('net');
 const { execFile, spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = Number(process.env.PORT || 8080);
+const DEFAULT_PORT = 18080;
+const HAS_EXPLICIT_PORT = Object.prototype.hasOwnProperty.call(process.env, 'PORT');
+const REQUESTED_PORT = Number(process.env.PORT || DEFAULT_PORT);
+const MAX_PORT_SCAN = 20;
 const WEB_ROOT = __dirname;
 const PROJECT_ROOT = path.resolve(WEB_ROOT, '..');
 const MVNW_PATH = path.resolve(PROJECT_ROOT, 'mvnw');
+const CORE_SRC_ROOT = path.resolve(PROJECT_ROOT, 'api-codegen-core', 'src', 'main');
 const CORE_JAR_PATH = path.resolve(PROJECT_ROOT, 'api-codegen-core', 'target', 'api-codegen.jar');
 const CONTRACT_PATH = path.resolve(PROJECT_ROOT, 'api-codegen-core', 'src', 'main', 'resources', 'ui-bridge-contract.json');
 
@@ -95,8 +100,39 @@ function sendFile(res, filePath) {
 
 let coreBridgeReady = false;
 
+function getLatestModifiedTime(targetPath) {
+  if (!fs.existsSync(targetPath)) {
+    return 0;
+  }
+
+  const stat = fs.statSync(targetPath);
+  if (!stat.isDirectory()) {
+    return stat.mtimeMs;
+  }
+
+  let latest = stat.mtimeMs;
+  const entries = fs.readdirSync(targetPath, { withFileTypes: true });
+  for (const entry of entries) {
+    latest = Math.max(latest, getLatestModifiedTime(path.join(targetPath, entry.name)));
+  }
+  return latest;
+}
+
+function needsCoreBridgeRebuild() {
+  if (!fs.existsSync(CORE_JAR_PATH)) {
+    return true;
+  }
+
+  const jarMtime = fs.statSync(CORE_JAR_PATH).mtimeMs;
+  const sourceMtime = Math.max(
+    getLatestModifiedTime(CORE_SRC_ROOT),
+    fs.existsSync(MVNW_PATH) ? fs.statSync(MVNW_PATH).mtimeMs : 0
+  );
+  return sourceMtime > jarMtime;
+}
+
 function ensureCoreBridgeReady() {
-  if (coreBridgeReady && fs.existsSync(CORE_JAR_PATH)) {
+  if (coreBridgeReady && !needsCoreBridgeRebuild()) {
     return;
   }
 
@@ -212,6 +248,60 @@ const server = http.createServer(async (req, res) => {
   tryServeFile(res, resolveCandidatePaths(requestUrl), 0);
 });
 
-server.listen(PORT, () => {
-  console.log(`Static server listening on http://localhost:${PORT}`);
+function isPortAvailable(port) {
+  return new Promise((resolve) => {
+    const probe = net.createServer();
+
+    probe.once('error', (error) => {
+      if (error && error.code === 'EADDRINUSE') {
+        resolve(false);
+        return;
+      }
+
+      resolve(false);
+    });
+
+    probe.once('listening', () => {
+      probe.close(() => resolve(true));
+    });
+
+    probe.listen(port, '::');
+  });
+}
+
+async function resolveListenPort() {
+  if (HAS_EXPLICIT_PORT) {
+    return REQUESTED_PORT;
+  }
+
+  for (let candidate = REQUESTED_PORT; candidate < REQUESTED_PORT + MAX_PORT_SCAN; candidate++) {
+    if (await isPortAvailable(candidate)) {
+      if (candidate !== REQUESTED_PORT) {
+        console.warn(`Port ${REQUESTED_PORT} is already in use, switched to http://localhost:${candidate}`);
+      }
+      return candidate;
+    }
+  }
+
+  throw new Error(`No available port found in range ${REQUESTED_PORT}-${REQUESTED_PORT + MAX_PORT_SCAN - 1}. Use PORT=<port> node server.js to override.`);
+}
+
+server.on('error', (error) => {
+  if (error && error.code === 'EADDRINUSE') {
+    console.error(`Port ${REQUESTED_PORT} is already in use. Use PORT=<port> node server.js to override the default ${DEFAULT_PORT}.`);
+    process.exit(1);
+  }
+
+  throw error;
 });
+
+resolveListenPort()
+  .then((listenPort) => {
+    server.listen(listenPort, () => {
+      console.log(`Static server listening on http://localhost:${listenPort}`);
+    });
+  })
+  .catch((error) => {
+    console.error(error.message);
+    process.exit(1);
+  });
