@@ -41,18 +41,20 @@ test.describe('Diff Count Bug - TDD', () => {
 
     console.log('Diff counts - Adds:', addsText, 'Removes:', removesText);
 
-    // Get number of API blocks in unified view
-    const apiBlocksUnified = await page.locator('#diff-unified .diff-api-unified').count();
-    console.log('API blocks in unified view:', apiBlocksUnified);
+    const thirdPartyWrapperCount = await page.locator('#diff-unified .d2h-wrapper').count();
+    const sideBySideCount = await page.locator('#diff-unified .d2h-file-side-diff').count();
+    const legacyPreviewCount = await page.locator('#diff-unified .diff-api-unified').count();
 
-    // Expect that if there are API blocks with changes, the count should reflect that
-    if (apiBlocksUnified > 0) {
-      // At least one of add/remove should be non-zero if there are changes
-      const hasNonZeroCount = addsText !== '0 处添加' || removesText !== '0 处删除';
+    console.log('Third-party diff wrappers:', thirdPartyWrapperCount);
+    console.log('Side-by-side diff blocks:', sideBySideCount);
+    console.log('Legacy preview blocks:', legacyPreviewCount);
 
-      // This assertion should PASS after fix
-      expect(hasNonZeroCount).toBe(true);
-    }
+    const hasNonZeroCount = addsText !== '0 处添加' || removesText !== '0 处删除';
+
+    expect(thirdPartyWrapperCount).toBe(1);
+    expect(sideBySideCount).toBeGreaterThan(0);
+    expect(legacyPreviewCount).toBe(0);
+    expect(hasNonZeroCount).toBe(true);
   });
 
   test('should have scrollable dialog when content exceeds viewport', async ({ page }) => {

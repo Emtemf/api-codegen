@@ -9,7 +9,8 @@
 - 自动校验分析和修复建议（DFX 规则代码）
 - 生成 Controller、Request、Response 类
 - 支持类和方法级别自定义注解
-- Web UI 可视化编辑，支持实时预览和 Diff 对比
+- Web UI 仅负责可视化编辑，分析与修复逻辑统一收敛到 `api-codegen-core`
+- 自动修复直接回写用户原始 Swagger / OpenAPI YAML，并提供紧凑 Diff 预览
 - Maven 插件支持，适配 CI/CD 流程
 
 ## 项目结构
@@ -20,6 +21,11 @@ api-codegen/
 ├── api-codegen-maven-plugin/  # Maven 插件
 └── web-ui/                    # Web 可视化界面
 ```
+
+## Bridge Contract
+
+Web UI、IDEA 插件、浏览器插件共用的 JSON bridge contract 见：
+[docs/ui-bridge-contract.md](/home/wula/IdeaProjects/api-codegen/docs/ui-bridge-contract.md)
 
 ## 环境要求
 
@@ -40,46 +46,47 @@ api-codegen/
 
 ```bash
 cd web-ui
-npx serve -l 8080
-# 浏览器打开 http://localhost:8080
+node server.js
+# 浏览器打开 http://localhost:18080
+# 如果 18080 被占用，会自动顺延到下一个可用端口
+# 也可以手动指定端口：PORT=19090 node server.js
 ```
 
-或直接用浏览器打开 `web-ui/index.html`
+Web UI 现在通过本地 `server.js` 调用 `api-codegen-core` 作为统一分析/修复入口，
+因此不能再直接打开 `web-ui/index.html`。
 
 ### Web UI 界面预览
 
 > 注意：如果图片未正常显示，请尝试强制刷新浏览器 (Ctrl+F5)
 
-**1. 初始状态** - 空白编辑器
+**1. 初始状态** - 空白编辑器，等待输入 YAML
 ![Initial State](docs/images/05-initial-state.png)
 
-**2. 点击"加载示例"** - 选择 Swagger 或 OpenAPI 示例
-![Load Example](docs/images/05-load-example.png)
-
-**3. Swagger 示例已加载**
+**2. Swagger 2.0 示例已加载** - 直接在原始 YAML 上编辑
 ![Swagger Loaded](docs/images/05-swagger-loaded.png)
 
-**4. 点击"分析"** - 检测校验问题
+**3. Swagger 分析结果** - 顶部摘要优先展示当前可自动修复项，避免手动数量误导
 ![Validation Results](docs/images/06-validation-results.png)
 
-**5. OpenAPI 3.0 示例** - 同样支持
-![OpenAPI Demo](docs/images/09-openapi-initial.png)
+**4. 自动修复预览** - 左右对比原始 YAML 与修复后的 YAML 回写内容
+![Diff Preview](docs/images/04-autofix-preview.png)
 
-**6. 修复预览** - 统一 Diff 视图显示 Java 代码变更
-![Diff Preview](docs/images/diff-preview.png)
+**5. 自动修复后的手动处理组** - 同字段关联问题合并为一张卡片，补全一次统一消除
+![Manual Group](docs/images/07-manual-grouped.png)
 
-### Web UI 操作与 Maven 命令对照
+**6. OpenAPI 3.0 分析结果** - 与 Swagger 共用同一套 core 分析与修复能力
+![OpenAPI Analyze](docs/images/10-openapi-analyze.png)
 
-| Web UI 操作 | Maven 命令 |
-|------------|------------|
-| 加载 YAML 文件 | `-DyamlFile=api.yaml` |
-| 设置基础包名 | `-DbasePackage=com.example` |
-| 设置公司名称 | `-Dcompany="MyCompany"` |
-| 配置文件 | `-DconfigFile=codegen-config.yaml` |
-| 分析校验问题 | 内置自动分析 |
-| 选择性修复 | 勾选要修复的问题 |
-| 统一 Diff 预览 | 显示 Java 代码变更 |
-| 强制覆盖 | `-Dforce=true` |
+### Web UI 与 Core 的关系
+
+| Web UI 操作 | 实际执行 |
+|------------|----------|
+| 打开 / 粘贴 YAML | 编辑用户原始 Swagger / OpenAPI 文件 |
+| 点击“分析” | 调用 `api-codegen-core` 的统一分析入口 |
+| 点击“自动修复” | 由 `api-codegen-core` 计算可安全回写的修复 |
+| 查看修复预览 | 对比原始 YAML 与修复后的 YAML |
+| 点击“应用修复” | 将修复结果写回编辑器并重新分析 |
+| 点击“需手动” | 在缺少类型语义时补全必要信息，再重新分析 |
 
 ### IntelliJ 插件（可选）
 
@@ -107,68 +114,28 @@ cd api-codegen-core
 ../mvnw exec:java -Dexec.mainClass="com.apicgen.Main" -Dexec.args="api.yaml"
 ```
 
-## 配置文件
+## 单文件输入与自定义注解
 
-在项目根目录创建 `codegen-config.yaml`：
+用户只维护一份 API YAML。
+如果需要给生成的 Controller 类或方法附加自定义注解，直接写在 Swagger / OpenAPI 文件里，不需要再维护第二份 `codegen-config.yaml`。
 
 ```yaml
-# 版权声明（生成代码时添加到文件顶部）
-# 例如: Copyright (c) 2024 MyCompany. All rights reserved.
-copyright: ""
-
-# OpenAPI 配置
-openapi:
-  enabled: false
-  version: "3.0"
-
-# 自定义注解（可选）
-customAnnotations:
-  classAnnotations:
-    - "@Secured"
-    - "@AuditLog"
-  methodAnnotations:
-    - "@Permission(\"default\")"
-
-# 输出路径配置
-output:
-  controller:
-    path: generated/api/    # Controller 输出目录
-  request:
-    path: src/main/java/req/  # Request 输出目录
-  response:
-    path: src/main/java/rsp/  # Response 类出目录
+openapi: 3.0.1
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@Secured"
+      - "@AuditLog"
+    post:
+      operationId: createUser
+      x-java-method-annotations:
+        - "@Permission(\"user.create\")"
+      responses:
+        "200":
+          description: OK
 ```
 
-### 配置说明
-
-| 配置项 | 说明 |
-|--------|------|
-| `copyright` | 版权声明，直接放到文件顶部，为空则不添加 |
-| `output.controller.path` | 生成的 Controller 类输出路径 |
-| `output.request.path` | 生成的 Request 类输出路径 |
-| `output.response.path` | 生成的 Response 类输出路径 |
-| `customAnnotations` | 可选，自定义注解配置 |
-
-> **注意**: 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
-
-### 自定义注解示例
-
-支持为生成的类和方法添加自定义注解：
-
-```java
-@Path("/api")
-@Secured
-@AuditLog
-public class ExampleApi {
-
-    @Permission("default")
-    @POST
-    @Path("/users")
-    public CreateUserRsp create(@Valid CreateUserReq req) {
-        // ...
-    }
-}
-```
+> 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
 
 ## Maven 插件参数
 
@@ -179,7 +146,6 @@ mvn com.apicgen:api-codegen-maven-plugin:generate [参数]
   -DyamlFile=api.yaml        # YAML 文件路径
   -DbasePackage=com.example   # 基础包名
   -Dcompany="MyCompany"      # 公司名称
-  -DconfigFile=config.yaml    # 配置文件
   -Dforce=true               # 强制覆盖已有文件
 ```
 
@@ -277,14 +243,23 @@ public Response getUserById(
 ## 测试
 
 ```bash
-mvn test
+./mvnw test
+
+# 仅运行 core 相关测试
+./mvnw -pl api-codegen-core test
+
+# Web UI bridge / diff / render 回归
+cd web-ui && npm run test:ci
+
+# Web UI E2E（Playwright）
+cd web-ui && npm run test:e2e
 ```
 
 ### 测试要求
 
-**核心原则：Maven 后端为源**
+**核心原则：`api-codegen-core` 为单一业务来源**
 
-所有业务逻辑必须在 Maven 后端实现。前端/插件必须复用后端逻辑。
+所有分析、修复、格式收敛逻辑都必须在 `api-codegen-core` 实现。Web UI、IDEA 插件、浏览器插件和 Maven 插件只做交互、集成与展示。
 
 **BDD 格式**：所有测试使用 Given-When-Then 结构，确保可读性。
 
@@ -299,11 +274,11 @@ mvn test
 ### 端到端测试场景
 
 ```bash
-# Web UI 单元测试 (45 tests)
+# Web UI bridge / diff / render 回归
 cd web-ui && npm test
 
-# E2E 测试 (28 tests)
-cd web-ui && npx playwright test
+# E2E 测试
+cd web-ui && npm run test:e2e
 ```
 
 **测试覆盖的 DFX 规则**：
@@ -329,15 +304,15 @@ cd web-ui && npx playwright test
 
 ```
 ┌─────────────────────────────────────┐
-│        Web UI (前端展示)            │
+│ Web UI / IDEA 插件 / 浏览器插件      │
 └──────────────┬──────────────────────┘
-               │ HTTP/文件
+               │ bridge contract / 调用
 ┌──────────────▼──────────────────────┐
-│    Maven 插件 / CLI (业务逻辑)       │ ← 核心实现
+│       api-codegen-core (核心库)      │ ← 校验 / 修复 / 转换 / 生成
 └──────────────┬──────────────────────┘
-               │
+               │ 集成
 ┌──────────────▼──────────────────────┐
-│       api-codegen-core (核心库)      │ ← 校验/转换/生成
+│      Maven 插件 / CLI / 其他宿主      │
 └─────────────────────────────────────┘
 ```
 

@@ -57,20 +57,20 @@ fi
 echo ""
 
 # -----------------------------------------------------------------------------
-# 2. Web UI 单元测试 (analyzer)
+# 2. Web UI Core bridge contract 测试
 # -----------------------------------------------------------------------------
-echo -e "${BLUE}[2/3] 运行 Web UI 单元测试 (analyzer)...${NC}"
+echo -e "${BLUE}[2/3] 运行 Web UI Core bridge contract 测试...${NC}"
 
 cd web-ui
-if node test/analyzer-test.js 2>&1 | tee /tmp/ui-analyzer-output.txt; then
-    UI_ANALYZER_TESTS=$(grep -oP "总计: \K\d+" /tmp/ui-analyzer-output.txt || echo "0")
-    UI_ANALYZER_PASSED=$(grep -oP "通过: \K\d+" /tmp/ui-analyzer-output.txt || echo "0")
-    echo -e "${GREEN}✓ Web UI (analyzer) 测试通过: $UI_ANALYZER_PASSED/$UI_ANALYZER_TESTS${NC}"
-    MODULE_RESULTS+=("UI-analyzer: $UI_ANALYZER_PASSED 通过")
-    PASSED_TESTS=$((PASSED_TESTS + UI_ANALYZER_PASSED))
+if node test/core-bridge-test.js 2>&1 | tee /tmp/ui-core-bridge-output.txt; then
+    UI_CORE_TESTS=$(grep -oP "总计: \K\d+" /tmp/ui-core-bridge-output.txt || echo "0")
+    UI_CORE_PASSED=$(grep -oP "通过: \K\d+" /tmp/ui-core-bridge-output.txt || echo "0")
+    echo -e "${GREEN}✓ Web UI (core-bridge) 测试通过: $UI_CORE_PASSED/$UI_CORE_TESTS${NC}"
+    MODULE_RESULTS+=("UI-core-bridge: $UI_CORE_PASSED 通过")
+    PASSED_TESTS=$((PASSED_TESTS + UI_CORE_PASSED))
 else
-    echo -e "${RED}✗ Web UI (analyzer) 测试失败${NC}"
-    MODULE_RESULTS+=("UI-analyzer: 失败")
+    echo -e "${RED}✗ Web UI (core-bridge) 测试失败${NC}"
+    MODULE_RESULTS+=("UI-core-bridge: 失败")
     FAILED_TESTS=$((FAILED_TESTS + 1))
 fi
 echo ""

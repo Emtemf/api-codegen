@@ -23,237 +23,162 @@ let passed = 0;
 let failed = 0;
 const results = [];
 
-/**
- * 简化的 computeImpact 函数（从 index.html 提取）
- */
-function computeImpact(before, after) {
-    var result = {
-        apis: [],
-        fields: []
-    };
-
-    try {
-        var beforeParsed = jsyaml.load(before);
-        var afterParsed = jsyaml.load(after);
-
-        if (!beforeParsed || !afterParsed) {
-            return result;
-        }
-
-        var isSwagger = (beforeParsed.swagger || beforeParsed.openapi || beforeParsed.paths);
-
-        if (isSwagger) {
-            var beforePaths = beforeParsed.paths || {};
-            var afterPaths = afterParsed.paths || {};
-
-            function normalizePath(path) {
-                if (!path) return path;
-                var normalized = path.replace(/\/+/g, '/');
-                // Remove /XXX/ prefix (placeholder path)
-                normalized = normalized.replace(/^\/XXX\//, '/');
-                if (!normalized.startsWith('/')) {
-                    normalized = '/' + normalized;
-                }
-                return normalized;
-            }
-
-            var normalizedBeforePaths = {};
-            for (var origPath in beforePaths) {
-                var np = normalizePath(origPath);
-                normalizedBeforePaths[np] = origPath;
-            }
-
-            for (var path in afterPaths) {
-                var np = normalizePath(path);
-                var beforePath = beforePaths[path];
-                var afterPath = afterPaths[path];
-                var originalPath = path;
-
-                if (normalizedBeforePaths[np]) {
-                    originalPath = normalizedBeforePaths[np];
-                    beforePath = beforePaths[originalPath];
-                }
-
-                if (!beforePath && originalPath === path) {
-                    if (!normalizedBeforePaths[np]) {
-                        var afterOp = afterPath[Object.keys(afterPath)[0]];
-                        if (afterOp.summary || afterOp.operationId || (afterOp.parameters && afterOp.parameters.length > 0)) {
-                            result.apis.push({
-                                path: path,
-                                originalPath: path,
-                                method: Object.keys(afterPath)[0],
-                                name: afterOp.operationId || afterOp.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
-                                summary: afterOp.summary || '',
-                                operationId: afterOp.operationId || '',
-                                parameters: afterOp.parameters || [],
-                                type: 'added',
-                                changes: [{ prop: 'API', before: '(无)', after: '新增接口' }]
-                            });
-                        }
-                    }
-                } else if (originalPath !== path) {
-                    var afterOpFixed = afterPath[Object.keys(afterPath)[0]];
-                    result.apis.push({
-                        path: path,
-                        originalPath: originalPath,
-                        method: Object.keys(afterPath)[0],
-                        name: afterOpFixed.operationId || afterOpFixed.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
-                        summary: afterOpFixed.summary || '',
-                        operationId: afterOpFixed.operationId || '',
-                        parameters: afterOpFixed.parameters || [],
-                        type: 'modified',
-                        changes: [{ prop: 'path', before: originalPath, after: path }]
-                    });
-                } else {
-                    var hasActualChange = false;
-                    var pathChanges = [];
-
-                    if (originalPath !== path) {
-                        hasActualChange = true;
-                        pathChanges.push({ prop: 'path', before: originalPath, after: path });
-                    }
-
-                    for (var method in afterPath) {
-                        var beforeMethod = beforePath[method];
-                        var afterMethod = afterPath[method];
-
-                        if (!beforeMethod) {
-                            hasActualChange = true;
-                        } else {
-                            var changes = [];
-
-                            if (!beforeMethod.operationId && afterMethod.operationId) {
-                                changes.push({ prop: 'operationId', before: '(无)', after: afterMethod.operationId });
-                            }
-                            if (!beforeMethod.description && afterMethod.description) {
-                                changes.push({ prop: 'description', before: '(无)', after: afterMethod.description });
-                            }
-
-                            // 参数变更检测
-                            if (afterMethod.parameters && afterMethod.parameters.length > 0) {
-                                var beforeParamMap = {};
-                                if (beforeMethod.parameters) {
-                                    beforeMethod.parameters.forEach(function(p) { beforeParamMap[p.name] = p; });
-                                }
-                                afterMethod.parameters.forEach(function(param) {
-                                    var beforeParam = beforeParamMap[param.name];
-                                    if (!beforeParam) {
-                                        changes.push({ prop: '参数 ' + param.name, before: '(无)', after: '新增' });
-                                    } else {
-                                        if (!beforeParam.description && param.description) {
-                                            changes.push({ prop: '参数 ' + param.name + ' description', before: '(无)', after: param.description });
-                                        }
-                                        if (!beforeParam.type && param.type) {
-                                            changes.push({ prop: '参数 ' + param.name + ' type', before: '(无)', after: param.type });
-                                        }
-                                        if (!beforeParam.minLength && param.minLength !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' minLength', before: '(无)', after: param.minLength });
-                                        }
-                                        if (!beforeParam.maxLength && param.maxLength !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' maxLength', before: '(无)', after: param.maxLength });
-                                        }
-                                        if (!beforeParam.minimum && param.minimum !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' minimum', before: '(无)', after: param.minimum });
-                                        }
-                                        if (!beforeParam.maximum && param.maximum !== undefined) {
-                                            changes.push({ prop: '参数 ' + param.name + ' maximum', before: '(无)', after: param.maximum });
-                                        }
-                                        if (!beforeParam.pattern && param.pattern) {
-                                            changes.push({ prop: '参数 ' + param.name + ' pattern', before: '(无)', after: param.pattern });
-                                        }
-                                    }
-                                });
-                            }
-
-                            if (changes.length > 0) {
-                                hasActualChange = true;
-                                pathChanges = pathChanges.concat(changes);
-                            }
-                        }
-                    }
-
-                    if (hasActualChange) {
-                        var firstAfterMethod = afterPath[Object.keys(afterPath)[0]];
-                        result.apis.push({
-                            path: path,
-                            originalPath: originalPath,
-                            method: Object.keys(afterPath)[0],
-                            name: firstAfterMethod.operationId || firstAfterMethod.summary || path.replace(/\//g, '').replace(/\{|\}/g, ''),
-                            summary: firstAfterMethod.summary || '',
-                            operationId: firstAfterMethod.operationId || '',
-                            parameters: firstAfterMethod.parameters || [],
-                            type: 'modified',
-                            changes: pathChanges
-                        });
-                    }
-                }
-            }
-        }
-
-        // Definitions/字段变更检测
-        var beforeDefs = beforeParsed.definitions || (beforeParsed.components && beforeParsed.components.schemas) || {};
-        var afterDefs = afterParsed.definitions || (afterParsed.components && afterParsed.components.schemas) || {};
-
-        for (var defName in afterDefs) {
-            var beforeDef = beforeDefs[defName] || {};
-            var afterDef = afterDefs[defName];
-            var beforeProps = beforeDef.properties || {};
-            var afterProps = afterDef.properties || {};
-
-            var fieldChangesList = [];
-
-            for (var propName in afterProps) {
-                var beforeProp = beforeProps[propName] || {};
-                var afterProp = afterProps[propName];
-
-                var beforeVal = JSON.stringify(beforeProp);
-                var afterVal = JSON.stringify(afterProp);
-
-                if (beforeVal !== afterVal) {
-                    var changes = [];
-                    if (!beforeProp.required && afterProp.required) {
-                        changes.push({ prop: 'required', before: '(无)', after: true });
-                    }
-                    if (!beforeProp.format && afterProp.format) {
-                        changes.push({ prop: 'format', before: '(无)', after: afterProp.format });
-                    }
-                    if (!beforeProp.pattern && afterProp.pattern) {
-                        changes.push({ prop: 'pattern', before: '(无)', after: afterProp.pattern });
-                    }
-                    if (!beforeProp.minimum && afterProp.minimum !== undefined) {
-                        changes.push({ prop: 'minimum', before: '(无)', after: afterProp.minimum });
-                    }
-                    if (!beforeProp.maximum && afterProp.maximum !== undefined) {
-                        changes.push({ prop: 'maximum', before: '(无)', after: afterProp.maximum });
-                    }
-                    if (!beforeProp.minLength && afterProp.minLength !== undefined) {
-                        changes.push({ prop: 'minLength', before: '(无)', after: afterProp.minLength });
-                    }
-                    if (!beforeProp.maxLength && afterProp.maxLength !== undefined) {
-                        changes.push({ prop: 'maxLength', before: '(无)', after: afterProp.maxLength });
-                    }
-
-                    if (changes.length > 0) {
-                        fieldChangesList.push({
-                            className: defName,
-                            field: propName,
-                            fieldType: afterProp.type || 'Object',
-                            changes: changes
-                        });
-                    }
-                }
-            }
-
-            if (fieldChangesList.length > 0) {
-                result.fields = result.fields.concat(fieldChangesList);
-            }
-        }
-
-    } catch (e) {
-        console.error('computeImpact error:', e.message);
+function extractFunctionSource(fileContent, functionName) {
+    const startToken = `function ${functionName}`;
+    const startIndex = fileContent.indexOf(startToken);
+    if (startIndex === -1) {
+        throw new Error(`未在 index.html 中找到函数: ${functionName}`);
     }
 
-    return result;
+    const bodyStart = fileContent.indexOf('{', startIndex);
+    if (bodyStart === -1) {
+        throw new Error(`函数 ${functionName} 缺少函数体`);
+    }
+
+    let depth = 0;
+    for (let i = bodyStart; i < fileContent.length; i++) {
+        const char = fileContent[i];
+        if (char === '{') depth++;
+        if (char === '}') depth--;
+        if (depth === 0) {
+            return fileContent.slice(startIndex, i + 1);
+        }
+    }
+
+    throw new Error(`函数 ${functionName} 提取失败，括号未闭合`);
+}
+
+function loadComputeImpactFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const normalizePathForDiffSource = extractFunctionSource(indexHtml, 'normalizePathForDiff');
+    const getSwaggerFieldChangesSource = extractFunctionSource(indexHtml, 'getSwaggerFieldChanges');
+    const computeImpactSource = extractFunctionSource(indexHtml, 'computeImpact');
+
+    return eval(`(() => {
+        ${normalizePathForDiffSource}
+        ${getSwaggerFieldChangesSource}
+        ${computeImpactSource}
+        return computeImpact;
+    })()`);
+}
+
+const computeImpact = loadComputeImpactFromIndex();
+
+function loadIsAutoFixableFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const isAutoFixableSource = extractFunctionSource(indexHtml, 'isAutoFixable');
+
+    return eval(`(() => {
+        ${isAutoFixableSource}
+        return isAutoFixable;
+    })()`);
+}
+
+const isAutoFixable = loadIsAutoFixableFromIndex();
+
+function loadIsManualLocatableFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const isManualLocatableSource = extractFunctionSource(indexHtml, 'isManualLocatable');
+
+    return eval(`(() => {
+        ${isManualLocatableSource}
+        return isManualLocatable;
+    })()`);
+}
+
+const isManualLocatable = loadIsManualLocatableFromIndex();
+
+function loadFindIssueLocationLineFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const splitIssueApiRefSource = extractFunctionSource(indexHtml, 'splitIssueApiRef');
+    const extractIssueFieldNameSource = extractFunctionSource(indexHtml, 'extractIssueFieldName');
+    const findIssueLocationLineSource = extractFunctionSource(indexHtml, 'findIssueLocationLine');
+
+    return eval(`(() => {
+        ${splitIssueApiRefSource}
+        ${extractIssueFieldNameSource}
+        ${findIssueLocationLineSource}
+        return findIssueLocationLine;
+    })()`);
+}
+
+const findIssueLocationLine = loadFindIssueLocationLineFromIndex();
+
+function uniqueStrings(values) {
+    const seen = new Set();
+    return (values || []).filter(value => {
+        if (!value || typeof value !== 'string' || seen.has(value)) {
+            return false;
+        }
+        seen.add(value);
+        return true;
+    });
+}
+
+function extractResourceAnnotationEntries(parsed) {
+    if (!parsed) return [];
+    const entries = [];
+    const httpMethods = ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'];
+
+    if (parsed.paths) {
+        Object.keys(parsed.paths).forEach(pathKey => {
+            const pathItem = parsed.paths[pathKey] || {};
+            const classAnnotations = Array.isArray(pathItem['x-java-class-annotations']) ? pathItem['x-java-class-annotations'] : [];
+
+            httpMethods.forEach(method => {
+                const operation = pathItem[method];
+                if (!operation || typeof operation !== 'object') return;
+
+                const methodAnnotations = Array.isArray(operation['x-java-method-annotations']) ? operation['x-java-method-annotations'] : [];
+                const legacyAnnotations = Array.isArray(operation.annotations) ? operation.annotations : [];
+                if (classAnnotations.length === 0 && methodAnnotations.length === 0 && legacyAnnotations.length === 0) return;
+
+                entries.push({
+                    path: `${method.toUpperCase()} ${pathKey}`,
+                    classAnnotations: uniqueStrings(classAnnotations),
+                    methodAnnotations: uniqueStrings(methodAnnotations.concat(legacyAnnotations))
+                });
+            });
+        });
+    }
+
+    return entries;
+}
+
+function normalizeAnnotationBundle(annotations) {
+    if (Array.isArray(annotations)) {
+        return {
+            classAnnotations: [],
+            methodAnnotations: [],
+            legacyAnnotations: annotations
+        };
+    }
+
+    annotations = annotations || {};
+    return {
+        classAnnotations: annotations.classAnnotations || [],
+        methodAnnotations: annotations.methodAnnotations || [],
+        legacyAnnotations: annotations.legacyAnnotations || annotations.annotations || []
+    };
+}
+
+function generateJavaControllerPreview(annotations) {
+    const bundle = normalizeAnnotationBundle(annotations);
+    const lines = [];
+
+    if (bundle.classAnnotations.length > 0) {
+        lines.push('// 资源组注解');
+        bundle.classAnnotations.forEach(annotation => lines.push(annotation));
+    }
+
+    const methodAnnotations = bundle.methodAnnotations.concat(bundle.legacyAnnotations);
+    if (methodAnnotations.length > 0) {
+        lines.push('// 方法注解');
+        methodAnnotations.forEach(annotation => lines.push(annotation));
+    }
+
+    lines.push('@GetMapping("/users")');
+    return lines.join('\n');
 }
 
 /**
@@ -427,7 +352,7 @@ paths:
       parameters:
         - name: keyword
           in: query
-          minLength: 0
+          minLength: 1
           maxLength: 255
       responses:
         200:
@@ -779,6 +704,270 @@ paths:
     return {
         pass: impact.apis.length > 0,
         message: `检测到 ${impact.apis.length} 个API变更，共 ${impact.apis[0]?.changes?.length || 0} 处变更`
+    };
+});
+
+test('computeImpact', 'Swagger 资源组注解应透传到预览模型', function() {
+    const before = `swagger: "2.0"
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@TenantScoped"
+    get:
+      operationId: getUsers
+      responses:
+        200:
+          description: OK`;
+
+    const after = `swagger: "2.0"
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@TenantScoped"
+    get:
+      operationId: getUsers
+      x-java-method-annotations:
+        - "@Permission(\\"user.read\\")"
+      description: 获取用户列表
+      responses:
+        200:
+          description: OK`;
+
+    const impact = computeImpact(before, after);
+    const api = impact.apis[0] || {};
+    return {
+        pass: Array.isArray(api.classAnnotations) &&
+            api.classAnnotations.includes('@TenantScoped') &&
+            Array.isArray(api.methodAnnotations) &&
+            api.methodAnnotations.includes('@Permission("user.read")'),
+        message: `类注解: ${JSON.stringify(api.classAnnotations)}, 方法注解: ${JSON.stringify(api.methodAnnotations)}`
+    };
+});
+
+test('computeImpact', 'Swagger 归一化到 core YAML 时应回退为非结构化差异', function() {
+    const before = `swagger: "2.0"
+paths:
+  //users:
+    get:
+      operationId: getUsers
+      responses:
+        200:
+          description: OK`;
+
+    const after = `---
+apis:
+- name: "getUsers"
+  path: "/users"
+  method: "GET"
+  response:
+    className: "Response"
+    fields:
+    - name: "success"
+      type: "Boolean"
+      required: false
+      description: "操作是否成功"
+      validation: {}`;
+
+    const impact = computeImpact(before, after);
+    return {
+        pass: impact.apis.length === 0 && impact.fields.length === 0,
+        message: `跨结构对比不应误报结构化变更，当前: ${impact.apis.length} 个 API, ${impact.fields.length} 个字段`
+    };
+});
+
+test('singleInput', 'index.html 不应再包含 codegen-config.yaml 双文件提示', function() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    return {
+        pass: !indexHtml.includes('codegen-config.yaml') &&
+            !indexHtml.includes('配置预览') &&
+            !indexHtml.includes('API + Config'),
+        message: '单一输入模式下不应再保留第二份配置文件相关文案'
+    };
+});
+
+test('javaPreview', 'Java 预览应显示资源组与方法注解', function() {
+    const preview = generateJavaControllerPreview({
+        classAnnotations: ['@TenantScoped'],
+        methodAnnotations: ['@Permission("user.read")']
+    });
+
+    return {
+        pass: preview.includes('// 资源组注解') &&
+            preview.includes('@TenantScoped') &&
+            preview.includes('// 方法注解') &&
+            preview.includes('@Permission("user.read")'),
+        message: preview
+    };
+});
+
+console.log('\n--- 4. Core Contract UI 行为测试 ---\n');
+
+test('isAutoFixable', '应优先使用 core 返回的 fixable=false', function() {
+    const issue = {
+        severity: 'warn',
+        message: 'String 字段缺少长度校验',
+        fixable: false
+    };
+
+    return {
+        pass: isAutoFixable(issue) === false,
+        message: 'UI 不应再因为 message 命中旧规则而覆盖 core 的 fixable=false'
+    };
+});
+
+test('isAutoFixable', '应优先使用 core 返回的 fixable=true', function() {
+    const issue = {
+        severity: 'info',
+        message: '自定义 core 修复建议',
+        fixable: true
+    };
+
+    return {
+        pass: isAutoFixable(issue) === true,
+        message: 'UI 应接受 core 的 fixable=true，而不是依赖前端关键字猜测'
+    };
+});
+
+test('isAutoFixable', '缺少 fixable 元数据时不应再回退到 message 猜测', function() {
+    const issue = {
+        severity: 'warn',
+        message: 'String 字段缺少长度校验'
+    };
+
+    return {
+        pass: isAutoFixable(issue) === false,
+        message: 'UI 不应在缺少 contract 元数据时自行推断可修复性'
+    };
+});
+
+test('isManualLocatable', '缺少定位信息的人工问题不应显示可点击定位按钮', function() {
+    const issue = {
+        severity: 'error',
+        message: 'YAML 格式解析失败',
+        fixable: false,
+        api: 'search',
+        field: 'request.Request.keyword'
+    };
+
+    return {
+        pass: isManualLocatable(issue) === false,
+        message: '没有 locator 的问题不应再依赖 api/field 字符串推断定位能力'
+    };
+});
+
+test('isManualLocatable', '带有定位信息的人工问题仍可点击定位', function() {
+    const issue = {
+        severity: 'error',
+        message: 'minLength 不能大于 maxLength',
+        fixable: false,
+        locator: {
+            kind: 'swagger-field',
+            apiName: 'search',
+            path: '/search',
+            method: 'GET',
+            section: 'request',
+            className: 'Request',
+            fieldName: 'keyword',
+            property: 'validation'
+        }
+    };
+
+    return {
+        pass: isManualLocatable(issue) === true,
+        message: '只有 core 提供稳定 locator 时 UI 才应显示可点击的手动定位入口'
+    };
+});
+
+test('findIssueLocationLine', '应基于 operationId 和 field 在 Swagger 中定位参数行', function() {
+    const lines = `swagger: "2.0"
+paths:
+  /search:
+    get:
+      operationId: search
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+            minLength: 100
+            maxLength: 10`.split('\n');
+
+    const line = findIssueLocationLine(lines, {
+        api: '',
+        field: '',
+        locator: {
+            kind: 'swagger-field',
+            apiName: 'search',
+            path: '/search',
+            method: 'GET',
+            section: 'request',
+            className: 'Request',
+            fieldName: 'keyword',
+            property: 'validation'
+        },
+        message: 'minLength 不能大于 maxLength'
+    });
+
+    return {
+        pass: line === 6,
+        message: `期望定位到参数定义行 7，当前: ${line + 1}`
+    };
+});
+
+test('findIssueLocationLine', '应基于 name 和 field 在 custom YAML 中定位字段行', function() {
+    const lines = `apis:
+  - name: createUser
+    path: /api/users
+    method: POST
+    request:
+      className: CreateUserReq
+      fields:
+        - name: username
+          type: String`.split('\n');
+
+    const line = findIssueLocationLine(lines, {
+        api: '',
+        field: '',
+        locator: {
+            kind: 'custom-field',
+            apiName: 'createUser',
+            path: '/api/users',
+            method: 'POST',
+            section: 'request',
+            className: 'CreateUserReq',
+            fieldName: 'username'
+        },
+        message: 'String 字段缺少长度校验'
+    });
+
+    return {
+        pass: line === 7,
+        message: `期望定位到字段定义行 8，当前: ${line + 1}`
+    };
+});
+
+test('findIssueLocationLine', '路径类问题应优先定位到路径行', function() {
+    const lines = `swagger: "2.0"
+paths:
+  //users:
+    get:
+      operationId: getUsers`.split('\n');
+
+    const line = findIssueLocationLine(lines, {
+        api: '',
+        field: '',
+        locator: {
+            kind: 'swagger-path',
+            path: '//users',
+            method: 'GET',
+            property: 'path'
+        },
+        message: '路径不能包含重复斜杠: //users'
+    });
+
+    return {
+        pass: line === 2,
+        message: `期望定位到路径行 3，当前: ${line + 1}`
     };
 });
 

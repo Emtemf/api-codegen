@@ -47,19 +47,19 @@ if %ERRORLEVEL%==0 (
 echo.
 
 :: -----------------------------------------------------------------------------
-:: 2. Web UI 单元测试 (analyzer)
+:: 2. Web UI Core bridge contract 测试
 :: -----------------------------------------------------------------------------
-echo [2/3] 运行 Web UI 单元测试 (analyzer)...
+echo [2/3] 运行 Web UI Core bridge contract 测试...
 
 cd web-ui
-node test/analyzer-test.js > ui-analyzer-output.txt 2>&1
+node test/core-bridge-test.js > ui-core-bridge-output.txt 2>&1
 if %ERRORLEVEL%==0 (
-    echo [OK] Web UI (analyzer) 测试通过
-    for /f "tokens=2" %%a in ('findstr "通过:" ui-analyzer-output.txt') do (
+    echo [OK] Web UI (core-bridge) 测试通过
+    for /f "tokens=2" %%a in ('findstr "通过:" ui-core-bridge-output.txt') do (
         echo     %%a
     )
 ) else (
-    echo [ERROR] Web UI (analyzer) 测试失败
+    echo [ERROR] Web UI (core-bridge) 测试失败
     set /a FAILED_MODULES+=1
 )
 cd ..
@@ -106,7 +106,7 @@ echo.
 
 if %FAILED_MODULES%==0 (
     echo [OK] 所有测试通过！
-    del /q mvn-test-output.txt web-ui\ui-analyzer-output.txt web-ui\ui-diff-output.txt web-ui\ui-render-output.txt 2>nul
+    del /q mvn-test-output.txt web-ui\ui-core-bridge-output.txt web-ui\ui-diff-output.txt web-ui\ui-render-output.txt 2>nul
     exit /b 0
 ) else (
     echo [ERROR] 有 %FAILED_MODULES% 个模块测试失败

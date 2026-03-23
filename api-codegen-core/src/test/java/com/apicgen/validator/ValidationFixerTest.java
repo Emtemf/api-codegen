@@ -194,6 +194,37 @@ class ValidationFixerTest {
             assertNotNull(fixedYaml);
             assertTrue(fixedYaml.contains("pattern:"), "应添加pattern校验");
         }
+
+        @Test
+        @DisplayName("should_normalize_invalid_string_length_range_to_defaults")
+        void shouldNormalizeInvalidStringLengthRangeToDefaults() throws IOException {
+            String yamlContent = """
+                apis:
+                  - name: searchInvalidLength
+                    path: /api/search
+                    method: GET
+                    request:
+                      className: SearchReq
+                      fields:
+                        - name: keyword
+                          type: String
+                          required: false
+                          validation:
+                            minLength: 100
+                            maxLength: 10
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("minLength: 1"), "非法字符串长度范围应回退到默认 minLength=1");
+            assertTrue(fixedYaml.contains("maxLength: 255"), "非法字符串长度范围应回退到默认 maxLength=255");
+            assertFalse(fixedYaml.contains("minLength: 100"), "非法 minLength 不应保留");
+            assertFalse(fixedYaml.contains("maxLength: 10"), "非法 maxLength 不应保留");
+        }
     }
 
     @Nested
@@ -480,6 +511,37 @@ class ValidationFixerTest {
             assertNotNull(fixedYaml);
             assertTrue(fixedYaml.contains("min:"), "应添加min");
             assertTrue(fixedYaml.contains("max:"), "应添加max");
+        }
+
+        @Test
+        @DisplayName("should_normalize_invalid_numeric_range_to_defaults")
+        void shouldNormalizeInvalidNumericRangeToDefaults() throws IOException {
+            String yamlContent = """
+                apis:
+                  - name: queryInvalidRange
+                    path: /api/users
+                    method: GET
+                    request:
+                      className: QueryReq
+                      fields:
+                        - name: age
+                          type: Integer
+                          required: false
+                          validation:
+                            min: 100
+                            max: 10
+                """;
+            ApiDefinition apiDefinition = YamlParser.parse(yamlContent);
+
+            ValidationAnalyzer analyzer = new ValidationAnalyzer();
+            List<ValidationAnalyzer.AnalysisItem> issues = analyzer.analyze(apiDefinition);
+            String fixedYaml = fixer.fix(apiDefinition, issues);
+
+            assertNotNull(fixedYaml);
+            assertTrue(fixedYaml.contains("min: 0.0"), "非法数值范围应回退到默认 min=0");
+            assertTrue(fixedYaml.contains("2147483647") || fixedYaml.contains("2.147483647E9"), "非法数值范围应回退到默认 max");
+            assertFalse(fixedYaml.contains("min: 100"), "非法 min 不应保留");
+            assertFalse(fixedYaml.contains("max: 10"), "非法 max 不应保留");
         }
 
         /**

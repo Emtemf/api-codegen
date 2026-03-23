@@ -167,44 +167,31 @@ public class SwaggerConverter {
         // 处理 parameters
         if (operation.has("parameters") && operation.get("parameters").isArray()) {
             for (JsonNode param : operation.get("parameters")) {
+                String paramIn = param.has("in") ? param.get("in").asText("query") : "query";
+                if ("body".equals(paramIn) && param.has("schema")) {
+                    List<FieldDefinition> bodyFields = extractFieldsFromSchema(param.get("schema"), root, param.path("name").asText("body"));
+                    for (FieldDefinition field : bodyFields) {
+                        field.setIn("body");
+                    }
+                    fields.addAll(bodyFields);
+                    continue;
+                }
+
                 FieldDefinition field = new FieldDefinition();
                 if (param.has("name")) {
                     field.setName(param.get("name").asText(""));
                 }
-                if (param.has("schema") && param.get("schema").has("type")) {
-                    field.setType(convertJsonType(param.get("schema").get("type").asText()));
-                    // 从 schema 提取校验规则
+                if (param.has("schema")) {
                     JsonNode schema = param.get("schema");
-                    ValidationConfig validation = new ValidationConfig();
-
-                    // 数值类型校验
-                    if (schema.has("minimum")) {
-                        validation.setMin(schema.get("minimum").asDouble());
+                    field.setType(extractTypeFromSchema(schema, root));
+                    ValidationConfig validation = extractValidationFromSchema(schema);
+                    if (hasValidation(validation)) {
+                        field.setValidation(validation);
                     }
-                    if (schema.has("maximum")) {
-                        validation.setMax(schema.get("maximum").asDouble());
-                    }
-                    // 字符串类型校验
-                    if (schema.has("minLength")) {
-                        validation.setMinLength(schema.get("minLength").asInt());
-                    }
-                    if (schema.has("maxLength")) {
-                        validation.setMaxLength(schema.get("maxLength").asInt());
-                    }
-                    // 正则校验
-                    if (schema.has("pattern")) {
-                        validation.setPattern(schema.get("pattern").asText());
-                    }
-                    // 邮箱格式
-                    if (schema.has("format") && "email".equals(schema.get("format").asText())) {
-                        validation.setEmail(true);
-                    }
-
-                    // 如果有校验规则，设置到字段
-                    if (validation.getMin() != null || validation.getMax() != null
-                            || validation.getMinLength() != null || validation.getMaxLength() != null
-                            || (validation.getPattern() != null && !validation.getPattern().isEmpty())
-                            || Boolean.TRUE.equals(validation.getEmail())) {
+                } else if (param.has("type")) {
+                    field.setType(convertJsonType(param.get("type").asText(), param.path("format").asText("")));
+                    ValidationConfig validation = extractValidationFromSchema(param);
+                    if (hasValidation(validation)) {
                         field.setValidation(validation);
                     }
                 } else {
@@ -216,10 +203,7 @@ public class SwaggerConverter {
                 if (param.has("description")) {
                     field.setDescription(param.get("description").asText(""));
                 }
-                // 设置参数位置类型（path/query/header/cookie）
-                if (param.has("in")) {
-                    field.setIn(param.get("in").asText("query"));
-                }
+                field.setIn(paramIn);
                 fields.add(field);
             }
         }
@@ -298,6 +282,10 @@ public class SwaggerConverter {
 
     @SuppressWarnings("unchecked")
     private List<FieldDefinition> extractFieldsFromSchema(JsonNode schema, JsonNode root, String defaultName) {
+        return extractFieldsFromSchema(schema, root, defaultName, new HashSet<>());
+    }
+
+    private List<FieldDefinition> extractFieldsFromSchema(JsonNode schema, JsonNode root, String defaultName, Set<String> visitedRefs) {
         List<FieldDefinition> fields = new ArrayList<>();
 
         if (schema == null) {
@@ -307,32 +295,24 @@ public class SwaggerConverter {
         // 处理引用
         String refValue = getRefValue(schema);
         if (refValue != null) {
-            String refName = extractRefName(refValue);
-            FieldDefinition field = new FieldDefinition();
-            String fieldName = defaultName;
-            if (!refName.isEmpty()) {
-                fieldName = refName.substring(0, 1).toLowerCase() + refName.substring(1);
+            if (visitedRefs.contains(refValue)) {
+                return fields;
             }
-            field.setName(fieldName);
-            field.setType(refName);
-            fields.add(field);
-            return fields;
+            visitedRefs.add(refValue);
+            JsonNode resolvedSchema = resolveRefSchema(refValue, root);
+            if (resolvedSchema != null) {
+                return extractFieldsFromSchema(resolvedSchema, root, defaultName, visitedRefs);
+            }
         }
 
         // 处理数组类型
         if (schema.has("type") && "array".equals(schema.get("type").asText())) {
             FieldDefinition field = new FieldDefinition();
             field.setName(defaultName);
-            if (schema.has("items")) {
-                JsonNode items = schema.get("items");
-                String itemType = extractTypeFromSchema(items, root);
-                if (itemType != null) {
-                    field.setType("List<" + itemType + ">");
-                } else {
-                    field.setType("List<Object>");
-                }
-            } else {
-                field.setType("List<Object>");
+            field.setType(extractTypeFromSchema(schema, root));
+            ValidationConfig validation = extractValidationFromSchema(schema);
+            if (hasValidation(validation)) {
+                field.setValidation(validation);
             }
             fields.add(field);
             return fields;
@@ -340,6 +320,7 @@ public class SwaggerConverter {
 
         // 处理对象类型
         if (schema.has("properties") && schema.get("properties").isObject()) {
+            Set<String> requiredFields = extractRequiredFields(schema);
             JsonNode properties = schema.get("properties");
             Iterator<String> fieldNames = properties.fieldNames();
             while (fieldNames.hasNext()) {
@@ -348,16 +329,40 @@ public class SwaggerConverter {
                 FieldDefinition field = new FieldDefinition();
                 field.setName(fieldName);
                 field.setType(extractTypeFromSchema(prop, root));
+                ValidationConfig validation = extractValidationFromSchema(prop);
+                if (hasValidation(validation)) {
+                    field.setValidation(validation);
+                }
                 if (prop.has("description")) {
                     field.setDescription(prop.get("description").asText(""));
                 }
-                if (prop.has("required") && prop.get("required").isBoolean()) {
-                    field.setRequired(prop.get("required").asBoolean(false));
+                if (requiredFields.contains(fieldName) || (prop.has("required") && prop.get("required").isBoolean())) {
+                    field.setRequired(requiredFields.contains(fieldName) || prop.get("required").asBoolean(false));
+                }
+
+                String nestedRefValue = getRefValue(prop);
+                if (nestedRefValue != null) {
+                    JsonNode nestedResolvedSchema = resolveRefSchema(nestedRefValue, root);
+                    if (nestedResolvedSchema != null && nestedResolvedSchema.has("properties")) {
+                        field.setFields(extractFieldsFromSchema(nestedResolvedSchema, root, fieldName, new HashSet<>(visitedRefs)));
+                    }
                 }
                 fields.add(field);
             }
+
+            if (!fields.isEmpty()) {
+                return fields;
+            }
         }
 
+        FieldDefinition field = new FieldDefinition();
+        field.setName(defaultName);
+        field.setType(extractTypeFromSchema(schema, root));
+        ValidationConfig validation = extractValidationFromSchema(schema);
+        if (hasValidation(validation)) {
+            field.setValidation(validation);
+        }
+        fields.add(field);
         return fields;
     }
 
@@ -384,6 +389,10 @@ public class SwaggerConverter {
         // 处理引用
         String refValue = getRefValue(schema);
         if (refValue != null) {
+            JsonNode resolvedSchema = resolveRefSchema(refValue, root);
+            if (resolvedSchema != null && resolvedSchema.has("type")) {
+                return extractTypeFromSchema(resolvedSchema, root);
+            }
             return extractRefName(refValue);
         }
 
@@ -405,6 +414,93 @@ public class SwaggerConverter {
         String format = schema.has("format") ? schema.get("format").asText("") : "";
 
         return convertJsonType(type, format);
+    }
+
+    private JsonNode resolveRefSchema(String ref, JsonNode root) {
+        if (ref == null || ref.isBlank() || root == null || !ref.startsWith("#/")) {
+            return null;
+        }
+
+        JsonNode current = root;
+        String[] segments = ref.substring(2).split("/");
+        for (String segment : segments) {
+            if (current == null) {
+                return null;
+            }
+            current = current.get(segment);
+        }
+        return current;
+    }
+
+    private Set<String> extractRequiredFields(JsonNode schema) {
+        Set<String> requiredFields = new LinkedHashSet<>();
+        if (schema == null || !schema.has("required") || !schema.get("required").isArray()) {
+            return requiredFields;
+        }
+
+        for (JsonNode requiredField : schema.get("required")) {
+            if (requiredField.isTextual()) {
+                requiredFields.add(requiredField.asText());
+            }
+        }
+        return requiredFields;
+    }
+
+    private ValidationConfig extractValidationFromSchema(JsonNode schema) {
+        ValidationConfig validation = new ValidationConfig();
+        if (schema == null) {
+            return validation;
+        }
+
+        if (schema.has("minimum")) {
+            validation.setMin(schema.get("minimum").asDouble());
+        }
+        if (schema.has("maximum")) {
+            validation.setMax(schema.get("maximum").asDouble());
+        }
+        if (schema.has("minLength")) {
+            validation.setMinLength(schema.get("minLength").asInt());
+        }
+        if (schema.has("maxLength")) {
+            validation.setMaxLength(schema.get("maxLength").asInt());
+        }
+        if (schema.has("pattern")) {
+            validation.setPattern(schema.get("pattern").asText());
+        }
+        if (schema.has("format") && "email".equals(schema.get("format").asText())) {
+            validation.setEmail(true);
+        }
+        if (schema.has("minItems")) {
+            validation.setMinSize(schema.get("minItems").asInt());
+        }
+        if (schema.has("maxItems")) {
+            validation.setMaxSize(schema.get("maxItems").asInt());
+        }
+        if (schema.has("past")) {
+            validation.setPast(schema.get("past").asBoolean(false));
+        }
+        if (schema.has("future")) {
+            validation.setFuture(schema.get("future").asBoolean(false));
+        }
+
+        return validation;
+    }
+
+    private boolean hasValidation(ValidationConfig validation) {
+        if (validation == null) {
+            return false;
+        }
+
+        return validation.getMin() != null
+            || validation.getMax() != null
+            || validation.getMinLength() != null
+            || validation.getMaxLength() != null
+            || validation.getPattern() != null
+            || Boolean.TRUE.equals(validation.getEmail())
+            || validation.getMinSize() != null
+            || validation.getMaxSize() != null
+            || Boolean.TRUE.equals(validation.getPast())
+            || Boolean.TRUE.equals(validation.getFuture());
     }
 
     private String convertJsonType(String type) {
@@ -470,13 +566,14 @@ public class SwaggerConverter {
     }
 
     /**
-     * 规范化路径：修复 // 和 /XXX/ 前缀
+     * 规范化路径：统一分隔符、折叠重复分隔符，并修复 /XXX/ 前缀
      */
     private String normalizePath(String path) {
-        // 修复路径包含 // 的问题
-        if (path.contains("//")) {
-            path = path.replaceAll("/+", "/");
+        if (path == null || path.isEmpty()) {
+            return path;
         }
+
+        path = path.replaceAll("[/\\\\]+", "/");
 
         // 修复 /XXX/ 前缀（如 /XXX/users -> /users）
         if (path.matches("^/[A-Z][A-Z0-9_]*[/].*")) {

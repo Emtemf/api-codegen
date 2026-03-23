@@ -110,17 +110,87 @@ test.describe('Diff Feature Verification', () => {
       const removesText = await page.locator('#diff-removes').textContent().catch(() => '');
       console.log('Adds:', addsText, 'Removes:', removesText);
 
+      const thirdPartyWrapperCount = await page.locator('#diff-unified .d2h-wrapper').count().catch(() => 0);
+      const sideBySideCount = await page.locator('#diff-unified .d2h-file-side-diff').count().catch(() => 0);
+      const legacyPreviewCount = await page.locator('#diff-unified .diff-api-unified').count().catch(() => 0);
+      const infoRowCount = await page.locator('#diff-unified td.d2h-info').count().catch(() => 0);
+      console.log('Third-party diff wrappers:', thirdPartyWrapperCount);
+      console.log('Side-by-side diff blocks:', sideBySideCount);
+      console.log('Legacy preview blocks:', legacyPreviewCount);
+      console.log('Info rows:', infoRowCount);
+
+      const diffBackground = await page.locator('#diff-unified .d2h-file-side-diff').first().evaluate(el => {
+        return window.getComputedStyle(el).backgroundColor;
+      }).catch(() => '');
+      console.log('Diff background:', diffBackground);
+
+      const wrapperClassName = await page.locator('#diff-unified .d2h-wrapper').first().getAttribute('class').catch(() => '');
+      console.log('Diff wrapper class:', wrapperClassName);
+
+      const codeWhiteSpace = await page.locator('#diff-unified .d2h-code-side-line').first().evaluate(el => {
+        const style = window.getComputedStyle(el);
+        return {
+          whiteSpace: style.whiteSpace,
+          wordBreak: style.wordBreak,
+          overflowWrap: style.overflowWrap
+        };
+      }).catch(() => ({ whiteSpace: '', wordBreak: '', overflowWrap: '' }));
+      console.log('Code line style:', codeWhiteSpace);
+
+      const contextLineStyle = await page.locator('#diff-unified td.d2h-cntx').first().evaluate(el => {
+        const style = window.getComputedStyle(el);
+        return {
+          color: style.color,
+          background: style.backgroundColor
+        };
+      }).catch(() => ({ color: '', background: '' }));
+      console.log('Context line style:', contextLineStyle);
+
+      const lineNumberLayout = await page.locator('#diff-unified td.d2h-code-side-linenumber').first().evaluate(el => {
+        const style = window.getComputedStyle(el);
+        const contentCell = el.parentElement?.querySelector('td:not(.d2h-code-side-linenumber)');
+        const numberRect = el.getBoundingClientRect();
+        const contentRect = contentCell ? contentCell.getBoundingClientRect() : null;
+        return {
+          position: style.position,
+          display: style.display,
+          numberRight: numberRect.right,
+          contentLeft: contentRect ? contentRect.left : -1
+        };
+      }).catch(() => ({ position: '', display: '', numberRight: -1, contentLeft: -1 }));
+      console.log('Line number layout:', lineNumberLayout);
+
+      const visibleNumbers = await page.locator('#diff-unified .d2h-file-side-diff').first().evaluate(el => {
+        const cells = Array.from(el.querySelectorAll('td.d2h-code-side-linenumber'));
+        return cells
+          .map(cell => (cell.textContent || '').trim())
+          .filter(Boolean)
+          .slice(0, 8);
+      }).catch(() => []);
+      console.log('Visible line numbers:', visibleNumbers);
+
       // Assertions - content should not be empty
       unifiedDiffWorks = unifiedContent.length > 0;
       console.log('Unified Diff has content:', unifiedDiffWorks);
 
-      // Step 7: Check if API diff shows per-API blocks
-      console.log('Step 7: Checking API-level diff blocks...');
-      const apiBlocksUnified = await page.locator('#diff-unified .diff-api-unified').count().catch(() => 0);
-      console.log('API blocks in unified view:', apiBlocksUnified);
-
-      // API diff works if there are API blocks with changes
-      diffWorks = unifiedDiffWorks && apiBlocksUnified > 0;
+      // Step 7: Check that only one side-by-side diff preview exists
+      console.log('Step 7: Checking single side-by-side diff preview...');
+      diffWorks = unifiedDiffWorks
+        && thirdPartyWrapperCount === 1
+        && sideBySideCount > 0
+        && legacyPreviewCount === 0
+        && infoRowCount === 0
+        && wrapperClassName.includes('d2h-dark-color-scheme')
+        && diffBackground === 'rgb(13, 17, 23)'
+        && codeWhiteSpace.whiteSpace === 'pre'
+        && codeWhiteSpace.wordBreak === 'normal'
+        && codeWhiteSpace.overflowWrap === 'normal'
+        && contextLineStyle.color === 'rgb(240, 246, 252)'
+        && contextLineStyle.background === 'rgb(34, 48, 67)'
+        && lineNumberLayout.position === 'static'
+        && lineNumberLayout.display === 'table-cell'
+        && lineNumberLayout.contentLeft >= lineNumberLayout.numberRight
+        && JSON.stringify(visibleNumbers) === JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8']);
     }
 
     // Report
@@ -129,7 +199,7 @@ test.describe('Diff Feature Verification', () => {
     console.log('- Has validation issues: ' + (hasIssues ? 'YES' : 'NO'));
     console.log('- Auto-fix works: ' + (isModalVisible ? 'YES' : 'NO'));
     console.log('- Unified Diff preview shows content: ' + (unifiedDiffWorks ? 'YES' : 'NO'));
-    console.log('- API Diff blocks present: ' + (diffWorks ? 'YES' : 'NO'));
+    console.log('- Single side-by-side diff preview present: ' + (diffWorks ? 'YES' : 'NO'));
     console.log('================\n');
 
     // Take a final screenshot of the diff modal if visible
@@ -140,7 +210,7 @@ test.describe('Diff Feature Verification', () => {
     // Final assertions
     expect(isModalVisible).toBe(true);
     expect(unifiedDiffWorks).toBe(true);
-    // API diff should show blocks
+    // Diff should render as a single dark side-by-side preview
     expect(diffWorks).toBe(true);
   });
 });
