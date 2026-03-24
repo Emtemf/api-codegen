@@ -337,11 +337,11 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(15, 23, 42, 0.28);
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(14px);
         }
         .diff-modal.active {
             display: flex;
@@ -448,7 +448,7 @@
         }
 
         .diff-container {
-            background: #10161d;
+            background: #f8fafc;
             width: 100vw;
             height: 100vh;
             min-width: 100vw;
@@ -470,9 +470,9 @@
             max-width: min(1360px, calc(100vw - 40px));
             max-height: min(92vh, calc(100vh - 28px));
             margin: auto;
-            border: 1px solid rgba(148, 163, 184, 0.18);
+            border: 1px solid rgba(148, 163, 184, 0.28);
             border-radius: 16px;
-            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.42);
+            box-shadow: 0 28px 80px rgba(15, 23, 42, 0.16);
         }
 
         /* 改进的 Diff 区块样式 */
@@ -600,17 +600,17 @@
         /* 头部 - 简洁风格 */
         .diff-header {
             padding: 12px 18px;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.22);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: linear-gradient(180deg, #16202a 0%, #111820 100%);
+            background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
             flex-shrink: 0;
         }
         .diff-title {
             font-size: 16px;
             font-weight: 600;
-            color: #e6edf3;
+            color: #0f172a;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -634,12 +634,12 @@
             gap: 5px;
         }
         .diff-stat-add {
-            background: rgba(58, 138, 122, 0.16);
-            color: #86efac;
+            background: #dcfce7;
+            color: #166534;
         }
         .diff-stat-remove {
-            background: rgba(158, 84, 69, 0.18);
-            color: #fdba74;
+            background: #fee2e2;
+            color: #b42318;
         }
 
         /* 主体 - 全屏高度 */
@@ -649,7 +649,7 @@
             display: flex;
             flex-direction: column;
             min-height: 0;
-            background: #0d1117;
+            background: #f8fafc;
         }
 
         /* 统一 Diff 面板 */
@@ -661,11 +661,11 @@
         }
         .diff-unified-header {
             padding: 12px 20px;
-            background: #161b22;
+            background: #f8fafc;
             font-size: 14px;
             font-weight: 600;
-            color: #e6edf3;
-            border-bottom: 1px solid #21262d;
+            color: #0f172a;
+            border-bottom: 1px solid #d8dee6;
             display: flex;
             align-items: center;
             flex-shrink: 0;
@@ -678,17 +678,17 @@
             font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
             font-size: 12.5px;
             line-height: 1.45;
-            background: linear-gradient(180deg, #0f151b 0%, #0d1319 100%);
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
         }
         .diff-unified-content::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
         .diff-unified-content::-webkit-scrollbar-track {
-            background: #0d1117;
+            background: #e2e8f0;
         }
         .diff-unified-content::-webkit-scrollbar-thumb {
-            background: #30363d;
+            background: #94a3b8;
             border-radius: 4px;
         }
 
@@ -2457,7 +2457,7 @@
             border-top: 1px solid rgba(148, 163, 184, 0.08);
             position: relative;
             background:
-                linear-gradient(180deg, #0e141b 0%, #0c1218 100%);
+                linear-gradient(180deg, #fbfdff 0%, #f2f6fb 100%);
         }
 
         .diff-monaco-root::before {
@@ -2466,7 +2466,7 @@
             inset: 0;
             pointer-events: none;
             background:
-                linear-gradient(90deg, rgba(88, 166, 255, 0.018) 0%, rgba(88, 166, 255, 0.008) 47%, rgba(0, 0, 0, 0) 50%, rgba(46, 160, 67, 0.006) 53%, rgba(46, 160, 67, 0.014) 100%);
+                linear-gradient(90deg, rgba(9, 105, 218, 0.024) 0%, rgba(9, 105, 218, 0.01) 47%, rgba(255, 255, 255, 0) 50%, rgba(22, 163, 74, 0.003) 53%, rgba(22, 163, 74, 0.008) 100%);
             z-index: 1;
         }
 
@@ -2479,8 +2479,8 @@
             width: 1px;
             transform: translateX(-0.5px);
             pointer-events: none;
-            background: linear-gradient(180deg, rgba(110, 118, 129, 0.26) 0%, rgba(110, 118, 129, 0.1) 100%);
-            box-shadow: 0 0 0 1px rgba(12, 18, 24, 0.3);
+            background: linear-gradient(180deg, rgba(148, 163, 184, 0.34) 0%, rgba(148, 163, 184, 0.14) 100%);
+            box-shadow: 0 0 0 1px rgba(226, 232, 240, 0.9);
             z-index: 2;
         }
 
@@ -2492,23 +2492,23 @@
 
         .diff-monaco-root .margin,
         .diff-monaco-root .monaco-editor-background {
-            background: #0d1117 !important;
+            background: #ffffff !important;
         }
 
         .diff-monaco-root .editor.original .margin,
         .diff-monaco-root .editor.original .monaco-editor-background {
             background:
-                linear-gradient(180deg, rgba(14, 19, 26, 0.99) 0%, rgba(12, 17, 23, 0.99) 100%) !important;
+                linear-gradient(180deg, rgba(255, 255, 255, 0.995) 0%, rgba(248, 250, 252, 0.995) 100%) !important;
         }
 
         .diff-monaco-root .editor.modified .margin,
         .diff-monaco-root .editor.modified .monaco-editor-background {
             background:
-                linear-gradient(180deg, rgba(14, 18, 22, 0.99) 0%, rgba(12, 16, 20, 0.99) 100%) !important;
+                linear-gradient(180deg, rgba(255, 255, 255, 0.998) 0%, rgba(251, 253, 252, 0.998) 100%) !important;
         }
 
         .diff-monaco-root .line-numbers {
-            color: #6e7681 !important;
+            color: #64748b !important;
         }
 
         .diff-monaco-root .editor.original::before,
@@ -2529,24 +2529,24 @@
         .diff-monaco-root .editor.original::before {
             content: '原始';
             left: 14px;
-            color: #c9d1d9;
-            background: rgba(48, 58, 71, 0.42);
-            border: 1px solid rgba(110, 118, 129, 0.24);
-            box-shadow: 0 6px 16px rgba(7, 11, 16, 0.16);
+            color: #334155;
+            background: rgba(241, 245, 249, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 6px 16px rgba(148, 163, 184, 0.12);
         }
 
         .diff-monaco-root .editor.modified::before {
             content: '修复后';
             right: 14px;
-            color: #b6f0c9;
-            background: rgba(31, 111, 74, 0.26);
-            border: 1px solid rgba(63, 185, 80, 0.2);
-            box-shadow: 0 8px 20px rgba(9, 24, 18, 0.18);
+            color: #166534;
+            background: rgba(220, 252, 231, 0.98);
+            border: 1px solid rgba(74, 222, 128, 0.42);
+            box-shadow: 0 10px 24px rgba(34, 197, 94, 0.14);
         }
 
         .diff-monaco-root .monaco-editor .current-line,
         .diff-monaco-root .monaco-editor .current-line-margin {
-            border-color: rgba(245, 158, 11, 0.16) !important;
+            border-color: rgba(148, 163, 184, 0.18) !important;
         }
 
         .diff-monaco-root .monaco-editor .view-overlays .current-line {
@@ -2555,74 +2555,76 @@
 
         .diff-monaco-root .monaco-diff-editor .editor.original {
             box-shadow:
-                inset -1px 0 0 rgba(110, 118, 129, 0.14),
-                inset 0 1px 0 rgba(255, 255, 255, 0.015);
+                inset -1px 0 0 rgba(203, 213, 225, 0.9),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         .diff-monaco-root .monaco-diff-editor .editor.modified {
             box-shadow:
-                inset 1px 0 0 rgba(63, 185, 80, 0.06),
-                inset 0 1px 0 rgba(110, 231, 183, 0.015);
+                inset 1px 0 0 rgba(74, 222, 128, 0.72),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         .diff-monaco-root .editor.modified .monaco-scrollable-element {
-            box-shadow: inset 0 0 0 1px rgba(63, 185, 80, 0.018);
+            box-shadow:
+                inset 0 0 0 1px rgba(74, 222, 128, 0.14),
+                inset 3px 0 0 rgba(34, 197, 94, 0.06);
         }
 
         .diff-monaco-root .editor.modified .line-numbers {
-            color: #7ab88e !important;
+            color: #16a34a !important;
         }
 
         .diff-monaco-root .editor.original .line-numbers {
-            color: #7b8794 !important;
+            color: #64748b !important;
         }
 
         .diff-monaco-root .editor.modified .margin-view-overlays .current-line-margin,
         .diff-monaco-root .editor.modified .view-overlays .current-line {
-            border-color: rgba(63, 185, 80, 0.16) !important;
+            border-color: rgba(34, 197, 94, 0.22) !important;
         }
 
         .diff-monaco-root .editor.original .margin-view-overlays .current-line-margin,
         .diff-monaco-root .editor.original .view-overlays .current-line {
-            border-color: rgba(110, 118, 129, 0.12) !important;
+            border-color: rgba(148, 163, 184, 0.16) !important;
         }
 
         .diff-monaco-root .editor.original .diagonal-fill,
         .diff-monaco-root .editor.modified .diagonal-fill {
             display: block !important;
             width: 100% !important;
-            border-top: 1px solid rgba(255, 255, 255, 0.015);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+            border-top: 1px solid rgba(255, 255, 255, 0.8);
+            border-bottom: 1px solid rgba(203, 213, 225, 0.8);
         }
 
         .diff-monaco-root .editor.original .diagonal-fill {
             background:
                 repeating-linear-gradient(
                     -45deg,
-                    rgba(248, 81, 73, 0.08) 0px,
-                    rgba(248, 81, 73, 0.08) 2px,
-                    rgba(248, 81, 73, 0.03) 2px,
-                    rgba(248, 81, 73, 0.03) 8px
+                    rgba(248, 81, 73, 0.12) 0px,
+                    rgba(248, 81, 73, 0.12) 2px,
+                    rgba(248, 81, 73, 0.045) 2px,
+                    rgba(248, 81, 73, 0.045) 8px
                 ),
-                linear-gradient(180deg, rgba(69, 26, 30, 0.42) 0%, rgba(38, 20, 22, 0.28) 100%);
+                linear-gradient(180deg, rgba(255, 235, 233, 0.92) 0%, rgba(255, 245, 245, 0.96) 100%);
         }
 
         .diff-monaco-root .editor.modified .diagonal-fill {
             background:
                 repeating-linear-gradient(
                     -45deg,
-                    rgba(63, 185, 80, 0.07) 0px,
-                    rgba(63, 185, 80, 0.07) 2px,
-                    rgba(63, 185, 80, 0.025) 2px,
-                    rgba(63, 185, 80, 0.025) 8px
+                    rgba(34, 197, 94, 0.16) 0px,
+                    rgba(34, 197, 94, 0.16) 2px,
+                    rgba(34, 197, 94, 0.05) 2px,
+                    rgba(34, 197, 94, 0.05) 8px
                 ),
-                linear-gradient(180deg, rgba(19, 54, 35, 0.32) 0%, rgba(15, 32, 24, 0.22) 100%);
+                linear-gradient(180deg, rgba(220, 252, 231, 0.94) 0%, rgba(244, 255, 247, 0.98) 100%);
         }
 
         .diff-footer {
             padding: 14px 18px;
-            background: rgba(12, 18, 24, 0.96);
-            border-top: 1px solid rgba(148, 163, 184, 0.12);
+            background: #ffffff;
+            border-top: 1px solid rgba(148, 163, 184, 0.22);
         }
 
         .diff-actions {
@@ -2640,7 +2642,7 @@
         .diff-hint-item {
             padding: 6px 9px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.03);
+            background: #eef2f7;
         }
 
         .manual-fix-container {
@@ -4936,44 +4938,44 @@ definitions:
 
                     if (!window.__monacoDiffThemeReady) {
                         monaco.editor.defineTheme('apicgen-diff-dark', {
-                            base: 'vs-dark',
+                            base: 'vs',
                             inherit: true,
                             rules: [
-                                { token: '', foreground: 'c9d1d9' },
-                                { token: 'comment', foreground: '8b949e', fontStyle: 'italic' },
-                                { token: 'string', foreground: 'd2a86b' },
-                                { token: 'number', foreground: 'b392f0' },
-                                { token: 'keyword', foreground: '79c0ff' },
-                                { token: 'key', foreground: '7ee787' },
-                                { token: 'type', foreground: 'a5d6ff' },
-                                { token: 'delimiter', foreground: '6e7681' },
-                                { token: 'operators', foreground: '6e7681' }
+                                { token: '', foreground: '0f172a' },
+                                { token: 'comment', foreground: '64748b', fontStyle: 'italic' },
+                                { token: 'string', foreground: '9a3412' },
+                                { token: 'number', foreground: '7c3aed' },
+                                { token: 'keyword', foreground: '1d4ed8' },
+                                { token: 'key', foreground: '0f766e' },
+                                { token: 'type', foreground: '0369a1' },
+                                { token: 'delimiter', foreground: '64748b' },
+                                { token: 'operators', foreground: '64748b' }
                             ],
                             colors: {
-                                'editor.background': '#0d1117',
-                                'editor.foreground': '#c9d1d9',
-                                'editorGutter.background': '#0d1117',
-                                'editorLineNumber.foreground': '#6e7681',
-                                'editorLineNumber.activeForeground': '#e6edf3',
-                                'editorIndentGuide.background1': '#1f2937',
-                                'editorIndentGuide.activeBackground1': '#3b4b60',
-                                'editorWhitespace.foreground': '#1b2530',
-                                'editor.selectionBackground': '#1f3b5b',
-                                'editor.lineHighlightBackground': '#161b22',
-                                'diffEditor.insertedTextBackground': '#2f9e5f33',
-                                'diffEditor.removedTextBackground': '#f8514933',
-                                'diffEditor.insertedLineBackground': '#10281d',
-                                'diffEditor.removedLineBackground': '#2a1a1d',
-                                'diffEditor.diagonalFill': '#0c1218',
-                                'diffEditor.border': '#21262d',
-                                'diffEditorGutter.insertedLineBackground': '#143624',
-                                'diffEditorGutter.removedLineBackground': '#3a2024',
-                                'editorOverviewRuler.addedForeground': '#3fb950',
-                                'editorOverviewRuler.modifiedForeground': '#d29922',
-                                'editorOverviewRuler.deletedForeground': '#f85149',
-                                'scrollbarSlider.background': '#30363d',
-                                'scrollbarSlider.hoverBackground': '#484f58',
-                                'scrollbarSlider.activeBackground': '#6e7681'
+                                'editor.background': '#ffffff',
+                                'editor.foreground': '#0f172a',
+                                'editorGutter.background': '#f8fafc',
+                                'editorLineNumber.foreground': '#64748b',
+                                'editorLineNumber.activeForeground': '#0f172a',
+                                'editorIndentGuide.background1': '#dbe4ee',
+                                'editorIndentGuide.activeBackground1': '#94a3b8',
+                                'editorWhitespace.foreground': '#e2e8f0',
+                                'editor.selectionBackground': '#bfdbfe',
+                                'editor.lineHighlightBackground': '#f8fafc',
+                                'diffEditor.insertedTextBackground': '#22c55e33',
+                                'diffEditor.removedTextBackground': '#ef444422',
+                                'diffEditor.insertedLineBackground': '#dcfce7',
+                                'diffEditor.removedLineBackground': '#fff1f2',
+                                'diffEditor.diagonalFill': '#f8fafc',
+                                'diffEditor.border': '#d8dee6',
+                                'diffEditorGutter.insertedLineBackground': '#bbf7d0',
+                                'diffEditorGutter.removedLineBackground': '#ffe4e6',
+                                'editorOverviewRuler.addedForeground': '#16a34a',
+                                'editorOverviewRuler.modifiedForeground': '#d97706',
+                                'editorOverviewRuler.deletedForeground': '#dc2626',
+                                'scrollbarSlider.background': '#cbd5e1',
+                                'scrollbarSlider.hoverBackground': '#94a3b8',
+                                'scrollbarSlider.activeBackground': '#64748b'
                             }
                         });
                         window.__monacoDiffThemeReady = true;

@@ -10,7 +10,7 @@
 - 生成 Controller、Request、Response 类
 - 支持类和方法级别自定义注解
 - Web UI 仅负责可视化编辑，分析与修复逻辑统一收敛到 `api-codegen-core`
-- 自动修复直接回写用户原始 Swagger / OpenAPI YAML，并提供紧凑 Diff 预览
+- 自动修复直接回写用户原始 Swagger / OpenAPI YAML，并提供 Monaco 双栏 Diff 预览
 - Maven 插件支持，适配 CI/CD 流程
 
 ## 项目结构
@@ -25,7 +25,7 @@ api-codegen/
 ## Bridge Contract
 
 Web UI、IDEA 插件、浏览器插件共用的 JSON bridge contract 见：
-[docs/ui-bridge-contract.md](/home/wula/IdeaProjects/api-codegen/docs/ui-bridge-contract.md)
+[`docs/ui-bridge-contract.md`](docs/ui-bridge-contract.md)
 
 ## 环境要求
 
@@ -52,29 +52,29 @@ node server.js
 # 也可以手动指定端口：PORT=19090 node server.js
 ```
 
-Web UI 现在通过本地 `server.js` 调用 `api-codegen-core` 作为统一分析/修复入口，
-因此不能再直接打开 `web-ui/index.html`。
+Web UI 必须通过本地 `server.js` 调用 `api-codegen-core` 作为统一分析/修复入口，
+不能直接双击打开 `web-ui/index.html`。
 
 ### Web UI 界面预览
 
 > 注意：如果图片未正常显示，请尝试强制刷新浏览器 (Ctrl+F5)
 
-**1. 初始状态** - 空白编辑器，等待输入 YAML
+**1. 初始状态** - Core-first workspace，等待输入原始 YAML
 ![Initial State](docs/images/05-initial-state.png)
 
-**2. Swagger 2.0 示例已加载** - 直接在原始 YAML 上编辑
+**2. Swagger 2.0 示例已加载** - 左侧只编辑用户原始 YAML
 ![Swagger Loaded](docs/images/05-swagger-loaded.png)
 
-**3. Swagger 分析结果** - 顶部摘要优先展示当前可自动修复项，避免手动数量误导
+**3. Swagger 分析结果** - 右侧验证面板优先展示当前可自动修复项
 ![Validation Results](docs/images/06-validation-results.png)
 
-**4. 自动修复预览** - 左右对比原始 YAML 与修复后的 YAML 回写内容
+**4. 自动修复预览** - Monaco 双栏对比原始 YAML 与修复后 YAML
 ![Diff Preview](docs/images/04-autofix-preview.png)
 
-**5. 自动修复后的手动处理组** - 同字段关联问题合并为一张卡片，补全一次统一消除
+**5. 自动修复后的手动处理组** - 同字段关联问题归并为一个补全入口
 ![Manual Group](docs/images/07-manual-grouped.png)
 
-**6. OpenAPI 3.0 分析结果** - 与 Swagger 共用同一套 core 分析与修复能力
+**6. OpenAPI 3.0 分析结果** - 与 Swagger 共用同一套 core 分析/修复能力
 ![OpenAPI Analyze](docs/images/10-openapi-analyze.png)
 
 ### Web UI 与 Core 的关系
@@ -118,6 +118,8 @@ cd api-codegen-core
 
 用户只维护一份 API YAML。
 如果需要给生成的 Controller 类或方法附加自定义注解，直接写在 Swagger / OpenAPI 文件里，不需要再维护第二份 `codegen-config.yaml`。
+
+如果仓库里还能看到 `codegen-config.yaml`，那只是历史样例/兼容遗留，不是当前推荐输入，也不是 Web UI、Maven 插件或后续 IDEA / 浏览器插件的必需文件。
 
 ```yaml
 openapi: 3.0.1
