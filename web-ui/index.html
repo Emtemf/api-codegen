@@ -2457,7 +2457,7 @@
             border-top: 1px solid rgba(148, 163, 184, 0.08);
             position: relative;
             background:
-                linear-gradient(90deg, rgba(87, 114, 143, 0.12) 0%, rgba(87, 114, 143, 0.04) 46%, rgba(32, 72, 60, 0.05) 54%, rgba(37, 122, 92, 0.14) 100%);
+                linear-gradient(180deg, #0e141b 0%, #0c1218 100%);
         }
 
         .diff-monaco-root::before {
@@ -2466,7 +2466,7 @@
             inset: 0;
             pointer-events: none;
             background:
-                linear-gradient(90deg, rgba(104, 136, 168, 0.04) 0%, rgba(104, 136, 168, 0.015) 47%, rgba(16, 22, 28, 0) 50%, rgba(32, 120, 90, 0.025) 53%, rgba(48, 160, 118, 0.07) 100%);
+                linear-gradient(90deg, rgba(88, 166, 255, 0.018) 0%, rgba(88, 166, 255, 0.008) 47%, rgba(0, 0, 0, 0) 50%, rgba(46, 160, 67, 0.006) 53%, rgba(46, 160, 67, 0.014) 100%);
             z-index: 1;
         }
 
@@ -2479,8 +2479,8 @@
             width: 1px;
             transform: translateX(-0.5px);
             pointer-events: none;
-            background: linear-gradient(180deg, rgba(139, 152, 168, 0.18) 0%, rgba(139, 152, 168, 0.08) 100%);
-            box-shadow: 0 0 0 1px rgba(12, 18, 24, 0.24), 0 0 18px rgba(16, 185, 129, 0.05);
+            background: linear-gradient(180deg, rgba(110, 118, 129, 0.26) 0%, rgba(110, 118, 129, 0.1) 100%);
+            box-shadow: 0 0 0 1px rgba(12, 18, 24, 0.3);
             z-index: 2;
         }
 
@@ -2492,23 +2492,23 @@
 
         .diff-monaco-root .margin,
         .diff-monaco-root .monaco-editor-background {
-            background: #0f151b !important;
+            background: #0d1117 !important;
         }
 
         .diff-monaco-root .editor.original .margin,
         .diff-monaco-root .editor.original .monaco-editor-background {
             background:
-                linear-gradient(180deg, rgba(23, 34, 46, 0.98) 0%, rgba(15, 23, 31, 0.98) 100%) !important;
+                linear-gradient(180deg, rgba(14, 19, 26, 0.99) 0%, rgba(12, 17, 23, 0.99) 100%) !important;
         }
 
         .diff-monaco-root .editor.modified .margin,
         .diff-monaco-root .editor.modified .monaco-editor-background {
             background:
-                linear-gradient(180deg, rgba(13, 29, 27, 0.98) 0%, rgba(11, 24, 22, 0.98) 100%) !important;
+                linear-gradient(180deg, rgba(14, 18, 22, 0.99) 0%, rgba(12, 16, 20, 0.99) 100%) !important;
         }
 
         .diff-monaco-root .line-numbers {
-            color: #7b8da3 !important;
+            color: #6e7681 !important;
         }
 
         .diff-monaco-root .editor.original::before,
@@ -2529,19 +2529,19 @@
         .diff-monaco-root .editor.original::before {
             content: '原始';
             left: 14px;
-            color: #cdd9e5;
-            background: rgba(63, 84, 108, 0.34);
-            border: 1px solid rgba(130, 154, 179, 0.22);
-            box-shadow: 0 6px 16px rgba(7, 11, 16, 0.18);
+            color: #c9d1d9;
+            background: rgba(48, 58, 71, 0.42);
+            border: 1px solid rgba(110, 118, 129, 0.24);
+            box-shadow: 0 6px 16px rgba(7, 11, 16, 0.16);
         }
 
         .diff-monaco-root .editor.modified::before {
             content: '修复后';
             right: 14px;
-            color: #cbf7df;
-            background: rgba(29, 105, 78, 0.36);
-            border: 1px solid rgba(93, 211, 159, 0.28);
-            box-shadow: 0 8px 20px rgba(9, 24, 18, 0.22);
+            color: #b6f0c9;
+            background: rgba(31, 111, 74, 0.26);
+            border: 1px solid rgba(63, 185, 80, 0.2);
+            box-shadow: 0 8px 20px rgba(9, 24, 18, 0.18);
         }
 
         .diff-monaco-root .monaco-editor .current-line,
@@ -2555,36 +2555,68 @@
 
         .diff-monaco-root .monaco-diff-editor .editor.original {
             box-shadow:
-                inset -1px 0 0 rgba(148, 163, 184, 0.1),
+                inset -1px 0 0 rgba(110, 118, 129, 0.14),
                 inset 0 1px 0 rgba(255, 255, 255, 0.015);
         }
 
         .diff-monaco-root .monaco-diff-editor .editor.modified {
             box-shadow:
-                inset 1px 0 0 rgba(74, 222, 128, 0.16),
-                inset 0 1px 0 rgba(110, 231, 183, 0.03);
+                inset 1px 0 0 rgba(63, 185, 80, 0.06),
+                inset 0 1px 0 rgba(110, 231, 183, 0.015);
         }
 
         .diff-monaco-root .editor.modified .monaco-scrollable-element {
-            box-shadow: inset 0 0 0 1px rgba(45, 148, 108, 0.06);
+            box-shadow: inset 0 0 0 1px rgba(63, 185, 80, 0.018);
         }
 
         .diff-monaco-root .editor.modified .line-numbers {
-            color: #82c5a5 !important;
+            color: #7ab88e !important;
         }
 
         .diff-monaco-root .editor.original .line-numbers {
-            color: #7990a7 !important;
+            color: #7b8794 !important;
         }
 
         .diff-monaco-root .editor.modified .margin-view-overlays .current-line-margin,
         .diff-monaco-root .editor.modified .view-overlays .current-line {
-            border-color: rgba(74, 222, 128, 0.18) !important;
+            border-color: rgba(63, 185, 80, 0.16) !important;
         }
 
         .diff-monaco-root .editor.original .margin-view-overlays .current-line-margin,
         .diff-monaco-root .editor.original .view-overlays .current-line {
-            border-color: rgba(148, 163, 184, 0.12) !important;
+            border-color: rgba(110, 118, 129, 0.12) !important;
+        }
+
+        .diff-monaco-root .editor.original .diagonal-fill,
+        .diff-monaco-root .editor.modified .diagonal-fill {
+            display: block !important;
+            width: 100% !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.015);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+        }
+
+        .diff-monaco-root .editor.original .diagonal-fill {
+            background:
+                repeating-linear-gradient(
+                    -45deg,
+                    rgba(248, 81, 73, 0.08) 0px,
+                    rgba(248, 81, 73, 0.08) 2px,
+                    rgba(248, 81, 73, 0.03) 2px,
+                    rgba(248, 81, 73, 0.03) 8px
+                ),
+                linear-gradient(180deg, rgba(69, 26, 30, 0.42) 0%, rgba(38, 20, 22, 0.28) 100%);
+        }
+
+        .diff-monaco-root .editor.modified .diagonal-fill {
+            background:
+                repeating-linear-gradient(
+                    -45deg,
+                    rgba(63, 185, 80, 0.07) 0px,
+                    rgba(63, 185, 80, 0.07) 2px,
+                    rgba(63, 185, 80, 0.025) 2px,
+                    rgba(63, 185, 80, 0.025) 8px
+                ),
+                linear-gradient(180deg, rgba(19, 54, 35, 0.32) 0%, rgba(15, 32, 24, 0.22) 100%);
         }
 
         .diff-footer {
@@ -4907,41 +4939,41 @@ definitions:
                             base: 'vs-dark',
                             inherit: true,
                             rules: [
-                                { token: '', foreground: 'd9e2ec' },
-                                { token: 'comment', foreground: '6f9b7b', fontStyle: 'italic' },
-                                { token: 'string', foreground: 'd7aa73' },
-                                { token: 'number', foreground: 'b8a0f7' },
-                                { token: 'keyword', foreground: '8ad1ff' },
-                                { token: 'key', foreground: '4fd7e6' },
-                                { token: 'type', foreground: '7ed7c9' },
-                                { token: 'delimiter', foreground: '8fa4b8' },
-                                { token: 'operators', foreground: '8fa4b8' }
+                                { token: '', foreground: 'c9d1d9' },
+                                { token: 'comment', foreground: '8b949e', fontStyle: 'italic' },
+                                { token: 'string', foreground: 'd2a86b' },
+                                { token: 'number', foreground: 'b392f0' },
+                                { token: 'keyword', foreground: '79c0ff' },
+                                { token: 'key', foreground: '7ee787' },
+                                { token: 'type', foreground: 'a5d6ff' },
+                                { token: 'delimiter', foreground: '6e7681' },
+                                { token: 'operators', foreground: '6e7681' }
                             ],
                             colors: {
-                                'editor.background': '#0f151b',
-                                'editor.foreground': '#d9e2ec',
-                                'editorGutter.background': '#101922',
-                                'editorLineNumber.foreground': '#6f8296',
-                                'editorLineNumber.activeForeground': '#b7cadc',
-                                'editorIndentGuide.background1': '#223241',
-                                'editorIndentGuide.activeBackground1': '#3b5873',
-                                'editorWhitespace.foreground': '#1f2d39',
-                                'editor.selectionBackground': '#214764',
-                                'editor.lineHighlightBackground': '#14202a',
-                                'diffEditor.insertedTextBackground': '#2d6a57',
-                                'diffEditor.removedTextBackground': '#76433a',
-                                'diffEditor.insertedLineBackground': '#1a4639',
-                                'diffEditor.removedLineBackground': '#482a24',
+                                'editor.background': '#0d1117',
+                                'editor.foreground': '#c9d1d9',
+                                'editorGutter.background': '#0d1117',
+                                'editorLineNumber.foreground': '#6e7681',
+                                'editorLineNumber.activeForeground': '#e6edf3',
+                                'editorIndentGuide.background1': '#1f2937',
+                                'editorIndentGuide.activeBackground1': '#3b4b60',
+                                'editorWhitespace.foreground': '#1b2530',
+                                'editor.selectionBackground': '#1f3b5b',
+                                'editor.lineHighlightBackground': '#161b22',
+                                'diffEditor.insertedTextBackground': '#2f9e5f33',
+                                'diffEditor.removedTextBackground': '#f8514933',
+                                'diffEditor.insertedLineBackground': '#10281d',
+                                'diffEditor.removedLineBackground': '#2a1a1d',
                                 'diffEditor.diagonalFill': '#0c1218',
-                                'diffEditor.border': '#1a2c38',
-                                'diffEditorGutter.insertedLineBackground': '#1f4f40',
-                                'diffEditorGutter.removedLineBackground': '#55332b',
-                                'editorOverviewRuler.addedForeground': '#2fbf7c',
-                                'editorOverviewRuler.modifiedForeground': '#e3a34b',
-                                'editorOverviewRuler.deletedForeground': '#ef6b5c',
-                                'scrollbarSlider.background': '#253445',
-                                'scrollbarSlider.hoverBackground': '#34506a',
-                                'scrollbarSlider.activeBackground': '#466987'
+                                'diffEditor.border': '#21262d',
+                                'diffEditorGutter.insertedLineBackground': '#143624',
+                                'diffEditorGutter.removedLineBackground': '#3a2024',
+                                'editorOverviewRuler.addedForeground': '#3fb950',
+                                'editorOverviewRuler.modifiedForeground': '#d29922',
+                                'editorOverviewRuler.deletedForeground': '#f85149',
+                                'scrollbarSlider.background': '#30363d',
+                                'scrollbarSlider.hoverBackground': '#484f58',
+                                'scrollbarSlider.activeBackground': '#6e7681'
                             }
                         });
                         window.__monacoDiffThemeReady = true;
