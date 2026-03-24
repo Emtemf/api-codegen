@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>API Codegen - Web UI</title>
     <link rel="stylesheet" href="lib/codemirror.min.css">
-    <link rel="stylesheet" href="node_modules/diff2html/bundles/css/diff2html.min.css">
     <link rel="stylesheet" href="lib/dracula.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1057,167 +1056,6 @@
             font-weight: 500;
         }
 
-        /* ===== diff2html 样式覆盖 ===== */
-        .diff-third-party-shell {
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #0d1117;
-        }
-        .diff-third-party-header {
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(180deg, #161b22 0%, #11161d 100%);
-            border-bottom: 1px solid #21262d;
-        }
-        .diff-third-party-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e6edf3;
-        }
-        .diff-third-party-badge {
-            margin-left: auto;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
-            color: #79c0ff;
-            background: rgba(56, 139, 253, 0.16);
-            border: 1px solid rgba(56, 139, 253, 0.28);
-        }
-        .diff-third-party-body {
-            background: #0d1117;
-        }
-        .diff-unified-content .d2h-wrapper {
-            font-family: 'JetBrains Mono', 'Consolas', monospace !important;
-            font-size: 12.5px !important;
-            background: #0f151b !important;
-            color: #e6edf3 !important;
-        }
-        .diff-unified-content .d2h-file-header { display: none; }
-        .diff-unified-content .d2h-file-collapse,
-        .diff-unified-content .d2h-tag {
-            display: none !important;
-        }
-        .diff-unified-content .d2h-files-diff,
-        .diff-unified-content .d2h-file-wrapper,
-        .diff-unified-content .d2h-file-side-diff,
-        .diff-unified-content .d2h-code-wrapper,
-        .diff-unified-content .d2h-diff-table,
-        .diff-unified-content .d2h-diff-tbody {
-            background: #0f151b !important;
-        }
-        .diff-unified-content .d2h-code-wrapper {
-            overflow-x: auto !important;
-            overflow-y: hidden !important;
-        }
-        .diff-unified-content .d2h-file-wrapper {
-            border: none !important;
-            box-shadow: none !important;
-        }
-        .diff-unified-content .d2h-file-side-diff {
-            background: #0f151b !important;
-        }
-        .diff-unified-content .d2h-file-side-diff:first-child {
-            border-right: 1px solid rgba(148, 163, 184, 0.2) !important;
-        }
-        .diff-unified-content .d2h-code-side-linenumber {
-            position: static !important;
-            display: table-cell !important;
-            width: 38px !important;
-            min-width: 38px !important;
-            padding: 0 6px 0 4px !important;
-            text-align: right !important;
-            color: #8ea0b5 !important;
-            background: #17212b !important;
-            border-color: rgba(148, 163, 184, 0.18) !important;
-            line-height: 18px !important;
-            white-space: nowrap !important;
-            vertical-align: top !important;
-            font-variant-numeric: tabular-nums !important;
-        }
-        .diff-unified-content .d2h-code-side-line {
-            display: block !important;
-            width: auto !important;
-            line-height: 18px !important;
-            color: #d8e1ea !important;
-            background: #17212b !important;
-            padding: 0 8px !important;
-            white-space: pre !important;
-            word-break: normal !important;
-            overflow-wrap: normal !important;
-            font-variant-numeric: tabular-nums !important;
-            font-weight: 450 !important;
-        }
-        .diff-unified-content .d2h-code-line-ctn {
-            color: #d8e1ea !important;
-            white-space: pre !important;
-            word-break: normal !important;
-            overflow-wrap: normal !important;
-        }
-        .diff-unified-content .d2h-diff-table td {
-            vertical-align: top !important;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.12) !important;
-        }
-        .diff-unified-content .d2h-code-line-prefix,
-        .diff-unified-content .d2h-code-line-ctn {
-            color: inherit !important;
-        }
-        .diff-unified-content .d2h-code-line-prefix {
-            color: #b9c6d4 !important;
-        }
-        .diff-unified-content .d2h-info,
-        .diff-unified-content .d2h-cntx {
-            background: #17212b !important;
-            color: #d8e1ea !important;
-        }
-        .diff-unified-content td.d2h-cntx,
-        .diff-unified-content td.d2h-cntx + td,
-        .diff-unified-content td.d2h-cntx ~ td {
-            background: #17212b !important;
-        }
-        .diff-unified-content td.d2h-info,
-        .diff-unified-content td.d2h-info + td,
-        .diff-unified-content td.d2h-info ~ td {
-            background: #111920 !important;
-        }
-        .diff-unified-content .d2h-info .d2h-code-side-line,
-        .diff-unified-content .d2h-info .d2h-code-line-ctn,
-        .diff-unified-content .d2h-cntx .d2h-code-side-line,
-        .diff-unified-content .d2h-cntx .d2h-code-line-ctn {
-            color: #f0f6fc !important;
-            background: transparent !important;
-            font-weight: 500 !important;
-        }
-        .diff-unified-content .d2h-info .d2h-code-line-prefix,
-        .diff-unified-content .d2h-cntx .d2h-code-line-prefix {
-            color: #b9c6d4 !important;
-        }
-        .diff-unified-content .d2h-del,
-        .diff-unified-content .d2h-del .d2h-code-side-line {
-            background: rgba(120, 72, 58, 0.28) !important;
-            color: #ffd3bf !important;
-        }
-        .diff-unified-content .d2h-ins,
-        .diff-unified-content .d2h-ins .d2h-code-side-line {
-            background: rgba(44, 95, 82, 0.3) !important;
-            color: #c8f2df !important;
-        }
-        .diff-unified-content .d2h-change {
-            border-color: #21262d !important;
-        }
-        .diff-unified-content .d2h-emptyplaceholder,
-        .diff-unified-content .d2h-code-side-emptyplaceholder {
-            background: #11171d !important;
-            border-color: rgba(148, 163, 184, 0.12) !important;
-        }
-        .diff-unified-content .d2h-ins .d2h-code-line-ctn del,
-        .diff-unified-content .d2h-del .d2h-code-line-ctn del {
-            background: transparent !important;
-        }
-
         /* 空行对齐 */
         .diff-line-empty {
             background: transparent;
@@ -1874,20 +1712,1066 @@
             border-color: rgba(59, 130, 246, 0.35);
             color: #bfdbfe;
         }
+
+        /* Workspace refresh */
+        :root {
+            --app-bg: #0a0f14;
+            --surface-strong: rgba(15, 23, 32, 0.92);
+            --surface-soft: rgba(18, 28, 38, 0.78);
+            --surface-subtle: rgba(28, 39, 51, 0.72);
+            --border-soft: rgba(148, 163, 184, 0.14);
+            --border-strong: rgba(245, 158, 11, 0.22);
+            --text-strong: #f8fafc;
+            --text-main: #d7dee7;
+            --text-muted: #8fa0b3;
+            --accent: #f59e0b;
+            --accent-strong: #f97316;
+            --accent-soft: rgba(245, 158, 11, 0.16);
+            --shadow-elevated: 0 24px 80px rgba(0, 0, 0, 0.34);
+        }
+
+        body {
+            font-family: "Avenir Next", "Segoe UI Variable", "PingFang SC", "Noto Sans SC", sans-serif;
+            color: var(--text-main);
+            background:
+                radial-gradient(circle at top left, rgba(249, 115, 22, 0.18), transparent 28%),
+                radial-gradient(circle at 85% 12%, rgba(56, 189, 248, 0.12), transparent 24%),
+                linear-gradient(180deg, #0c1218 0%, #0a0f14 46%, #0a0f14 100%);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.75), transparent 85%);
+            opacity: 0.28;
+        }
+
+        .app {
+            gap: 16px;
+            padding: 18px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            padding: 20px 22px;
+            background:
+                linear-gradient(135deg, rgba(18, 28, 38, 0.94) 0%, rgba(12, 18, 24, 0.96) 100%);
+            border: 1px solid var(--border-soft);
+            border-radius: 26px;
+            box-shadow: var(--shadow-elevated);
+            align-items: flex-start;
+            gap: 18px;
+        }
+
+        .header-brand {
+            min-width: 0;
+            flex: 1 1 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .header-kicker {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: #fbbf24;
+        }
+
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            font-size: 28px;
+            line-height: 1;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            color: var(--text-strong);
+        }
+
+        .header-badge {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(251, 191, 36, 0.22);
+            background: rgba(245, 158, 11, 0.08);
+            font-size: 11px;
+            font-weight: 700;
+            color: #fde68a;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .header-subtitle {
+            max-width: 720px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .header-right {
+            flex: 0 1 560px;
+            min-width: min(100%, 340px);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 14px;
+        }
+
+        .workspace-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .workspace-pill {
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.09);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            color: #dbe7f3;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .nav {
+            display: none;
+        }
+
+        .actions {
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: #111827;
+        }
+
+        .btn-secondary {
+            background: rgba(148, 163, 184, 0.12);
+            color: #e5edf5;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #14b8a6 0%, #22c55e 100%);
+            color: #04130f;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.03);
+        }
+
+        .btn.btn-inactive {
+            background: rgba(71, 85, 105, 0.62);
+            color: #cbd5e1;
+        }
+
+        .main {
+            gap: 16px;
+        }
+
+        .panel {
+            border: 1px solid var(--border-soft);
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(15, 23, 32, 0.92) 0%, rgba(10, 15, 20, 0.94) 100%);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .api-panel {
+            min-width: 0;
+        }
+
+        .analysis {
+            min-width: 360px;
+            max-width: 430px;
+            border: 1px solid var(--border-soft);
+            border-left: 1px solid var(--border-soft);
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(15, 23, 32, 0.96) 0%, rgba(12, 17, 24, 0.96) 100%);
+            box-shadow: var(--shadow-elevated);
+        }
+
+        .panel-header,
+        .analysis-header {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .panel-header {
+            gap: 14px;
+        }
+
+        .panel-header-copy,
+        .analysis-heading {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+
+        .panel-header-copy span,
+        .analysis-heading strong {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-strong);
+        }
+
+        .panel-header-copy small,
+        .analysis-heading small {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text-muted);
+        }
+
+        .analysis-kicker {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #fdba74;
+        }
+
+        .panel-header-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        #yaml-info,
+        .panel-meta-pill {
+            min-width: 52px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(249, 115, 22, 0.08);
+            border: 1px solid rgba(249, 115, 22, 0.18);
+            color: #fdba74;
+            font-size: 11px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .panel-load-btn {
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.1);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .editor-wrapper {
+            padding: 14px;
+            background:
+                linear-gradient(180deg, rgba(15, 23, 32, 0.42) 0%, rgba(7, 10, 14, 0) 100%);
+            position: relative;
+        }
+
+        .editor-wrapper::before {
+            content: 'Source YAML';
+            position: absolute;
+            top: 24px;
+            left: 28px;
+            z-index: 2;
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(245, 158, 11, 0.12);
+            border: 1px solid rgba(245, 158, 11, 0.16);
+            color: #fcd34d;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        .editor-wrapper .CodeMirror {
+            margin-top: 18px;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06);
+            background: linear-gradient(180deg, rgba(13, 19, 26, 0.98) 0%, rgba(10, 15, 20, 0.98) 100%);
+        }
+
+        .editor-wrapper .CodeMirror-gutters {
+            background: rgba(15, 21, 28, 0.92);
+            border-right: 1px solid rgba(148, 163, 184, 0.08);
+        }
+
+        .editor-wrapper .CodeMirror-linenumber {
+            color: #5f7084;
+        }
+
+        .editor-wrapper .CodeMirror-cursor {
+            border-left: 2px solid #f59e0b;
+        }
+
+        .editor-wrapper .CodeMirror-activeline-background {
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .editor-wrapper .CodeMirror-selected {
+            background: rgba(251, 191, 36, 0.12) !important;
+        }
+
+        .analysis-header {
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .issue-count {
+            min-width: 42px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.12);
+            color: #f8fafc;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .issue-list {
+            padding: 14px;
+        }
+
+        .issue-select-all {
+            padding: 14px 14px 12px;
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(148, 163, 184, 0.04) 100%);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 18px;
+            margin-bottom: 12px;
+        }
+
+        .selected-issue-summary {
+            font-size: 11px;
+            line-height: 1.5;
+            color: #dbe4ee;
+            font-weight: 600;
+        }
+
+        .issue-select-all-legend {
+            gap: 10px;
+            padding-top: 10px;
+        }
+
+        .analysis-flow-note {
+            margin-bottom: 14px;
+            padding: 11px 12px;
+            border-radius: 14px;
+            background: rgba(148, 163, 184, 0.06);
+            border: 1px dashed rgba(148, 163, 184, 0.16);
+            font-size: 12px;
+            line-height: 1.5;
+            color: #dbe4ee;
+        }
+
+        .analysis-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .analysis-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .analysis-section-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .analysis-section-heading {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .analysis-section-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .analysis-section-copy {
+            font-size: 12px;
+            line-height: 1.45;
+            color: #8fa0b3;
+        }
+
+        .analysis-section-count {
+            flex-shrink: 0;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #f8fafc;
+            background: rgba(148, 163, 184, 0.12);
+        }
+
+        .analysis-section.fixable .analysis-section-count {
+            background: rgba(34, 197, 94, 0.14);
+            color: #bbf7d0;
+        }
+
+        .analysis-section.manual .analysis-section-count {
+            background: rgba(249, 115, 22, 0.14);
+            color: #fdba74;
+        }
+
+        .analysis-section-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .issue-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .issue-legend-dot.fixable {
+            color: #22c55e;
+        }
+
+        .issue-legend-dot.manual {
+            color: #fb7185;
+        }
+
+        .issue-legend-text {
+            color: var(--text-muted);
+        }
+
+        .issue {
+            margin-bottom: 10px;
+            padding: 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-left-width: 4px;
+            background: rgba(15, 23, 32, 0.82);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .issue:hover {
+            transform: translateY(-1px);
+            background: rgba(18, 28, 38, 0.9);
+        }
+
+        .issue-checkbox {
+            padding-top: 3px;
+        }
+
+        .issue-checkbox input[type="checkbox"] {
+            width: 17px;
+            height: 17px;
+            accent-color: #f59e0b;
+            filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.18));
+        }
+
+        .issue-content {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .issue-title {
+            gap: 9px;
+            margin-bottom: 0;
+        }
+
+        .issue.error {
+            background: linear-gradient(180deg, rgba(127, 29, 29, 0.16) 0%, rgba(15, 23, 32, 0.88) 100%);
+            border-color: rgba(248, 113, 113, 0.78);
+        }
+
+        .issue.warn {
+            background: linear-gradient(180deg, rgba(120, 53, 15, 0.16) 0%, rgba(15, 23, 32, 0.88) 100%);
+            border-color: rgba(251, 191, 36, 0.78);
+        }
+
+        .issue.info {
+            background: linear-gradient(180deg, rgba(30, 64, 175, 0.16) 0%, rgba(15, 23, 32, 0.88) 100%);
+            border-color: rgba(96, 165, 250, 0.78);
+        }
+
+        .issue-type {
+            letter-spacing: 0.08em;
+        }
+
+        .issue-rule {
+            margin-left: 0;
+            background: rgba(15, 23, 32, 0.76);
+            color: #9fb0c2;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            padding: 3px 8px;
+            border-radius: 999px;
+        }
+
+        .issue-fixable {
+            margin-left: 0;
+            border-radius: 999px;
+            padding: 4px 9px;
+            border: 1px solid transparent;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .issue-fixable.fixable-yes {
+            background: rgba(34, 197, 94, 0.14);
+            color: #86efac;
+            border-color: rgba(34, 197, 94, 0.24);
+        }
+
+        .issue-fixable.fixable-no {
+            background: rgba(249, 115, 22, 0.14);
+            color: #fdba74;
+            border-color: rgba(249, 115, 22, 0.22);
+        }
+
+        .issue-fixable.fixable-no:hover {
+            background: rgba(249, 115, 22, 0.24);
+            color: #fff7ed;
+        }
+
+        .issue-fixable.fixable-manual-static {
+            background: rgba(148, 163, 184, 0.12);
+            border-color: rgba(148, 163, 184, 0.14);
+            color: #b7c3cf;
+        }
+
+        .issue-message {
+            color: #e6edf5;
+            line-height: 1.6;
+            font-size: 13px;
+        }
+
+        .issue-api,
+        .issue-group-note {
+            color: var(--text-muted);
+        }
+
+        .issue-group-list {
+            gap: 12px;
+        }
+
+        .issue-group-item {
+            padding-top: 12px;
+            border-top: 1px dashed rgba(148, 163, 184, 0.14);
+        }
+
+        .issue-group-item-head {
+            margin-bottom: 8px;
+        }
+
+        .issue-group-note {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(148, 163, 184, 0.06);
+            border: 1px solid rgba(148, 163, 184, 0.08);
+        }
+
+        .analysis-section-body .issue {
+            margin-bottom: 0;
+        }
+
+        .empty {
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            opacity: 0.82;
+            filter: saturate(1.15);
+        }
+
+        .statusbar {
+            padding: 12px 18px;
+            border: 1px solid var(--border-soft);
+            border-radius: 20px;
+            background: rgba(12, 18, 24, 0.84);
+            color: var(--text-muted);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.06);
+        }
+
+        .status-tag {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        #status-message {
+            color: #e7eef6;
+        }
+
+        .diff-modal {
+            background: rgba(4, 8, 13, 0.86);
+        }
+
+        .diff-container.diff-container-compact {
+            border-radius: 22px;
+            border-color: rgba(148, 163, 184, 0.2);
+            background: linear-gradient(180deg, rgba(12, 18, 24, 0.98) 0%, rgba(9, 13, 18, 0.98) 100%);
+        }
+
+        .diff-header {
+            padding: 16px 20px;
+            background: linear-gradient(180deg, rgba(22, 32, 42, 0.98) 0%, rgba(12, 18, 24, 0.98) 100%);
+        }
+
+        .diff-title {
+            gap: 12px;
+        }
+
+        .diff-title-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: rgba(245, 158, 11, 0.14);
+            box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.18);
+        }
+
+        .diff-stats {
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .diff-stat {
+            padding: 6px 11px;
+            border: 1px solid rgba(148, 163, 184, 0.08);
+        }
+
+        .diff-body {
+            background:
+                linear-gradient(180deg, rgba(12, 18, 24, 0.98) 0%, rgba(10, 15, 20, 0.98) 100%);
+        }
+
+        .diff-unified-header {
+            padding: 14px 18px;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: linear-gradient(180deg, rgba(20, 28, 36, 0.98) 0%, rgba(15, 21, 28, 0.98) 100%);
+        }
+
+        .diff-unified-heading {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .diff-unified-helper {
+            font-size: 12px;
+            color: #8fa0b3;
+        }
+
+        .diff-panel-arrow {
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .diff-panel-badge {
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .diff-panel-badge.before {
+            background: rgba(148, 163, 184, 0.1);
+            color: #dbe4ee;
+            border-color: rgba(148, 163, 184, 0.12);
+        }
+
+        .diff-panel-badge.after {
+            background: rgba(34, 197, 94, 0.12);
+            color: #bbf7d0;
+            border-color: rgba(34, 197, 94, 0.16);
+        }
+
+        .diff-unified-content {
+            padding: 0;
+            background:
+                radial-gradient(circle at top left, rgba(245, 158, 11, 0.05), transparent 18%),
+                linear-gradient(180deg, #0f151b 0%, #0c1218 100%);
+        }
+
+        .diff-monaco-root {
+            width: 100%;
+            height: 100%;
+            min-height: 560px;
+            border-top: 1px solid rgba(148, 163, 184, 0.08);
+            position: relative;
+            background:
+                linear-gradient(90deg, rgba(87, 114, 143, 0.12) 0%, rgba(87, 114, 143, 0.04) 46%, rgba(32, 72, 60, 0.05) 54%, rgba(37, 122, 92, 0.14) 100%);
+        }
+
+        .diff-monaco-root::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, rgba(104, 136, 168, 0.04) 0%, rgba(104, 136, 168, 0.015) 47%, rgba(16, 22, 28, 0) 50%, rgba(32, 120, 90, 0.025) 53%, rgba(48, 160, 118, 0.07) 100%);
+            z-index: 1;
+        }
+
+        .diff-monaco-root::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 1px;
+            transform: translateX(-0.5px);
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(139, 152, 168, 0.18) 0%, rgba(139, 152, 168, 0.08) 100%);
+            box-shadow: 0 0 0 1px rgba(12, 18, 24, 0.24), 0 0 18px rgba(16, 185, 129, 0.05);
+            z-index: 2;
+        }
+
+        .diff-monaco-root .monaco-diff-editor,
+        .diff-monaco-root .monaco-editor,
+        .diff-monaco-root .overflow-guard {
+            background: transparent !important;
+        }
+
+        .diff-monaco-root .margin,
+        .diff-monaco-root .monaco-editor-background {
+            background: #0f151b !important;
+        }
+
+        .diff-monaco-root .editor.original .margin,
+        .diff-monaco-root .editor.original .monaco-editor-background {
+            background:
+                linear-gradient(180deg, rgba(23, 34, 46, 0.98) 0%, rgba(15, 23, 31, 0.98) 100%) !important;
+        }
+
+        .diff-monaco-root .editor.modified .margin,
+        .diff-monaco-root .editor.modified .monaco-editor-background {
+            background:
+                linear-gradient(180deg, rgba(13, 29, 27, 0.98) 0%, rgba(11, 24, 22, 0.98) 100%) !important;
+        }
+
+        .diff-monaco-root .line-numbers {
+            color: #7b8da3 !important;
+        }
+
+        .diff-monaco-root .editor.original::before,
+        .diff-monaco-root .editor.modified::before {
+            position: absolute;
+            top: 10px;
+            z-index: 5;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            pointer-events: none;
+            backdrop-filter: blur(6px);
+        }
+
+        .diff-monaco-root .editor.original::before {
+            content: '原始';
+            left: 14px;
+            color: #cdd9e5;
+            background: rgba(63, 84, 108, 0.34);
+            border: 1px solid rgba(130, 154, 179, 0.22);
+            box-shadow: 0 6px 16px rgba(7, 11, 16, 0.18);
+        }
+
+        .diff-monaco-root .editor.modified::before {
+            content: '修复后';
+            right: 14px;
+            color: #cbf7df;
+            background: rgba(29, 105, 78, 0.36);
+            border: 1px solid rgba(93, 211, 159, 0.28);
+            box-shadow: 0 8px 20px rgba(9, 24, 18, 0.22);
+        }
+
+        .diff-monaco-root .monaco-editor .current-line,
+        .diff-monaco-root .monaco-editor .current-line-margin {
+            border-color: rgba(245, 158, 11, 0.16) !important;
+        }
+
+        .diff-monaco-root .monaco-editor .view-overlays .current-line {
+            border-width: 1px 0 !important;
+        }
+
+        .diff-monaco-root .monaco-diff-editor .editor.original {
+            box-shadow:
+                inset -1px 0 0 rgba(148, 163, 184, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.015);
+        }
+
+        .diff-monaco-root .monaco-diff-editor .editor.modified {
+            box-shadow:
+                inset 1px 0 0 rgba(74, 222, 128, 0.16),
+                inset 0 1px 0 rgba(110, 231, 183, 0.03);
+        }
+
+        .diff-monaco-root .editor.modified .monaco-scrollable-element {
+            box-shadow: inset 0 0 0 1px rgba(45, 148, 108, 0.06);
+        }
+
+        .diff-monaco-root .editor.modified .line-numbers {
+            color: #82c5a5 !important;
+        }
+
+        .diff-monaco-root .editor.original .line-numbers {
+            color: #7990a7 !important;
+        }
+
+        .diff-monaco-root .editor.modified .margin-view-overlays .current-line-margin,
+        .diff-monaco-root .editor.modified .view-overlays .current-line {
+            border-color: rgba(74, 222, 128, 0.18) !important;
+        }
+
+        .diff-monaco-root .editor.original .margin-view-overlays .current-line-margin,
+        .diff-monaco-root .editor.original .view-overlays .current-line {
+            border-color: rgba(148, 163, 184, 0.12) !important;
+        }
+
+        .diff-footer {
+            padding: 14px 18px;
+            background: rgba(12, 18, 24, 0.96);
+            border-top: 1px solid rgba(148, 163, 184, 0.12);
+        }
+
+        .diff-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .diff-hint {
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .diff-hint-item {
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .manual-fix-container {
+            border-radius: 20px;
+            border-color: rgba(148, 163, 184, 0.18);
+            background: linear-gradient(180deg, #121a22 0%, #0d1117 100%);
+        }
+
+        @keyframes workspaceFadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header,
+        .panel,
+        .analysis,
+        .statusbar {
+            animation: workspaceFadeUp 320ms ease-out;
+        }
+
+        @media (max-width: 1180px) {
+            .app {
+                padding: 14px;
+            }
+
+            .header {
+                padding: 18px;
+            }
+
+            .header-right {
+                align-items: flex-start;
+                flex-basis: 100%;
+            }
+
+            .workspace-pills,
+            .actions {
+                justify-content: flex-start;
+            }
+
+            .main {
+                flex-direction: column;
+            }
+
+            .analysis {
+                max-width: none;
+                min-width: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .app {
+                gap: 12px;
+                padding: 10px;
+            }
+
+            .header,
+            .panel,
+            .analysis,
+            .statusbar {
+                border-radius: 18px;
+            }
+
+            .header {
+                padding: 16px;
+            }
+
+            .logo {
+                font-size: 24px;
+            }
+
+            .header-subtitle {
+                font-size: 13px;
+            }
+
+            .actions {
+                width: 100%;
+            }
+
+            .actions .btn {
+                flex: 1 1 calc(50% - 8px);
+                justify-content: center;
+            }
+
+            .panel-header,
+            .analysis-header {
+                padding: 16px;
+            }
+
+            .panel-header {
+                flex-wrap: wrap;
+            }
+
+            .editor-wrapper::before {
+                top: 22px;
+                left: 24px;
+            }
+
+            .panel-header-meta {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .issue-select-all-meta {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .statusbar {
+                gap: 8px;
+            }
+
+            .diff-header,
+            .diff-unified-header,
+            .diff-footer {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
+            .diff-footer {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .diff-actions {
+                justify-content: flex-end;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app">
         <header class="header">
-            <div class="logo">API Codegen</div>
+            <div class="header-brand">
+                <div class="header-kicker">Core-First Workspace</div>
+                <div class="header-title-row">
+                    <div class="logo">API Codegen</div>
+                    <span class="header-badge">Core Bridge</span>
+                </div>
+                <div class="header-subtitle">只编辑原始 Swagger / OpenAPI YAML，分析、修复与预览都以 <code>api-codegen-core</code> 的结果为准。</div>
+            </div>
             <nav class="nav">
                 <button class="nav-btn active">API</button>
             </nav>
-            <div class="actions">
-                <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
-                <button class="btn btn-secondary" onclick="saveFile()">保存</button>
-                <button class="btn btn-primary" onclick="analyze()">分析</button>
-                <button class="btn btn-success btn-inactive" id="auto-fix-btn" onclick="autoFix()" title="当前没有可自动修复的问题">自动修复 (0)</button>
+            <div class="header-right">
+                <div class="workspace-pills">
+                    <span class="workspace-pill">单一 YAML 输入</span>
+                    <span class="workspace-pill">原文件回写修复</span>
+                    <span class="workspace-pill">手动补全后重分析</span>
+                </div>
+                <div class="actions">
+                    <button class="btn btn-secondary" onclick="loadExample()">加载示例</button>
+                    <button class="btn btn-secondary" onclick="saveFile()">保存</button>
+                    <button class="btn btn-primary" onclick="analyze()">分析</button>
+                    <button class="btn btn-success btn-inactive" id="auto-fix-btn" onclick="autoFix()" title="当前没有可自动修复的问题">自动修复 (0)</button>
+                </div>
             </div>
         </header>
 
@@ -1895,9 +2779,14 @@
             <!-- API YAML Editor -->
             <div class="panel api-panel">
                 <div class="panel-header">
-                    <span>API 定义 (Swagger / OpenAPI YAML)</span>
-                    <span id="yaml-info">-</span>
-                    <button class="panel-load-btn" onclick="loadApiFile()">打开</button>
+                    <div class="panel-header-copy">
+                        <span>API 定义 (Swagger / OpenAPI YAML)</span>
+                        <small>直接编辑用户原始文件，应用修复后会将结果回写到当前编辑器。</small>
+                    </div>
+                    <div class="panel-header-meta">
+                        <span id="yaml-info" class="panel-meta-pill">-</span>
+                        <button class="panel-load-btn" onclick="loadApiFile()">打开</button>
+                    </div>
                 </div>
                 <div class="editor-wrapper">
                     <textarea id="yaml-editor" class="original-textarea"></textarea>
@@ -1907,7 +2796,11 @@
             <!-- Analysis Panel -->
             <aside class="analysis">
                 <div class="analysis-header">
-                    <span>分析结果</span>
+                    <div class="analysis-heading">
+                        <span class="analysis-kicker">Validation Console</span>
+                        <strong>分析结果</strong>
+                        <small>优先处理可自动修复项，剩余问题再进入补全或定位。</small>
+                    </div>
                     <span class="issue-count" id="issue-count">0</span>
                 </div>
                 <div class="issue-list" id="issue-list">
@@ -1920,13 +2813,10 @@
         </main>
 
         <footer class="statusbar">
-            <span id="status-position">行: 1, 列: 1</span>
-            <span>|</span>
-            <span id="status-api">API: 0</span>
-            <span>|</span>
-            <span id="status-field">字段: 0</span>
-            <span>|</span>
-            <span id="status-message">就绪</span>
+            <span class="status-item"><span class="status-tag">光标</span><span id="status-position">行: 1, 列: 1</span></span>
+            <span class="status-item"><span class="status-tag">API</span><span id="status-api">API: 0</span></span>
+            <span class="status-item"><span class="status-tag">字段</span><span id="status-field">字段: 0</span></span>
+            <span class="status-item"><span class="status-tag">状态</span><span id="status-message">就绪</span></span>
         </footer>
     </div>
 
@@ -1952,13 +2842,15 @@
             </div>
             <div class="diff-body">
                 <!-- 统一 Diff 视图 -->
-                <div class="diff-unified-panel">
-                    <div class="diff-unified-header">
-                        <span class="diff-panel-badge before">修复前</span>
-                        <span style="margin: 0 8px;">→</span>
-                        <span class="diff-panel-badge after">修复后</span>
-                        <span style="margin-left: 12px; color: #8b949e;">Java 代码变更预览</span>
-                    </div>
+                    <div class="diff-unified-panel">
+                        <div class="diff-unified-header">
+                        <div class="diff-unified-heading">
+                            <span class="diff-panel-badge before">原始 YAML</span>
+                            <span class="diff-panel-arrow">→</span>
+                            <span class="diff-panel-badge after">回写结果</span>
+                        </div>
+                        <span class="diff-unified-helper">基于 core 返回结果生成的结构化预览</span>
+                        </div>
                     <div class="diff-unified-content" id="diff-unified"></div>
                 </div>
             </div>
@@ -1973,8 +2865,10 @@
                         <span>删除的行</span>
                     </span>
                 </div>
-                <button class="btn btn-secondary" onclick="closeDiffModal()">取消</button>
-                <button class="btn btn-success" onclick="applyFix()">应用修复</button>
+                <div class="diff-actions">
+                    <button class="btn btn-secondary" onclick="closeDiffModal()">取消</button>
+                    <button class="btn btn-success" onclick="applyFix()">应用修复</button>
+                </div>
             </div>
         </div>
     </div>
@@ -2026,8 +2920,8 @@
     </script>
     <script src="lib/codemirror.min.js"></script>
     <script src="lib/yaml.min.js"></script>
+    <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
-    <script src="node_modules/diff2html/bundles/js/diff2html.min.js"></script>
     <script>
         var yamlEditor;
 
@@ -2721,18 +3615,20 @@ definitions:
             var totalManualActions = countManualActionEntries(issues);
             var totalManualStatic = countManualStaticEntries(issues);
             var totalManualEntries = totalManualActions + totalManualStatic;
+            var autoIssueBlocks = [];
+            var manualIssueBlocks = [];
 
             var html = '<div class="issue-select-all">' +
                 '<div class="issue-select-all-meta">' +
                 '<label><input type="checkbox" id="select-all-issues" checked onchange="toggleAllIssues(this.checked)"> 全选</label>' +
-                '<span id="selected-issue-summary" style="font-size: 11px; color: #cbd5e1;">' + formatSelectedIssueSummary(totalFixable, totalFixable, totalManualEntries, totalManualEntries) + '</span>' +
+                '<span id="selected-issue-summary" class="selected-issue-summary">' + formatSelectedIssueSummary(totalFixable, totalFixable, totalManualEntries, totalManualEntries) + '</span>' +
                 '</div>' +
                 '<div class="issue-select-all-legend">' +
-                '<span style="color: #27ae60;">● 可修复</span> 自动修复 &nbsp; ' +
-                '<span style="color: #e94560;">● 需手动</span> 补全/定位' +
+                '<span class="issue-legend-item"><span class="issue-legend-dot fixable">●</span><span>可修复</span><span class="issue-legend-text">自动修复</span></span>' +
+                '<span class="issue-legend-item"><span class="issue-legend-dot manual">●</span><span>需手动</span><span class="issue-legend-text">补全/定位</span></span>' +
                 '</div></div>';
 
-            html += issues.map(function(issue, index) {
+            issues.forEach(function(issue, index) {
                 var checked = selectedIssues[index] ? 'checked' : '';
                 var severityText = issue.severity === 'error' ? '错误' : (issue.severity === 'warn' ? '警告' : '提示');
 
@@ -2751,31 +3647,70 @@ definitions:
                         : '点击补全或定位';
                     var fixableBadge = '<button type="button" class="issue-fixable fixable-no" title="' + buttonTitle + '" onclick="event.stopPropagation(); event.preventDefault(); handleManualIssue(' + index + ');">' + buttonText + '</button>';
                 } else if (isManualLocatable(issue)) {
-                    return '';
+                    return;
                 } else {
                     var fixableBadge = '<span class="issue-fixable fixable-manual-static" title="当前问题无法自动定位，请手动处理">需人工处理</span>';
                 }
 
+                var issueHtml;
                 if (isManualLocatable(issue) && relatedManualCount > 1) {
-                    return renderGroupedManualIssue(issues, index, issue, checked, fixableBadge, manualGroupKey);
+                    issueHtml = renderGroupedManualIssue(issues, index, issue, checked, fixableBadge, manualGroupKey);
+                } else {
+                    issueHtml = '<div class="issue ' + issue.severity + '">' +
+                        '<div class="issue-checkbox">' +
+                        '<input type="checkbox" ' + checked + ' onchange="toggleIssue(' + index + ', this.checked)">' +
+                        '</div>' +
+                        '<div class="issue-content">' +
+                        '<div class="issue-title">' +
+                        '<span class="issue-icon"></span>' +
+                        '<span class="issue-type">' + severityText + '</span>' +
+                        '<span class="issue-rule" title="规则依据">' + (issue.rule || '') + '</span>' +
+                        fixableBadge +
+                        '</div>' +
+                        '<div class="issue-message">' + issue.message + '</div>' +
+                        (issue.api !== undefined ? '<div class="issue-api">API: ' + issue.api + '</div>' : '') +
+                        '</div>' +
+                        '</div>';
                 }
 
-                return '<div class="issue ' + issue.severity + '">' +
-                    '<div class="issue-checkbox">' +
-                    '<input type="checkbox" ' + checked + ' onchange="toggleIssue(' + index + ', this.checked)">' +
+                if (canAutoFix) {
+                    autoIssueBlocks.push(issueHtml);
+                } else {
+                    manualIssueBlocks.push(issueHtml);
+                }
+            });
+
+            var flowMessage = totalFixable > 0
+                ? ('建议先自动修复 ' + totalFixable + ' 项，再处理剩余手动项')
+                : ('当前剩余 ' + totalManualEntries + ' 项需手动处理');
+
+            html += '<div class="analysis-flow-note">' + flowMessage + '</div>';
+
+            if (autoIssueBlocks.length > 0) {
+                html += '<section class="analysis-section fixable">' +
+                    '<div class="analysis-section-header">' +
+                        '<div class="analysis-section-heading">' +
+                            '<div class="analysis-section-title">可自动修复</div>' +
+                            '<div class="analysis-section-copy">可直接回写原始 YAML</div>' +
+                        '</div>' +
+                        '<div class="analysis-section-count">' + totalFixable + ' 项</div>' +
                     '</div>' +
-                    '<div class="issue-content">' +
-                    '<div class="issue-title">' +
-                    '<span class="issue-icon"></span>' +
-                    '<span class="issue-type">' + severityText + '</span>' +
-                    '<span class="issue-rule" title="规则依据">' + (issue.rule || '') + '</span>' +
-                    fixableBadge +
+                    '<div class="analysis-section-body">' + autoIssueBlocks.join('') + '</div>' +
+                '</section>';
+            }
+
+            if (manualIssueBlocks.length > 0) {
+                html += '<section class="analysis-section manual">' +
+                    '<div class="analysis-section-header">' +
+                        '<div class="analysis-section-heading">' +
+                            '<div class="analysis-section-title">需手动处理</div>' +
+                            '<div class="analysis-section-copy">补全或定位后会重新分析</div>' +
+                        '</div>' +
+                        '<div class="analysis-section-count">' + totalManualEntries + ' 项</div>' +
                     '</div>' +
-                    '<div class="issue-message">' + issue.message + '</div>' +
-                    (issue.api !== undefined ? '<div class="issue-api">API: ' + issue.api + '</div>' : '') +
-                    '</div>' +
-                    '</div>';
-            }).join('');
+                    '<div class="analysis-section-body">' + manualIssueBlocks.join('') + '</div>' +
+                '</section>';
+            }
 
             container.innerHTML = html;
             window.currentIssues = issues;
@@ -3930,10 +4865,178 @@ definitions:
             return normalized;
         }
 
+        var monacoLoaderPromise = null;
+        var diffPreviewEditor = null;
+        var diffPreviewResizeHandlerAttached = false;
+
+        function ensureMonacoLoaded() {
+            if (window.monaco && window.monaco.editor) {
+                return Promise.resolve(window.monaco);
+            }
+
+            if (monacoLoaderPromise) {
+                return monacoLoaderPromise;
+            }
+
+            monacoLoaderPromise = new Promise(function(resolve, reject) {
+                if (typeof window.require !== 'function') {
+                    reject(new Error('Monaco loader 不可用'));
+                    return;
+                }
+
+                var basePath = 'node_modules/monaco-editor/min/vs';
+                window.require.config({ paths: { vs: basePath } });
+                window.MonacoEnvironment = {
+                    getWorkerUrl: function() {
+                        var workerSource =
+                            "self.MonacoEnvironment={baseUrl:'" + location.origin + "/" + basePath + "/'};" +
+                            "importScripts('" + location.origin + "/" + basePath + "/base/worker/workerMain.js');";
+                        return 'data:text/javascript;charset=utf-8,' + encodeURIComponent(workerSource);
+                    }
+                };
+
+                window.require(['vs/editor/editor.main'], function() {
+                    var monaco = window.monaco;
+                    if (!monaco || !monaco.editor) {
+                        reject(new Error('Monaco 初始化失败'));
+                        return;
+                    }
+
+                    if (!window.__monacoDiffThemeReady) {
+                        monaco.editor.defineTheme('apicgen-diff-dark', {
+                            base: 'vs-dark',
+                            inherit: true,
+                            rules: [
+                                { token: '', foreground: 'd9e2ec' },
+                                { token: 'comment', foreground: '6f9b7b', fontStyle: 'italic' },
+                                { token: 'string', foreground: 'd7aa73' },
+                                { token: 'number', foreground: 'b8a0f7' },
+                                { token: 'keyword', foreground: '8ad1ff' },
+                                { token: 'key', foreground: '4fd7e6' },
+                                { token: 'type', foreground: '7ed7c9' },
+                                { token: 'delimiter', foreground: '8fa4b8' },
+                                { token: 'operators', foreground: '8fa4b8' }
+                            ],
+                            colors: {
+                                'editor.background': '#0f151b',
+                                'editor.foreground': '#d9e2ec',
+                                'editorGutter.background': '#101922',
+                                'editorLineNumber.foreground': '#6f8296',
+                                'editorLineNumber.activeForeground': '#b7cadc',
+                                'editorIndentGuide.background1': '#223241',
+                                'editorIndentGuide.activeBackground1': '#3b5873',
+                                'editorWhitespace.foreground': '#1f2d39',
+                                'editor.selectionBackground': '#214764',
+                                'editor.lineHighlightBackground': '#14202a',
+                                'diffEditor.insertedTextBackground': '#2d6a57',
+                                'diffEditor.removedTextBackground': '#76433a',
+                                'diffEditor.insertedLineBackground': '#1a4639',
+                                'diffEditor.removedLineBackground': '#482a24',
+                                'diffEditor.diagonalFill': '#0c1218',
+                                'diffEditor.border': '#1a2c38',
+                                'diffEditorGutter.insertedLineBackground': '#1f4f40',
+                                'diffEditorGutter.removedLineBackground': '#55332b',
+                                'editorOverviewRuler.addedForeground': '#2fbf7c',
+                                'editorOverviewRuler.modifiedForeground': '#e3a34b',
+                                'editorOverviewRuler.deletedForeground': '#ef6b5c',
+                                'scrollbarSlider.background': '#253445',
+                                'scrollbarSlider.hoverBackground': '#34506a',
+                                'scrollbarSlider.activeBackground': '#466987'
+                            }
+                        });
+                        window.__monacoDiffThemeReady = true;
+                    }
+
+                    resolve(monaco);
+                }, function(error) {
+                    reject(error || new Error('Monaco 资源加载失败'));
+                });
+            });
+
+            return monacoLoaderPromise;
+        }
+
+        function disposeDiffPreviewEditor() {
+            if (diffPreviewEditor) {
+                var originalModel = diffPreviewEditor.getOriginalEditor && diffPreviewEditor.getOriginalEditor().getModel();
+                var modifiedModel = diffPreviewEditor.getModifiedEditor && diffPreviewEditor.getModifiedEditor().getModel();
+                diffPreviewEditor.dispose();
+                diffPreviewEditor = null;
+                window.__diffPreviewEditor = null;
+                if (originalModel) {
+                    originalModel.dispose();
+                }
+                if (modifiedModel) {
+                    modifiedModel.dispose();
+                }
+            }
+        }
+
+        function layoutDiffPreviewEditor() {
+            if (diffPreviewEditor) {
+                diffPreviewEditor.layout();
+            }
+        }
+
+        function attachDiffPreviewResizeHandler() {
+            if (diffPreviewResizeHandlerAttached) {
+                return;
+            }
+            window.addEventListener('resize', layoutDiffPreviewEditor);
+            diffPreviewResizeHandlerAttached = true;
+        }
+
+        function waitForNextFrame() {
+            return new Promise(function(resolve) {
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(resolve);
+                });
+            });
+        }
+
+        async function renderMonacoDiff(before, after) {
+            var diffHost = document.getElementById('diff-unified');
+            diffHost.innerHTML = '<div id="diff-monaco-root" class="diff-monaco-root"></div>';
+
+            var monaco = await ensureMonacoLoaded();
+            var root = document.getElementById('diff-monaco-root');
+            var originalModel = monaco.editor.createModel(before || '', 'yaml');
+            var modifiedModel = monaco.editor.createModel(after || '', 'yaml');
+
+            disposeDiffPreviewEditor();
+
+            diffPreviewEditor = monaco.editor.createDiffEditor(root, {
+                theme: 'apicgen-diff-dark',
+                readOnly: true,
+                renderSideBySide: true,
+                renderIndicators: true,
+                ignoreTrimWhitespace: false,
+                originalEditable: false,
+                automaticLayout: false,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                renderWhitespace: 'selection',
+                guides: { indentation: true },
+                lineNumbers: 'on',
+                wordWrap: 'off',
+                fontFamily: 'JetBrains Mono, Fira Code, Consolas, monospace',
+                fontSize: 13,
+                lineHeight: 22,
+                glyphMargin: false
+            });
+            diffPreviewEditor.setModel({
+                original: originalModel,
+                modified: modifiedModel
+            });
+            window.__diffPreviewEditor = diffPreviewEditor;
+            attachDiffPreviewResizeHandler();
+            requestAnimationFrame(layoutDiffPreviewEditor);
+        }
+
         /**
          * Show diff preview modal - 只展示 core 返回 YAML 的左右对比
          */
-        function showDiffPreview(before, after) {
+        async function showDiffPreview(before, after) {
             try {
                 var diffHost = document.getElementById('diff-unified');
                 var diffStats = computePreviewDiff(before || '', after || '');
@@ -3953,17 +5056,17 @@ definitions:
                     }
                 });
 
+                window.pendingFixedContent = after;
+                document.getElementById('diff-modal').classList.add('active');
+                await waitForNextFrame();
+
                 if (!hasVisibleChanges) {
+                    disposeDiffPreviewEditor();
                     diffHost.innerHTML = '<div class="diff-no-changes"><div class="diff-no-changes-icon">✓</div><div class="diff-no-changes-text">没有需要修复的问题</div></div>';
                     document.getElementById('diff-adds').textContent = '0 处修改';
                     document.getElementById('diff-removes').textContent = '0 处删除';
                 } else {
-                    var thirdPartyDiffHtml = renderThirdPartyDiff(before, after);
-                    if (thirdPartyDiffHtml) {
-                        diffHost.innerHTML = thirdPartyDiffHtml;
-                    } else {
-                        diffHost.innerHTML = '<div class="diff-code-block">' + renderUnifiedDiff(before, after, diffStats) + '</div>';
-                    }
+                    await renderMonacoDiff(before || '', after || '');
 
                     var fixStats = window.currentFixStats || {};
                     if (fixStats.paramsFixed > 0) {
@@ -3974,9 +5077,8 @@ definitions:
                     document.getElementById('diff-removes').textContent = '-' + removeCount + ' 行';
                 }
 
-                window.pendingFixedContent = after;
-                setupScrollSync();
-                document.getElementById('diff-modal').classList.add('active');
+                await waitForNextFrame();
+                layoutDiffPreviewEditor();
             } catch (e) {
                 console.error('showDiffPreview error:', e);
                 setMessage('显示预览出错: ' + e.message);
@@ -4025,79 +5127,6 @@ definitions:
             });
 
             return html;
-        }
-
-        function renderThirdPartyDiff(before, after) {
-            if (typeof Diff === 'undefined' || typeof Diff.createTwoFilesPatch !== 'function' ||
-                typeof Diff2Html === 'undefined' || typeof Diff2Html.html !== 'function') {
-                return '';
-            }
-
-            try {
-                var patch = Diff.createTwoFilesPatch('api.yaml', 'api.yaml', before || '', after || '', '', '', {
-                    context: 3,
-                    ignoreWhitespace: true
-                });
-
-                var html = Diff2Html.html(patch, {
-                    drawFileList: false,
-                    matching: 'lines',
-                    outputFormat: 'side-by-side'
-                });
-                html = html.replace(/d2h-light-color-scheme/g, 'd2h-dark-color-scheme');
-                html = normalizeThirdPartyDiffHtml(html);
-
-                return '<div class="diff-third-party-shell">' +
-                    '<div class="diff-third-party-header">' +
-                    '<span class="diff-third-party-title">完整 YAML 对比</span>' +
-                    '<span class="diff-third-party-badge">左右对比</span>' +
-                    '</div>' +
-                    '<div class="diff-third-party-body">' + html + '</div>' +
-                    '</div>';
-            } catch (e) {
-                console.error('renderThirdPartyDiff error:', e);
-                return '';
-            }
-        }
-
-        function normalizeThirdPartyDiffHtml(html) {
-            if (!html) {
-                return html;
-            }
-
-            var host = document.createElement('div');
-            host.innerHTML = html;
-
-            Array.from(host.querySelectorAll('td.d2h-info')).forEach(function(cell) {
-                var row = cell.closest('tr');
-                if (row && row.parentNode) {
-                    row.parentNode.removeChild(row);
-                }
-            });
-
-            Array.from(host.querySelectorAll('.d2h-file-side-diff')).forEach(function(sideTable) {
-                var visibleLineNumber = 1;
-                Array.from(sideTable.querySelectorAll('tr')).forEach(function(row) {
-                    var numberCell = row.querySelector('td.d2h-code-side-linenumber');
-                    var contentCell = row.querySelector('td:not(.d2h-code-side-linenumber)');
-                    if (!numberCell || !contentCell) {
-                        return;
-                    }
-
-                    var isPlaceholder = contentCell.classList.contains('d2h-code-side-emptyplaceholder') ||
-                        contentCell.classList.contains('d2h-emptyplaceholder');
-                    var text = (contentCell.textContent || '').replace(/\s+/g, ' ').trim();
-
-                    if (isPlaceholder || text === '') {
-                        numberCell.textContent = '';
-                        return;
-                    }
-
-                    numberCell.textContent = String(visibleLineNumber++);
-                });
-            });
-
-            return host.innerHTML;
         }
 
         function computePreviewDiff(before, after) {
@@ -5932,6 +6961,7 @@ definitions:
         function closeDiffModal() {
             document.getElementById('diff-modal').classList.remove('active');
             window.pendingFixedContent = null;
+            disposeDiffPreviewEditor();
         }
 
         /**

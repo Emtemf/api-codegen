@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Diff Feature Verification', () => {
 
   test('should verify diff feature works correctly', async ({ page }) => {
+    test.setTimeout(60000);
+
     // Listen for console errors
     const consoleErrors: string[] = [];
     page.on('console', msg => {
@@ -43,11 +45,14 @@ test.describe('Diff Feature Verification', () => {
 
     // Step 2: Click "分析" button to analyze
     console.log('Step 2: Analyzing YAML...');
-    const analyzeButton = page.locator('button:has-text("分析")');
+    const analyzeButton = page.getByRole('button', { name: '分析', exact: true });
     await analyzeButton.click();
 
     // Wait for analysis to complete
-    await page.waitForTimeout(3000);
+    await page.waitForFunction(() => {
+      const issueCountText = document.querySelector('#issue-count')?.textContent || '';
+      return /总\s+\d+/.test(issueCountText);
+    }, null, { timeout: 20000 });
 
     // Check console errors
     console.log('Console errors:', consoleErrors);
@@ -65,7 +70,7 @@ test.describe('Diff Feature Verification', () => {
     console.log('Has validation issues:', hasIssues);
 
     // Check if auto-fix button is visible
-    const autoFixButton = page.locator('button:has-text("自动修复")');
+    const autoFixButton = page.getByRole('button', { name: /自动修复/ });
     const autoFixVisible = await autoFixButton.isVisible().catch(() => false);
     console.log('Auto-fix button visible:', autoFixVisible);
 
@@ -82,8 +87,10 @@ test.describe('Diff Feature Verification', () => {
     console.log('Step 4: Clicking auto-fix...');
     await autoFixButton.click();
 
-    // Wait for auto-fix to complete
-    await page.waitForTimeout(3000);
+    // Wait for auto-fix preview modal to appear
+    await page.waitForFunction(() => {
+      return document.querySelector('#diff-modal')?.classList.contains('active') === true;
+    }, null, { timeout: 20000 });
 
     // Step 5: Check if diff modal appears
     console.log('Step 5: Checking for diff modal...');
@@ -110,87 +117,124 @@ test.describe('Diff Feature Verification', () => {
       const removesText = await page.locator('#diff-removes').textContent().catch(() => '');
       console.log('Adds:', addsText, 'Removes:', removesText);
 
-      const thirdPartyWrapperCount = await page.locator('#diff-unified .d2h-wrapper').count().catch(() => 0);
-      const sideBySideCount = await page.locator('#diff-unified .d2h-file-side-diff').count().catch(() => 0);
+      const monacoDiffEditorCount = await page.locator('#diff-unified .monaco-diff-editor').count().catch(() => 0);
+      const monacoEditorCount = await page.locator('#diff-unified .monaco-editor').count().catch(() => 0);
       const legacyPreviewCount = await page.locator('#diff-unified .diff-api-unified').count().catch(() => 0);
-      const infoRowCount = await page.locator('#diff-unified td.d2h-info').count().catch(() => 0);
-      console.log('Third-party diff wrappers:', thirdPartyWrapperCount);
-      console.log('Side-by-side diff blocks:', sideBySideCount);
+      const diff2htmlCount = await page.locator('#diff-unified .d2h-wrapper').count().catch(() => 0);
+      console.log('Monaco diff editors:', monacoDiffEditorCount);
+      console.log('Monaco editors:', monacoEditorCount);
       console.log('Legacy preview blocks:', legacyPreviewCount);
-      console.log('Info rows:', infoRowCount);
+      console.log('diff2html wrappers:', diff2htmlCount);
 
-      const diffBackground = await page.locator('#diff-unified .d2h-file-side-diff').first().evaluate(el => {
-        return window.getComputedStyle(el).backgroundColor;
-      }).catch(() => '');
-      console.log('Diff background:', diffBackground);
+      await page.waitForFunction(() => {
+        const editor = (window as any).__diffPreviewEditor;
+        const host = document.querySelector('#diff-unified .monaco-diff-editor') as HTMLElement | null;
+        return !!editor
+          && !!host
+          && host.getBoundingClientRect().height > 300
+          && document.querySelectorAll('#diff-unified .editor.original .view-line').length > 10
+          && document.querySelectorAll('#diff-unified .editor.modified .view-line').length > 10;
+      }, null, { timeout: 10000 });
 
-      const wrapperClassName = await page.locator('#diff-unified .d2h-wrapper').first().getAttribute('class').catch(() => '');
-      console.log('Diff wrapper class:', wrapperClassName);
+      const monacoApi = await page.evaluate(() => {
+        const editor = (window as any).__diffPreviewEditor;
+        if (!editor) {
+          return null;
+        }
 
-      const codeWhiteSpace = await page.locator('#diff-unified .d2h-code-side-line').first().evaluate(el => {
-        const style = window.getComputedStyle(el);
+        function getFirstNonWhitespaceX(lineElement: Element | null) {
+          if (!lineElement) {
+            return null;
+          }
+
+          const text = lineElement.textContent || '';
+          let targetIndex = -1;
+          for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            if (char !== ' ' && char !== '\u00a0' && char !== '\t') {
+              targetIndex = i;
+              break;
+            }
+          }
+
+          if (targetIndex < 0) {
+            return null;
+          }
+
+          const walker = document.createTreeWalker(lineElement, NodeFilter.SHOW_TEXT);
+          let offset = 0;
+          let currentNode = walker.nextNode() as Text | null;
+
+          while (currentNode) {
+            const length = currentNode.textContent?.length || 0;
+            if (offset + length > targetIndex) {
+              const range = document.createRange();
+              const startOffset = targetIndex - offset;
+              range.setStart(currentNode, startOffset);
+              range.setEnd(currentNode, startOffset + 1);
+              return range.getBoundingClientRect().x;
+            }
+            offset += length;
+            currentNode = walker.nextNode() as Text | null;
+          }
+
+          return null;
+        }
+
+        function findLine(selector: string, expected: string) {
+          return Array.from(document.querySelectorAll(selector)).find(line =>
+            ((line.textContent || '').replace(/\u00a0/g, ' ').trim()) === expected
+          ) || null;
+        }
+
+        const originalEditor = editor.getOriginalEditor();
+        const modifiedEditor = editor.getModifiedEditor();
+        const host = document.querySelector('#diff-unified .monaco-diff-editor');
+        const originalInfoLine = findLine('#diff-unified .editor.original .view-line', 'info:');
+        const originalVersionLine = findLine('#diff-unified .editor.original .view-line', 'version: v1');
+        const modifiedInfoLine = findLine('#diff-unified .editor.modified .view-line', 'info:');
+        const modifiedVersionLine = findLine('#diff-unified .editor.modified .view-line', 'version: v1');
         return {
-          whiteSpace: style.whiteSpace,
-          wordBreak: style.wordBreak,
-          overflowWrap: style.overflowWrap
+          hasOriginalEditor: !!editor.getOriginalEditor,
+          hasModifiedEditor: !!editor.getModifiedEditor,
+          originalValue: originalEditor.getModel().getValue(),
+          modifiedValue: modifiedEditor.getModel().getValue(),
+          hostHeight: host ? host.getBoundingClientRect().height : 0,
+          originalVisibleLines: document.querySelectorAll('#diff-unified .editor.original .view-line').length,
+          modifiedVisibleLines: document.querySelectorAll('#diff-unified .editor.modified .view-line').length,
+          originalInfoX: getFirstNonWhitespaceX(originalInfoLine),
+          originalVersionX: getFirstNonWhitespaceX(originalVersionLine),
+          modifiedInfoX: getFirstNonWhitespaceX(modifiedInfoLine),
+          modifiedVersionX: getFirstNonWhitespaceX(modifiedVersionLine)
         };
-      }).catch(() => ({ whiteSpace: '', wordBreak: '', overflowWrap: '' }));
-      console.log('Code line style:', codeWhiteSpace);
-
-      const contextLineStyle = await page.locator('#diff-unified td.d2h-cntx').first().evaluate(el => {
-        const style = window.getComputedStyle(el);
-        return {
-          color: style.color,
-          background: style.backgroundColor
-        };
-      }).catch(() => ({ color: '', background: '' }));
-      console.log('Context line style:', contextLineStyle);
-
-      const lineNumberLayout = await page.locator('#diff-unified td.d2h-code-side-linenumber').first().evaluate(el => {
-        const style = window.getComputedStyle(el);
-        const contentCell = el.parentElement?.querySelector('td:not(.d2h-code-side-linenumber)');
-        const numberRect = el.getBoundingClientRect();
-        const contentRect = contentCell ? contentCell.getBoundingClientRect() : null;
-        return {
-          position: style.position,
-          display: style.display,
-          numberRight: numberRect.right,
-          contentLeft: contentRect ? contentRect.left : -1
-        };
-      }).catch(() => ({ position: '', display: '', numberRight: -1, contentLeft: -1 }));
-      console.log('Line number layout:', lineNumberLayout);
-
-      const visibleNumbers = await page.locator('#diff-unified .d2h-file-side-diff').first().evaluate(el => {
-        const cells = Array.from(el.querySelectorAll('td.d2h-code-side-linenumber'));
-        return cells
-          .map(cell => (cell.textContent || '').trim())
-          .filter(Boolean)
-          .slice(0, 8);
-      }).catch(() => []);
-      console.log('Visible line numbers:', visibleNumbers);
+      }).catch(() => null);
+      console.log('Monaco API:', monacoApi);
 
       // Assertions - content should not be empty
       unifiedDiffWorks = unifiedContent.length > 0;
       console.log('Unified Diff has content:', unifiedDiffWorks);
 
-      // Step 7: Check that only one side-by-side diff preview exists
-      console.log('Step 7: Checking single side-by-side diff preview...');
+      // Step 7: Check Monaco side-by-side diff and indentation preservation
+      console.log('Step 7: Checking Monaco side-by-side diff preview...');
       diffWorks = unifiedDiffWorks
-        && thirdPartyWrapperCount === 1
-        && sideBySideCount > 0
+        && monacoDiffEditorCount === 1
+        && monacoEditorCount >= 2
         && legacyPreviewCount === 0
-        && infoRowCount === 0
-        && wrapperClassName.includes('d2h-dark-color-scheme')
-        && diffBackground === 'rgb(13, 17, 23)'
-        && codeWhiteSpace.whiteSpace === 'pre'
-        && codeWhiteSpace.wordBreak === 'normal'
-        && codeWhiteSpace.overflowWrap === 'normal'
-        && contextLineStyle.color === 'rgb(240, 246, 252)'
-        && contextLineStyle.background === 'rgb(34, 48, 67)'
-        && lineNumberLayout.position === 'static'
-        && lineNumberLayout.display === 'table-cell'
-        && lineNumberLayout.contentLeft >= lineNumberLayout.numberRight
-        && JSON.stringify(visibleNumbers) === JSON.stringify(['1', '2', '3', '4', '5', '6', '7', '8']);
+        && diff2htmlCount === 0
+        && !!monacoApi
+        && monacoApi.hasOriginalEditor === true
+        && monacoApi.hasModifiedEditor === true
+        && monacoApi.originalValue.includes('  type: integer')
+        && monacoApi.modifiedValue.includes('  maximum: 2147483647')
+        && monacoApi.hostHeight > 300
+        && monacoApi.originalVisibleLines > 10
+        && monacoApi.modifiedVisibleLines > 10
+        && monacoApi.originalInfoX !== null
+        && monacoApi.originalVersionX !== null
+        && monacoApi.modifiedInfoX !== null
+        && monacoApi.modifiedVersionX !== null
+        && monacoApi.originalVersionX > monacoApi.originalInfoX
+        && monacoApi.modifiedVersionX > monacoApi.modifiedInfoX;
     }
 
     // Report
@@ -199,7 +243,7 @@ test.describe('Diff Feature Verification', () => {
     console.log('- Has validation issues: ' + (hasIssues ? 'YES' : 'NO'));
     console.log('- Auto-fix works: ' + (isModalVisible ? 'YES' : 'NO'));
     console.log('- Unified Diff preview shows content: ' + (unifiedDiffWorks ? 'YES' : 'NO'));
-    console.log('- Single side-by-side diff preview present: ' + (diffWorks ? 'YES' : 'NO'));
+    console.log('- Monaco side-by-side diff preview present: ' + (diffWorks ? 'YES' : 'NO'));
     console.log('================\n');
 
     // Take a final screenshot of the diff modal if visible
@@ -210,7 +254,7 @@ test.describe('Diff Feature Verification', () => {
     // Final assertions
     expect(isModalVisible).toBe(true);
     expect(unifiedDiffWorks).toBe(true);
-    // Diff should render as a single dark side-by-side preview
+    // Diff should render as a Monaco side-by-side preview with preserved indentation
     expect(diffWorks).toBe(true);
   });
 });
