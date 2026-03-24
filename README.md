@@ -160,33 +160,85 @@ cd api-codegen-core
 - `x-java-class-annotations` 写在 path 层，作用到生成的 Controller 类
 - `x-java-method-annotations` 写在具体 HTTP 方法层，作用到对应生成的方法
 
+Swagger 2.0 写法：
+
 ```yaml
-openapi: 3.0.1
+swagger: "2.0"
+info:
+  title: User API
+  version: "1.0"
 paths:
   /users:
     x-java-class-annotations:
       - "@Secured"
-      - "@Tag(name = \"用户管理\")"
+      - "@AuditLog(action='USER_QUERY')"
     post:
       operationId: createUser
       x-java-method-annotations:
-        - "@Permission(\"user.create\")"
-        - "@AuditLog(\"创建用户\")"
+        - "@Permission('user:create')"
+        - "@AuditLog(action='CREATE_USER')"
       responses:
         "200":
           description: OK
 ```
 
-生成效果示意：
+OpenAPI 3.0 写法：
+
+```yaml
+openapi: 3.0.1
+info:
+  title: User API
+  version: "1.0"
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@Secured"
+      - "@AuditLog(action='USER_QUERY')"
+    post:
+      operationId: createUser
+      x-java-method-annotations:
+        - "@Permission('user:create')"
+        - "@AuditLog(action='CREATE_USER')"
+      responses:
+        "200":
+          description: OK
+```
+
+上面这两份 YAML，我实际用 Maven 插件分别跑过，生成出来的 Controller 内容一致。
+下面是实际生成结果，不是示意代码。
+
+示例命令：
+
+```bash
+mvn com.apicgen:api-codegen-maven-plugin:generate \
+  -DyamlFile=api.yaml \
+  -DbasePackage=com.example.user \
+  -DoutputDir=./out
+```
+
+实际生成文件：
+
+- `./out/generated/api/com/example/user/api/UserApi.java`
+- `./out/src/main/java/rsp/com/example/user/rsp/Response.java`
+
+`UserApi.java` 实际内容片段：
 
 ```java
+/**
+ * 此文件由 api-codegen 自动生成，请勿手动修改
+ */
+@Path("/api")
 @Secured
-@Tag(name = "用户管理")
-public class UserController {
+@AuditLog(action='USER_QUERY')
+public class UserApi {
 
-    @Permission("user.create")
-    @AuditLog("创建用户")
-    public Response createUser(...) {
+    @Permission('user:create')
+    @AuditLog(action='CREATE_USER')
+    @POST
+    @Path("/users")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response create() {
         return null;
     }
 }
