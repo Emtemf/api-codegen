@@ -1,7 +1,5 @@
 package com.apicgen.maven;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.apicgen.config.CodegenConfig;
 import com.apicgen.generator.CodeGenerator;
 import com.apicgen.generator.CodeGeneratorFactory;
@@ -100,12 +98,6 @@ public class ApiCodegenMojo extends AbstractMojo {
      */
     @Parameter(property = "force", defaultValue = "false")
     private boolean force;
-
-    /**
-     * 插件配置文件路径（默认读取项目根目录 codegen-config.yaml）。
-     */
-    @Parameter(property = "configFile", defaultValue = "${basedir}/codegen-config.yaml")
-    private String configFile;
 
     /**
      * 仅执行校验规则分析，不生成代码。
@@ -260,24 +252,16 @@ public class ApiCodegenMojo extends AbstractMojo {
     /**
      * 加载并合并代码生成配置。
      * <p>
-     * 合并顺序：先读取 {@code configFile}，再用插件参数覆盖关键项（framework/basePackage/openapi/copyright）。
+     * 当前仅使用 Maven 参数与内置默认值，不再隐式读取项目根目录的历史配置文件。
      * 若输出配置缺失，仅补齐默认对象，不在此处创建业务文件。
      *
      * @return 合并后的配置对象，供后续生成流程使用
      * @throws IOException 配置文件存在但读取失败时抛出
      */
     private CodegenConfig loadConfig() throws IOException {
-        File configFileObj = new File(configFile);
         CodegenConfig config = new CodegenConfig();
 
-        if (configFileObj.exists()) {
-            // 从配置文件加载
-            ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-            config = yamlMapper.readValue(configFileObj, CodegenConfig.class);
-            logInfo("加载配置文件: " + configFile);
-        }
-
-        // 命令行参数覆盖配置文件
+        // 仅使用命令行参数覆盖默认配置
         if (framework != null && !framework.isBlank()) {
             config.setFramework(CodegenConfig.FrameworkType.valueOf(framework.toUpperCase()));
         }

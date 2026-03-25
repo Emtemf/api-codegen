@@ -1,6 +1,6 @@
 # 测试输出目录说明
 
-本目录包含单元测试生成的文件和文档，用于验证代码生成器的功能和配置。
+本目录包含单元测试生成的文件和文档，用于验证代码生成器的功能和输出结构。
 
 ## 目录结构
 
@@ -12,8 +12,7 @@ src/test/output/
 │   └── API_DOCUMENTATION.md  # API 文档
 ├── valid-edge-cases/         # 测试边界条件
 │   └── API_DOCUMENTATION.md  # API 文档
-└── config-preview/           # 配置预览
-    └── CONFIG_SUMMARY.md     # 配置摘要
+└── README.md                 # 当前目录说明
 ```
 
 ## Web 可视化界面
@@ -105,7 +104,7 @@ start ../../../../web-ui/index.html
 
 ---
 
-## 配置路径验证
+## 输出路径验证
 
 ### 默认配置
 
@@ -119,7 +118,7 @@ output:
     path: src/main/java/rsp/  # 自动覆盖
 ```
 
-### 自定义配置示例
+### 自定义参数示例
 
 ```yaml
 output:
@@ -138,14 +137,14 @@ output:
 ### 运行代码生成
 
 ```bash
-# 使用默认配置
+# 使用默认参数
 mvn api-codegen:generate
 
 # 强制覆盖
 mvn api-codegen:generate -Dforce=true
 
-# 指定配置文件
-mvn api-codegen:generate -DconfigFile=custom-config.yaml
+# 指定输出目录
+mvn api-codegen:generate -DoutputDir=custom/path
 ```
 
 ### 查看生成的文件

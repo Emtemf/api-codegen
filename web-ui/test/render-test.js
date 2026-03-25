@@ -775,10 +775,10 @@ apis:
     };
 });
 
-test('singleInput', 'index.html 不应再包含 codegen-config.yaml 双文件提示', function() {
+test('singleInput', 'index.html 不应再包含双文件提示', function() {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     return {
-        pass: !indexHtml.includes('codegen-config.yaml') &&
+        pass: !indexHtml.includes('第二份配置文件') &&
             !indexHtml.includes('配置预览') &&
             !indexHtml.includes('API + Config'),
         message: '单一输入模式下不应再保留第二份配置文件相关文案'

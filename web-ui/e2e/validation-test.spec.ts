@@ -779,12 +779,12 @@ paths:
 
   test.describe('Contract 收敛', () => {
 
-    test('首页不应再展示 codegen-config.yaml 双文件输入提示', async ({ page }) => {
+    test('首页不应再展示双文件输入提示', async ({ page }) => {
       const appPage = new AppPage(page);
       await appPage.goto();
       await appPage.waitForLoad();
 
-      await expect(page.locator('body')).not.toContainText('codegen-config.yaml');
+      await expect(page.locator('body')).not.toContainText('第二份配置文件');
       await expect(page.locator('body')).not.toContainText('配置预览');
       await expect(page.locator('.nav-btn')).not.toContainText('API + Config');
     });

@@ -30,6 +30,7 @@ Web UI、IDEA 插件、浏览器插件共用的 JSON bridge contract 见：
 ## 环境要求
 
 - **JDK 21** 或更高版本（必需）
+- **Node.js 22** 或兼容版本（Web UI 与前端测试需要）
 
 ## 支持的 YAML 格式
 
@@ -134,7 +135,8 @@ mvn com.apicgen:api-codegen-maven-plugin:generate \
 
 - 读取 `yamlFile` 指向的 API 定义
 - 先做解析与校验，再生成统一 Controller 和对应的 Request / Response 类
-- 默认输出到 `${basedir}/src/main/java`
+- 默认输出根目录是 `${basedir}/src/main/java`，再拼接 controller / request / response 子路径
+- 当前默认子路径分别是 `generated/api/`、`src/main/java/req/`、`src/main/java/rsp/`
 
 ### Java 直接运行
 
@@ -247,6 +249,7 @@ mvn com.apicgen:api-codegen-maven-plugin:generate [参数]
 - 默认 `force=false`，如果目标文件已存在，插件会跳过写入
 - `force=true` 时，插件会先生成 `.bak` 备份，再覆盖原文件
 - `autoFix=true` 时会直接回写 YAML，不继续进入代码生成
+- Maven 插件默认不再隐式读取项目根目录的第二份配置文件
 
 ## 校验规则
 

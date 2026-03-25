@@ -130,11 +130,11 @@ async function main() {
       assert.ok(!html.includes('js/analyzer.js'), 'index.html 仍然引用 js/analyzer.js');
     });
 
-    await test('首页不应再暴露 codegen-config.yaml 双文件输入提示', async () => {
+    await test('首页不应再暴露双文件输入提示', async () => {
       const response = await fetch(`${BASE_URL}/`);
       const html = await response.text();
       assert.ok(response.ok, '首页请求失败');
-      assert.ok(!html.includes('codegen-config.yaml'), '首页仍然提示第二份配置文件');
+      assert.ok(!html.includes('第二份配置文件'), '首页仍然提示第二份配置文件');
       assert.ok(!html.includes('配置预览'), '首页仍然展示配置预览区域');
       assert.ok(!html.includes('API + Config'), '首页导航仍然暗示双文件输入');
     });

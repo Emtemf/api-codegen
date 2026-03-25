@@ -23,7 +23,6 @@ public class MavenPluginIntegrationTest {
 
     private static final String TEST_PROJECT_DIR = "D:/idea/workSpace/api-codegen/api-codegen-maven-plugin/target/test-project";
     private static final String YAML_FILE = TEST_PROJECT_DIR + "/api.yaml";
-    private static final String CONFIG_FILE = TEST_PROJECT_DIR + "/codegen-config.yaml";
 
     public static void main(String[] args) throws Exception {
         System.out.println("========================================");
@@ -34,8 +33,9 @@ public class MavenPluginIntegrationTest {
         createTestProject();
 
         // Step 2: 模拟插件执行
-        System.out.println("\n[Step 1] 加载配置...");
-        CodegenConfig config = loadConfig();
+        System.out.println("\n[Step 1] 使用默认配置 + 命令行参数...");
+        CodegenConfig config = createDefaultConfig();
+        config.setBasePackage("com.apicgen");
         System.out.println("  框架: " + config.getFramework());
         System.out.println("  基础包: " + config.getBasePackage());
         System.out.println("  Controller路径: " + config.getOutput().getController().getPath());
@@ -168,34 +168,11 @@ public class MavenPluginIntegrationTest {
             writer.write(yamlContent);
         }
 
-        // 创建配置文件
-        String configContent = "framework: CXF\n" +
-            "copyright:\n" +
-            "  company: \"\"\n" +
-            "  startYear: 2024\n" +
-            "openApi:\n" +
-            "  enabled: false\n" +
-            "output:\n" +
-            "  controller:\n" +
-            "    path: generated/api/\n" +
-            "  request:\n" +
-            "    path: src/main/java/req/\n" +
-            "  response:\n" +
-            "    path: src/main/java/rsp/\n";
-
-        try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
-            writer.write(configContent);
-        }
-
         System.out.println("测试项目创建完成: " + TEST_PROJECT_DIR);
     }
 
-    private static CodegenConfig loadConfig() throws IOException {
-        File configFileObj = new File(CONFIG_FILE);
-        com.fasterxml.jackson.databind.ObjectMapper yamlMapper =
-            new com.fasterxml.jackson.databind.ObjectMapper(
-                new com.fasterxml.jackson.dataformat.yaml.YAMLFactory());
-        return yamlMapper.readValue(configFileObj, CodegenConfig.class);
+    private static CodegenConfig createDefaultConfig() {
+        return new CodegenConfig();
     }
 
     private static void writeFile(CodegenConfig config, String type, String apiName,
