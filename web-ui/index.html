@@ -868,20 +868,24 @@
             min-width: 0;
             min-height: 0;
             border: 1px solid rgba(148, 163, 184, 0.22);
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.86);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.92);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 18px 40px rgba(148, 163, 184, 0.14);
         }
         .impact-detail-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 14px 16px 10px;
+            padding: 16px 18px 12px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.16);
             flex-shrink: 0;
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.08), transparent 42%),
+                linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
         }
         .impact-detail-title {
             font-size: 13px;
@@ -895,44 +899,179 @@
             line-height: 1.5;
         }
         .impact-detail-count {
-            padding: 5px 10px;
+            padding: 6px 11px;
             border-radius: 999px;
-            background: rgba(29, 78, 216, 0.08);
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(14, 165, 233, 0.12));
             color: #1d4ed8;
             font-size: 12px;
             font-weight: 800;
         }
-        .impact-detail-columns {
-            flex: 1;
-            min-height: 0;
+        .impact-compare-head {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             gap: 0;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            background: linear-gradient(180deg, #fbfdff 0%, #f2f7fd 100%);
         }
-        .impact-detail-column {
-            min-width: 0;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-            background: rgba(248, 250, 252, 0.7);
-        }
-        .impact-detail-column + .impact-detail-column {
-            border-left: 1px solid rgba(148, 163, 184, 0.18);
-        }
-        .impact-detail-head {
-            padding: 10px 14px;
-            font-size: 12px;
+        .impact-compare-side {
+            padding: 11px 16px;
+            font-size: 11px;
             font-weight: 800;
-            color: #334155;
-            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-            background: rgba(255, 255, 255, 0.72);
-            flex-shrink: 0;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #475569;
         }
-        .impact-detail-scroll {
+        .impact-compare-side.before {
+            color: #b42318;
+            background: rgba(254, 226, 226, 0.55);
+        }
+        .impact-compare-side.after {
+            color: #166534;
+            background: rgba(220, 252, 231, 0.72);
+            border-left: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        .impact-compare-scroll {
             flex: 1;
             min-height: 0;
             overflow: auto;
-            padding: 14px;
+            padding: 16px;
+            background:
+                linear-gradient(180deg, rgba(248, 250, 252, 0.95) 0%, rgba(239, 246, 255, 0.72) 100%);
+        }
+        .impact-pair-card {
+            margin-bottom: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 18px;
+            overflow: hidden;
+            background: #ffffff;
+            box-shadow: 0 10px 28px rgba(148, 163, 184, 0.12);
+        }
+        .impact-pair-card:last-child {
+            margin-bottom: 0;
+        }
+        .impact-pair-header {
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            background:
+                linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+        .impact-pair-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .impact-method-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 38px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+        .impact-method-badge.get { background: #2563eb; }
+        .impact-method-badge.post { background: #059669; }
+        .impact-method-badge.put { background: #d97706; }
+        .impact-method-badge.delete { background: #dc2626; }
+        .impact-method-badge.patch { background: #7c3aed; }
+        .impact-route-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #0f172a;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        }
+        .impact-artifact-name {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.06);
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .impact-pair-status {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(37, 99, 235, 0.08);
+            color: #1d4ed8;
+        }
+        .impact-pair-card.added .impact-pair-status {
+            background: rgba(34, 197, 94, 0.12);
+            color: #166534;
+        }
+        .impact-pair-card.deleted .impact-pair-status {
+            background: rgba(239, 68, 68, 0.12);
+            color: #b42318;
+        }
+        .impact-pair-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            min-width: 0;
+        }
+        .impact-pair-pane {
+            min-width: 0;
+            background: #ffffff;
+        }
+        .impact-pair-pane + .impact-pair-pane {
+            border-left: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        .impact-pair-pane.before {
+            background: linear-gradient(180deg, rgba(255, 248, 247, 0.98) 0%, rgba(255, 255, 255, 1) 100%);
+        }
+        .impact-pair-pane.after {
+            background: linear-gradient(180deg, rgba(245, 255, 248, 0.98) 0%, rgba(255, 255, 255, 1) 100%);
+        }
+        .impact-change-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px 14px 0;
+        }
+        .impact-change-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            line-height: 1.4;
+            font-weight: 700;
+        }
+        .impact-change-tag.before {
+            background: rgba(254, 226, 226, 0.85);
+            color: #b42318;
+            border: 1px solid rgba(248, 113, 113, 0.24);
+        }
+        .impact-change-tag.after {
+            background: rgba(220, 252, 231, 0.92);
+            color: #166534;
+            border: 1px solid rgba(34, 197, 94, 0.18);
+        }
+        .impact-change-tag.neutral {
+            background: rgba(226, 232, 240, 0.8);
+            color: #475569;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        .impact-empty-state {
+            margin: 14px;
+            padding: 22px 16px;
+            border: 1px dashed rgba(148, 163, 184, 0.28);
+            border-radius: 14px;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.7;
+            color: #64748b;
+            background: rgba(255, 255, 255, 0.72);
         }
 
         /* API 块配对 - 确保前后对齐 */
@@ -1920,7 +2059,7 @@
             background: rgba(15, 52, 96, 0.22);
             border: 1px solid rgba(125, 211, 252, 0.22);
         }
-        .impact-detail-scroll .diff-field-empty {
+        .impact-compare-scroll .diff-field-empty {
             min-height: 160px;
             display: flex;
             align-items: center;
@@ -1932,6 +2071,33 @@
             border: 1px dashed rgba(148, 163, 184, 0.22);
             border-radius: 12px;
             background: rgba(248, 250, 252, 0.72);
+        }
+        .impact-pair-header .diff-resource-summary {
+            margin-top: 12px;
+            margin-bottom: 0;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.9), rgba(248, 250, 252, 0.95));
+            border: 1px solid rgba(125, 211, 252, 0.28);
+        }
+        .impact-pair-header .diff-resource-label {
+            color: #0369a1;
+            min-width: 42px;
+        }
+        .impact-pair-header .diff-resource-chip {
+            color: #1e293b;
+            background: rgba(248, 250, 252, 0.92);
+            border-color: rgba(148, 163, 184, 0.22);
+        }
+        .impact-pair-header .diff-resource-chip.type-class {
+            background: rgba(220, 252, 231, 0.92);
+            border-color: rgba(34, 197, 94, 0.18);
+            color: #166534;
+        }
+        .impact-pair-header .diff-resource-chip.type-method {
+            background: rgba(219, 234, 254, 0.92);
+            border-color: rgba(37, 99, 235, 0.18);
+            color: #1d4ed8;
         }
         .diff-resource-row {
             display: flex;
@@ -1968,6 +2134,40 @@
             border-color: rgba(59, 130, 246, 0.35);
             color: #bfdbfe;
         }
+        .impact-pair-pane .diff-java-code {
+            margin: 0;
+            padding: 16px 18px 18px;
+            color: #0f172a;
+            font-size: 12.5px;
+            line-height: 1.68;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .impact-pair-pane .diff-java-code::-webkit-scrollbar,
+        .impact-compare-scroll::-webkit-scrollbar,
+        .impact-index-list::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .impact-pair-pane .diff-java-code::-webkit-scrollbar-track,
+        .impact-compare-scroll::-webkit-scrollbar-track,
+        .impact-index-list::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.88);
+        }
+        .impact-pair-pane .diff-java-code::-webkit-scrollbar-thumb,
+        .impact-compare-scroll::-webkit-scrollbar-thumb,
+        .impact-index-list::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.9);
+            border-radius: 999px;
+        }
+        .impact-pair-pane .diff-java-code .syntax-keyword { color: #b42318; }
+        .impact-pair-pane .diff-java-code .syntax-type { color: #1d4ed8; }
+        .impact-pair-pane .diff-java-code .syntax-field { color: #b45309; }
+        .impact-pair-pane .diff-java-code .syntax-string { color: #0f766e; }
+        .impact-pair-pane .diff-java-code .syntax-number { color: #4338ca; }
+        .impact-pair-pane .diff-java-code .syntax-comment { color: #64748b; font-style: italic; }
+        .impact-pair-pane .diff-java-code .syntax-method { color: #7c3aed; }
+        .impact-pair-pane .diff-java-code .syntax-annotation { color: #9333ea; }
 
         /* Workspace refresh */
         :root {
@@ -2889,6 +3089,15 @@
             gap: 10px;
             flex-wrap: wrap;
         }
+        .diff-actions .btn-secondary {
+            background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+            color: #1e3a5f;
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 8px 20px rgba(148, 163, 184, 0.14);
+        }
+        .diff-actions .btn-success {
+            box-shadow: 0 10px 24px rgba(34, 197, 94, 0.24);
+        }
 
         .diff-hint {
             gap: 10px;
@@ -3043,6 +3252,17 @@
             .impact-layout {
                 grid-template-columns: 1fr;
             }
+
+            .impact-compare-head,
+            .impact-pair-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .impact-compare-side.after,
+            .impact-pair-pane + .impact-pair-pane {
+                border-left: none;
+                border-top: 1px solid rgba(148, 163, 184, 0.16);
+            }
         }
     </style>
 </head>
@@ -3186,20 +3406,15 @@
                             <div class="impact-detail-header">
                                 <div>
                                     <div class="impact-detail-title">Controller 代码预览</div>
-                                    <div class="impact-detail-copy">左边是修复前推导结果，右边是修复后生成结果。</div>
+                                    <div class="impact-detail-copy">按接口逐条对照，只保留真正会影响生成代码的变化。</div>
                                 </div>
                                 <div class="impact-detail-count" id="diff-api-count">0</div>
                             </div>
-                            <div class="impact-detail-columns">
-                                <div class="impact-detail-column">
-                                    <div class="impact-detail-head">修复前 Controller</div>
-                                    <div class="impact-detail-scroll" id="diff-api-before"></div>
-                                </div>
-                                <div class="impact-detail-column">
-                                    <div class="impact-detail-head">修复后 Controller</div>
-                                    <div class="impact-detail-scroll" id="diff-api-after"></div>
-                                </div>
+                            <div class="impact-compare-head">
+                                <div class="impact-compare-side before">修复前生成结果</div>
+                                <div class="impact-compare-side after">修复后生成结果</div>
                             </div>
+                            <div class="impact-compare-scroll" id="diff-api-comparison"></div>
                         </div>
                     </div>
                 </section>
@@ -3217,20 +3432,15 @@
                             <div class="impact-detail-header">
                                 <div>
                                     <div class="impact-detail-title">实体代码预览</div>
-                                    <div class="impact-detail-copy">按类展示字段与校验注解的前后差异。</div>
+                                    <div class="impact-detail-copy">按字段对照缺失校验与新增注解，直接看 DTO / Model 会怎么变。</div>
                                 </div>
                                 <div class="impact-detail-count" id="diff-field-count">0</div>
                             </div>
-                            <div class="impact-detail-columns">
-                                <div class="impact-detail-column">
-                                    <div class="impact-detail-head">修复前实体</div>
-                                    <div class="impact-detail-scroll" id="diff-field-before"></div>
-                                </div>
-                                <div class="impact-detail-column">
-                                    <div class="impact-detail-head">修复后实体</div>
-                                    <div class="impact-detail-scroll" id="diff-field-after"></div>
-                                </div>
+                            <div class="impact-compare-head">
+                                <div class="impact-compare-side before">修复前生成结果</div>
+                                <div class="impact-compare-side after">修复后生成结果</div>
                             </div>
+                            <div class="impact-compare-scroll" id="diff-field-comparison"></div>
                         </div>
                     </div>
                 </section>
@@ -5846,25 +6056,32 @@ definitions:
          * 左边(修复前)显示原始代码，右边(修复后)显示修复后代码
          */
         function renderApiChanges(impact) {
-            var beforeContainer = document.getElementById('diff-api-before');
-            var afterContainer = document.getElementById('diff-api-after');
+            var comparisonContainer = document.getElementById('diff-api-comparison');
             var countEl = document.getElementById('diff-api-count');
 
             if (!impact || !impact.apis || impact.apis.length === 0) {
-                beforeContainer.innerHTML = '<div class="diff-field-empty">无接口变更</div>';
-                afterContainer.innerHTML = '<div class="diff-field-empty">无接口变更</div>';
+                comparisonContainer.innerHTML = '<div class="diff-field-empty">无接口变更</div>';
                 countEl.textContent = '0';
                 return;
             }
 
             var apis = impact.apis;
             countEl.textContent = apis.length;
-
-            // 分别构建修复前和修复后的API块
-            var beforeBlocksHtml = '';
-            var afterBlocksHtml = '';
+            var rowsHtml = '';
 
             apis.forEach(function(api, index) {
+                function toPascalCase(value) {
+                    var normalized = String(value || 'api')
+                        .replace(/[^a-zA-Z0-9]+(.)?/g, function(match, chr) {
+                            return chr ? chr.toUpperCase() : '';
+                        })
+                        .replace(/^[^a-zA-Z]+/, '');
+                    if (!normalized) {
+                        return 'Api';
+                    }
+                    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+                }
+
                 var method = (api.method || 'get').toUpperCase();
                 var fixedPath = api.path || '';
                 var originalPath = api.originalPath || api.path || '';
@@ -5881,100 +6098,62 @@ definitions:
                 var javaCode = generateJavaControllerCode(fixedPath, method, apiName, annotations, api.description, params);
                 var originalJavaCode = generateJavaControllerCode(originalPath, method, apiName, annotations, api.description, originalParams);
                 var resourceSummary = renderResourceAnnotationSummary(annotations);
+                var changeMessages = buildApiChangeMessages(api);
+                var artifactName = toPascalCase(apiName) + 'Controller.java';
 
                 // 方法颜色
-                var methodColor = method === 'GET' ? '#61affe' : method === 'POST' ? '#49cc90' : method === 'PUT' ? '#fca130' : method === 'DELETE' ? '#f93e3e' : '#9012fe';
+                var cardClass = api.type === 'added' ? 'added' : (api.type === 'deleted' ? 'deleted' : 'modified');
+                var statusText = api.type === 'added' ? '新增接口' : (api.type === 'deleted' ? '删除接口' : ((api.changes && api.changes.length) || 1) + ' 处变化');
 
-                // 构建变更摘要
-                var changesSummary = '';
-                if (api.changes && api.changes.length > 0) {
-                    var changeLines = [];
-                    api.changes.forEach(function(change) {
-                        if (change.prop === 'path') {
-                            changeLines.push('路径: ' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after));
-                        } else if (change.prop.startsWith('参数 ')) {
-                            var detail = change.prop.replace('参数 ', '');
-                            if (change.before === '(无)') {
-                                changeLines.push('+ ' + detail + ': ' + change.after);
-                            } else {
-                                changeLines.push(detail + ': ' + escapeHtml(change.before) + ' → ' + escapeHtml(change.after));
-                            }
-                        }
-                    });
-                    if (changeLines.length > 0) {
-                        changesSummary = '<div class="diff-api-changes">' + changeLines.join('<br>') + '</div>';
-                    }
-                }
+                var headerHtml = '<div class="impact-pair-header">' +
+                    '<div class="impact-pair-title">' +
+                        '<span class="impact-method-badge ' + method.toLowerCase() + '">' + method + '</span>' +
+                        '<span class="impact-route-label">' + escapeHtml(fixedPath) + '</span>' +
+                        '<span class="impact-artifact-name">' + escapeHtml(artifactName) + '</span>' +
+                        '<span class="impact-pair-status">' + escapeHtml(statusText) + '</span>' +
+                    '</div>' +
+                    resourceSummary +
+                '</div>';
 
-                // 块标题（公共部分）
-                var blockHeader = '<div class="diff-api-block-header">' +
-                    '<span class="diff-api-method" style="background:' + methodColor + '">' + method + '</span>' +
-                    '<span class="diff-api-path">' + escapeHtml(fixedPath) + '</span>' +
-                    '<span class="diff-api-type">' + (api.type === 'added' ? '(新增)' : api.type === 'deleted' ? '(删除)' : '(修改)') + '</span>' +
-                    '</div>';
-
+                var beforePane = '';
+                var afterPane = '';
                 if (api.type === 'added') {
-                    // 新增的接口 - 只在右边显示
-                    var afterBlock = '<div class="diff-api-block" id="after-api-block-' + index + '">' +
-                        blockHeader +
-                        '<div class="diff-api-block-content">' +
-                        '<div class="diff-api-block-after" style="flex:1">' +
-                        '<div class="diff-api-block-label" style="color:#2ed573">+ 新增</div>' +
-                        resourceSummary +
+                    beforePane = '<section class="impact-pair-pane before">' +
+                        renderImpactEmptyState('修复前不会生成这段 Controller 代码。') +
+                    '</section>';
+                    afterPane = '<section class="impact-pair-pane after">' +
+                        renderImpactChangeTags(changeMessages.after.length ? changeMessages.after : ['新增接口将进入生成结果'], 'after') +
                         '<pre class="diff-java-code">' + javaCode + '</pre>' +
-                        '</div>' +
-                        '</div></div>';
-                    afterBlocksHtml += afterBlock;
-                    // 左边为空或显示占位
-                    beforeBlocksHtml += '';
-
+                    '</section>';
                 } else if (api.type === 'deleted') {
-                    // 删除的接口 - 只在左边显示
-                    var beforeBlock = '<div class="diff-api-block" id="before-api-block-' + index + '">' +
-                        blockHeader +
-                        '<div class="diff-api-block-content">' +
-                        '<div class="diff-api-block-before" style="flex:1">' +
-                        '<div class="diff-api-block-label" style="color:#ff4757">- 删除</div>' +
-                        resourceSummary +
+                    beforePane = '<section class="impact-pair-pane before">' +
+                        renderImpactChangeTags(changeMessages.before.length ? changeMessages.before : ['原有接口会从生成结果中移除'], 'before') +
                         '<pre class="diff-java-code">' + originalJavaCode + '</pre>' +
-                        '</div>' +
-                        '</div></div>';
-                    beforeBlocksHtml += beforeBlock;
-                    // 右边为空
-                    afterBlocksHtml += '';
-
+                    '</section>';
+                    afterPane = '<section class="impact-pair-pane after">' +
+                        renderImpactEmptyState('修复后不会再生成这段 Controller 代码。') +
+                    '</section>';
                 } else {
-                    // 修改的接口 - 左边显示修复前，右边显示修复后
-                    var beforeBlock = '<div class="diff-api-block" id="before-api-block-' + index + '">' +
-                        blockHeader +
-                        '<div class="diff-api-block-content">' +
-                        '<div class="diff-api-block-before" style="flex:1">' +
-                        '<div class="diff-api-block-label" style="color:#ff4757">修改前</div>' +
-                        resourceSummary +
-                        changesSummary +
+                    beforePane = '<section class="impact-pair-pane before">' +
+                        renderImpactChangeTags(changeMessages.before.length ? changeMessages.before : ['修复前生成代码存在这些问题'], 'before') +
                         '<pre class="diff-java-code">' + originalJavaCode + '</pre>' +
-                        '</div>' +
-                        '</div></div>';
-
-                    var afterBlock = '<div class="diff-api-block" id="after-api-block-' + index + '">' +
-                        blockHeader +
-                        '<div class="diff-api-block-content">' +
-                        '<div class="diff-api-block-after" style="flex:1">' +
-                        '<div class="diff-api-block-label" style="color:#2ed573">修改后</div>' +
-                        resourceSummary +
-                        changesSummary +
+                    '</section>';
+                    afterPane = '<section class="impact-pair-pane after">' +
+                        renderImpactChangeTags(changeMessages.after.length ? changeMessages.after : ['修复后生成代码按这里输出'], 'after') +
                         '<pre class="diff-java-code">' + javaCode + '</pre>' +
-                        '</div>' +
-                        '</div></div>';
-
-                    beforeBlocksHtml += beforeBlock;
-                    afterBlocksHtml += afterBlock;
+                    '</section>';
                 }
+
+                rowsHtml += '<article class="impact-pair-card ' + cardClass + '" id="api-impact-row-' + index + '">' +
+                    headerHtml +
+                    '<div class="impact-pair-grid">' +
+                        beforePane +
+                        afterPane +
+                    '</div>' +
+                '</article>';
             });
 
-            // 渲染到两个面板 - 左边(修复前)，右边(修复后)
-            beforeContainer.innerHTML = beforeBlocksHtml;
-            afterContainer.innerHTML = afterBlocksHtml;
+            comparisonContainer.innerHTML = rowsHtml || '<div class="diff-field-empty">无接口变更</div>';
         }
 
         function normalizeAnnotationBundle(annotations) {
@@ -6460,6 +6639,45 @@ definitions:
             }).join('');
         }
 
+        function renderImpactChangeTags(messages, tone) {
+            if (!messages || messages.length === 0) {
+                return '';
+            }
+            return '<div class="impact-change-list">' + messages.map(function(message) {
+                return '<span class="impact-change-tag ' + tone + '">' + escapeHtml(message) + '</span>';
+            }).join('') + '</div>';
+        }
+
+        function renderImpactEmptyState(message) {
+            return '<div class="impact-empty-state">' + escapeHtml(message) + '</div>';
+        }
+
+        function buildApiChangeMessages(api) {
+            var result = { before: [], after: [] };
+            (api && api.changes ? api.changes : []).forEach(function(change) {
+                if (!change || typeof change !== 'object') {
+                    return;
+                }
+                if (change.prop === 'path') {
+                    result.before.push('路径待规范: ' + (change.before || ''));
+                    result.after.push('路径修正为: ' + (change.after || ''));
+                    return;
+                }
+                if (!change.prop || !change.prop.startsWith('参数 ')) {
+                    return;
+                }
+                var detail = change.prop.replace('参数 ', '').trim();
+                if (change.before === '(无)') {
+                    result.before.push(detail + ' 缺失');
+                    result.after.push(detail + ' -> ' + change.after);
+                } else {
+                    result.before.push(detail + ': ' + change.before);
+                    result.after.push(detail + ': ' + change.after);
+                }
+            });
+            return result;
+        }
+
         function renderImpactPreview(impact) {
             var artifactIndex = buildImpactArtifactIndex(impact || { apis: [], fields: [] });
             renderImpactSummary(artifactIndex);
@@ -6486,175 +6704,122 @@ definitions:
          * Render field-level changes with before/after comparison
          */
         function renderFieldChanges(impact) {
-            var beforeContainer = document.getElementById('diff-field-before');
-            var afterContainer = document.getElementById('diff-field-after');
+            var comparisonContainer = document.getElementById('diff-field-comparison');
             var countEl = document.getElementById('diff-field-count');
 
             if (!impact || !impact.fields || impact.fields.length === 0) {
-                beforeContainer.innerHTML = '<div class="diff-field-empty">无字段变更</div>';
-                afterContainer.innerHTML = '<div class="diff-field-empty">无字段变更</div>';
+                comparisonContainer.innerHTML = '<div class="diff-field-empty">无字段变更</div>';
                 countEl.textContent = '0';
                 return;
             }
 
             var fields = impact.fields;
             countEl.textContent = fields.length;
+            var rowsHtml = '';
 
-            // Group by class
-            var byClass = {};
-            fields.forEach(function(item) {
-                if (!byClass[item.className]) {
-                    byClass[item.className] = [];
-                }
-                byClass[item.className].push(item);
-            });
+            fields.forEach(function(item, index) {
+                var fieldType = item.fieldType || 'String';
+                var fieldName = item.field;
+                var changes = item.changes || [];
+                var addedAnnotations = [];
+                var beforeDetails = [];
+                var afterDetails = [];
+                var fieldChangesMap = {};
 
-            var beforeHtml = '';
-            var afterHtml = '';
-
-            for (var className in byClass) {
-                var classFields = byClass[className];
-
-                beforeHtml += '<div class="diff-field-class"><div class="diff-field-class-title">' + escapeHtml(className) + '.java</div>';
-                afterHtml += '<div class="diff-field-class"><div class="diff-field-class-title">' + escapeHtml(className) + '.java</div>';
-
-                classFields.forEach(function(item) {
-                    var fieldType = item.fieldType || 'String';
-                    var fieldName = item.field;
-                    var changes = item.changes || [];
-                    var changeType = item.type || 'modified';
-
-                    // Build detailed changes info - 分离before和after
-                    var addedAnnotations = [];
-                    var beforeDetails = [];  // 修复前缺失的校验
-                    var afterDetails = [];   // 修复后新增的校验
-
-                    // 先收集所有的变更，按字段分组
-                    if (changes.length > 0) {
-                        // 用于收集每个字段的变更
-                        var fieldChangesMap = {};
-                        var yamlFormatChange = false;
-
-                        changes.forEach(function(change) {
-                            if (change === 'YAML格式变化') {
-                                yamlFormatChange = true;
-                                addedAnnotations.push('@Valid');
-                                beforeDetails.push('缺失校验规则');
-                                afterDetails.push('新增 @Valid');
-                            } else if (typeof change === 'object' && change.before !== undefined) {
-                                if (change.prop === 'required') {
-                                    var requiredAnnot = fieldType === 'String' ? '@NotBlank' : '@NotNull';
-                                    beforeDetails.push('缺失必填校验');
-                                    afterDetails.push('新增 ' + requiredAnnot);
-                                    addedAnnotations.push(requiredAnnot);
-                                } else if (change.prop === 'format' && change.after === 'email') {
-                                    beforeDetails.push('缺失邮箱格式校验');
-                                    afterDetails.push('新增 @Email');
-                                    addedAnnotations.push('@Email');
-                                } else if (change.prop === 'pattern') {
-                                    // 检查是否已经有同字段的变更
-                                    var existingIdx = beforeDetails.findIndex(function(d) {
-                                        return d.includes('缺失正则校验');
-                                    });
-                                    if (existingIdx === -1) {
-                                        beforeDetails.push('缺失正则校验');
-                                        afterDetails.push('新增 @Pattern(regexp="' + escapeHtml(change.after || '') + '")');
-                                        addedAnnotations.push('@Pattern(regexp="' + (change.after || '') + '")');
-                                    }
-                                } else if (change.prop === 'minimum') {
-                                    // 收集minimum，后面合并
-                                    if (!fieldChangesMap['min']) fieldChangesMap['min'] = [];
-                                    fieldChangesMap['min'].push(change.after);
-                                } else if (change.prop === 'maximum') {
-                                    if (!fieldChangesMap['max']) fieldChangesMap['max'] = [];
-                                    fieldChangesMap['max'].push(change.after);
-                                } else if (change.prop === 'minLength') {
-                                    if (!fieldChangesMap['sizeMin']) fieldChangesMap['sizeMin'] = [];
-                                    fieldChangesMap['sizeMin'].push(change.after);
-                                } else if (change.prop === 'maxLength') {
-                                    if (!fieldChangesMap['sizeMax']) fieldChangesMap['sizeMax'] = [];
-                                    fieldChangesMap['sizeMax'].push(change.after);
-                                }
-                            } else if (typeof change === 'string' && change.startsWith('@')) {
-                                addedAnnotations.push(change);
+                changes.forEach(function(change) {
+                    if (change === 'YAML格式变化') {
+                        addedAnnotations.push('@Valid');
+                        beforeDetails.push('缺失校验规则');
+                        afterDetails.push('新增 @Valid');
+                    } else if (typeof change === 'object' && change.before !== undefined) {
+                        if (change.prop === 'required') {
+                            var requiredAnnot = fieldType === 'String' ? '@NotBlank' : '@NotNull';
+                            beforeDetails.push('缺失必填校验');
+                            afterDetails.push('新增 ' + requiredAnnot);
+                            addedAnnotations.push(requiredAnnot);
+                        } else if (change.prop === 'format' && change.after === 'email') {
+                            beforeDetails.push('缺失邮箱格式校验');
+                            afterDetails.push('新增 @Email');
+                            addedAnnotations.push('@Email');
+                        } else if (change.prop === 'pattern') {
+                            if (beforeDetails.indexOf('缺失正则校验') === -1) {
+                                beforeDetails.push('缺失正则校验');
+                                afterDetails.push('新增 @Pattern(regexp="' + (change.after || '') + '")');
+                                addedAnnotations.push('@Pattern(regexp="' + (change.after || '') + '")');
                             }
-                        });
-
-                        // 合并数值范围校验 @Min/@Max
-                        if (fieldChangesMap['min'] || fieldChangesMap['max']) {
-                            var minVals = fieldChangesMap['min'] || [0];
-                            var maxVals = fieldChangesMap['max'] || [];
-                            // 去重
-                            minVals = [...new Set(minVals)];
-                            maxVals = [...new Set(maxVals)];
-
-                            beforeDetails.push('缺失数值范围校验');
-                            var mmAnnots = [];
-                            minVals.forEach(function(m) {
-                                mmAnnots.push('@Min(' + m + ')');
-                            });
-                            maxVals.forEach(function(m) {
-                                mmAnnots.push('@Max(' + m + ')');
-                            });
-                            afterDetails.push('新增 ' + mmAnnots.join(' '));
-                            mmAnnots.forEach(function(a) { addedAnnotations.push(a); });
+                        } else if (change.prop === 'minimum') {
+                            if (!fieldChangesMap.min) fieldChangesMap.min = [];
+                            fieldChangesMap.min.push(change.after);
+                        } else if (change.prop === 'maximum') {
+                            if (!fieldChangesMap.max) fieldChangesMap.max = [];
+                            fieldChangesMap.max.push(change.after);
+                        } else if (change.prop === 'minLength') {
+                            if (!fieldChangesMap.sizeMin) fieldChangesMap.sizeMin = [];
+                            fieldChangesMap.sizeMin.push(change.after);
+                        } else if (change.prop === 'maxLength') {
+                            if (!fieldChangesMap.sizeMax) fieldChangesMap.sizeMax = [];
+                            fieldChangesMap.sizeMax.push(change.after);
                         }
-
-                        // 合并长度校验 @Size
-                        if (fieldChangesMap['sizeMin'] || fieldChangesMap['sizeMax']) {
-                            var sMinVals = fieldChangesMap['sizeMin'] || [];
-                            var sMaxVals = fieldChangesMap['sizeMax'] || [];
-                            sMinVals = [...new Set(sMinVals)];
-                            sMaxVals = [...new Set(sMaxVals)];
-
-                            beforeDetails.push('缺失长度范围校验');
-                            var sizeParts = [];
-                            var hasSizeMin = false;
-                            sMinVals.forEach(function(m) {
-                                if (m > 0) {
-                                    sizeParts.push('min=' + m);
-                                    hasSizeMin = true;
-                                }
-                            });
-                            sMaxVals.forEach(function(m) {
-                                sizeParts.push('max=' + m);
-                            });
-                            var sizeAnnot = '@Size(' + sizeParts.join(', ') + ')';
-                            afterDetails.push('新增 ' + sizeAnnot);
-                            addedAnnotations.push(sizeAnnot);
-                        }
+                    } else if (typeof change === 'string' && change.startsWith('@')) {
+                        addedAnnotations.push(change);
                     }
-
-                    // Deduplicate
-                    addedAnnotations = [...new Set(addedAnnotations)];
-
-                    // Generate field code for before/after
-                    var beforeCode = generateJavaFieldCode(fieldName, fieldType, [], {});
-                    var afterCode = generateJavaFieldCode(fieldName, fieldType, addedAnnotations, {});
-
-                    // Before: show field without annotations - 显示缺失的校验
-                    beforeHtml += '<div class="diff-field-row">';
-                    beforeHtml += '<pre class="diff-java-code">' + beforeCode + '</pre>';
-                    if (beforeDetails.length > 0) {
-                        beforeHtml += '<div class="diff-validation-details">' + beforeDetails.join('<br>') + '</div>';
-                    }
-                    beforeHtml += '</div>';
-
-                    // After: field with annotations added - 显示新增的校验
-                    afterHtml += '<div class="diff-field-row">';
-                    afterHtml += '<pre class="diff-java-code">' + afterCode + '</pre>';
-                    if (afterDetails.length > 0) {
-                        afterHtml += '<div class="diff-validation-details diff-validation-after">' + afterDetails.join('<br>') + '</div>';
-                    }
-                    afterHtml += '</div>';
                 });
 
-                beforeHtml += '</div>';
-                afterHtml += '</div>';
-            }
+                if (fieldChangesMap.min || fieldChangesMap.max) {
+                    var minVals = [...new Set(fieldChangesMap.min || [0])];
+                    var maxVals = [...new Set(fieldChangesMap.max || [])];
+                    beforeDetails.push('缺失数值范围校验');
+                    var rangeAnnotations = [];
+                    minVals.forEach(function(m) { rangeAnnotations.push('@Min(' + m + ')'); });
+                    maxVals.forEach(function(m) { rangeAnnotations.push('@Max(' + m + ')'); });
+                    afterDetails.push('新增 ' + rangeAnnotations.join(' '));
+                    rangeAnnotations.forEach(function(annotation) { addedAnnotations.push(annotation); });
+                }
 
-            beforeContainer.innerHTML = beforeHtml;
-            afterContainer.innerHTML = afterHtml;
+                if (fieldChangesMap.sizeMin || fieldChangesMap.sizeMax) {
+                    var sMinVals = [...new Set(fieldChangesMap.sizeMin || [])];
+                    var sMaxVals = [...new Set(fieldChangesMap.sizeMax || [])];
+                    beforeDetails.push('缺失长度范围校验');
+                    var sizeParts = [];
+                    sMinVals.forEach(function(m) {
+                        if (m > 0) {
+                            sizeParts.push('min=' + m);
+                        }
+                    });
+                    sMaxVals.forEach(function(m) {
+                        sizeParts.push('max=' + m);
+                    });
+                    var sizeAnnotation = '@Size(' + sizeParts.join(', ') + ')';
+                    afterDetails.push('新增 ' + sizeAnnotation);
+                    addedAnnotations.push(sizeAnnotation);
+                }
+
+                addedAnnotations = [...new Set(addedAnnotations)];
+
+                var beforeCode = generateJavaFieldCode(fieldName, fieldType, [], {});
+                var afterCode = generateJavaFieldCode(fieldName, fieldType, addedAnnotations, {});
+                var headerTitle = '<div class="impact-pair-title">' +
+                    '<span class="impact-artifact-name">' + escapeHtml((item.className || 'Model') + '.java') + '</span>' +
+                    '<span class="impact-route-label">' + escapeHtml(fieldName + ' : ' + fieldType) + '</span>' +
+                    '<span class="impact-pair-status">' + escapeHtml(String(changes.length || addedAnnotations.length || 1)) + ' 处变化</span>' +
+                    '</div>';
+
+                rowsHtml += '<article class="impact-pair-card modified" id="field-impact-row-' + index + '">' +
+                    '<div class="impact-pair-header">' + headerTitle + '</div>' +
+                    '<div class="impact-pair-grid">' +
+                        '<section class="impact-pair-pane before">' +
+                            renderImpactChangeTags(beforeDetails.length ? beforeDetails : ['当前生成代码缺少这些校验'], 'before') +
+                            '<pre class="diff-java-code">' + beforeCode + '</pre>' +
+                        '</section>' +
+                        '<section class="impact-pair-pane after">' +
+                            renderImpactChangeTags(afterDetails.length ? afterDetails : ['修复后生成结果保持不变'], 'after') +
+                            '<pre class="diff-java-code">' + afterCode + '</pre>' +
+                        '</section>' +
+                    '</div>' +
+                '</article>';
+            });
+
+            comparisonContainer.innerHTML = rowsHtml || '<div class="diff-field-empty">无字段变更</div>';
         }
 
         /**

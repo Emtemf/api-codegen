@@ -243,12 +243,23 @@ test.describe('Diff Feature Verification', () => {
       await page.getByRole('button', { name: 'Controller 影响' }).click();
       await expect(page.locator('#diff-panel-controller')).toBeVisible();
       await expect(page.locator('#diff-controller-index')).toContainText('Controller.java');
-      await expect(page.locator('#diff-api-after')).toContainText('Response');
+      await expect(page.locator('#diff-api-comparison')).toBeVisible();
+      await expect(page.locator('#diff-api-comparison .impact-pair-card')).toHaveCount(13);
+      await expect(page.locator('#diff-api-comparison')).toContainText('Response');
+      const controllerScrollState = await page.locator('#diff-api-comparison').evaluate(el => ({
+        overflowY: window.getComputedStyle(el).overflowY,
+        scrollHeight: el.scrollHeight,
+        clientHeight: el.clientHeight
+      }));
+      expect(controllerScrollState.overflowY === 'auto' || controllerScrollState.overflowY === 'scroll').toBe(true);
+      expect(controllerScrollState.scrollHeight).toBeGreaterThan(controllerScrollState.clientHeight);
 
       await page.getByRole('button', { name: '实体变化' }).click();
       await expect(page.locator('#diff-panel-model')).toBeVisible();
       await expect(page.locator('#diff-model-index')).toContainText('.java');
-      await expect(page.locator('#diff-field-after')).toContainText('@');
+      await expect(page.locator('#diff-field-comparison')).toBeVisible();
+      await expect(page.locator('#diff-field-comparison .impact-pair-card')).toHaveCount(6);
+      await expect(page.locator('#diff-field-comparison')).toContainText('@');
 
       await page.getByRole('button', { name: 'YAML 变更' }).click();
       await expect(page.locator('#diff-panel-yaml')).toBeVisible();
