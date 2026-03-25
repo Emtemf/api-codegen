@@ -88,6 +88,29 @@ function loadIsManualLocatableFromIndex() {
 
 const isManualLocatable = loadIsManualLocatableFromIndex();
 
+function loadComputePreviewDiffFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const computePreviewDiffSource = extractFunctionSource(indexHtml, 'computePreviewDiff');
+    const Diff = {
+        diffLines(before, after) {
+            if (before === after) {
+                return [{ value: before, added: false, removed: false }];
+            }
+            return [
+                { value: before, removed: true, added: false },
+                { value: after, added: true, removed: false }
+            ];
+        }
+    };
+
+    return eval(`(() => {
+        ${computePreviewDiffSource}
+        return computePreviewDiff;
+    })()`);
+}
+
+const computePreviewDiff = loadComputePreviewDiffFromIndex();
+
 function loadFindIssueLocationLineFromIndex() {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     const splitIssueApiRefSource = extractFunctionSource(indexHtml, 'splitIssueApiRef');
@@ -772,6 +795,34 @@ apis:
     return {
         pass: impact.apis.length === 0 && impact.fields.length === 0,
         message: `跨结构对比不应误报结构化变更，当前: ${impact.apis.length} 个 API, ${impact.fields.length} 个字段`
+    };
+});
+
+test('computePreviewDiff', '仅缩进差异不应视为可见变更', function() {
+    const before = `swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers`;
+
+    const after = `swagger: "2.0"
+info:
+ title: Test API
+ version: "1.0"
+paths:
+ /users:
+   get:
+     operationId: getUsers`;
+
+    const diff = computePreviewDiff(before, after);
+    const hasVisibleChange = diff.some(part => part.added || part.removed);
+
+    return {
+        pass: hasVisibleChange === false,
+        message: `仅缩进差异不应产生新增/删除片段，当前: ${JSON.stringify(diff)}`
     };
 });
 

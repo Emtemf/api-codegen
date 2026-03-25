@@ -5164,6 +5164,22 @@ definitions:
         }
 
         function computePreviewDiff(before, after) {
+            function normalizePreviewLine(line) {
+                return String(line || '').replace(/^\s+|\s+$/g, '');
+            }
+
+            function normalizePreviewContent(content) {
+                return String(content || '')
+                    .split('\n')
+                    .map(normalizePreviewLine)
+                    .join('\n')
+                    .trim();
+            }
+
+            if (normalizePreviewContent(before) === normalizePreviewContent(after)) {
+                return [{ value: before || '', added: false, removed: false }];
+            }
+
             if (typeof Diff === 'undefined' || typeof Diff.diffLines !== 'function') {
                 if ((before || '') === (after || '')) {
                     return [{ value: before || '', added: false, removed: false }];

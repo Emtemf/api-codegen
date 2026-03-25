@@ -10,9 +10,10 @@ test.describe('API Codegen Web UI - Critical Flows', () => {
       await appPage.goto();
       await appPage.waitForLoad();
 
-      // Verify key elements are visible
+      // Verify current header/actions layout instead of the hidden legacy nav
       await expect(appPage.logo).toContainText('API Codegen');
-      await expect(appPage.navButtons.first()).toBeVisible();
+      await expect(appPage.analyzeButton).toBeVisible();
+      await expect(appPage.loadExampleButton).toBeVisible();
     });
 
     test('should analyze valid YAML and show no errors', async ({ page }) => {

@@ -27,7 +27,7 @@ test.describe('Diff Count Bug - TDD', () => {
     await page.waitForTimeout(500);
 
     // Click "分析" button
-    await page.locator('button:has-text("分析")').click();
+    await page.getByRole('button', { name: '分析', exact: true }).click();
     await page.waitForTimeout(3000);
 
     // Click "自动修复" button
@@ -41,18 +41,18 @@ test.describe('Diff Count Bug - TDD', () => {
 
     console.log('Diff counts - Adds:', addsText, 'Removes:', removesText);
 
-    const thirdPartyWrapperCount = await page.locator('#diff-unified .d2h-wrapper').count();
-    const sideBySideCount = await page.locator('#diff-unified .d2h-file-side-diff').count();
+    const monacoRootCount = await page.locator('#diff-unified #diff-monaco-root').count();
+    const monacoDiffEditorCount = await page.locator('#diff-unified .monaco-diff-editor').count();
     const legacyPreviewCount = await page.locator('#diff-unified .diff-api-unified').count();
 
-    console.log('Third-party diff wrappers:', thirdPartyWrapperCount);
-    console.log('Side-by-side diff blocks:', sideBySideCount);
+    console.log('Monaco roots:', monacoRootCount);
+    console.log('Monaco diff editors:', monacoDiffEditorCount);
     console.log('Legacy preview blocks:', legacyPreviewCount);
 
     const hasNonZeroCount = addsText !== '0 处添加' || removesText !== '0 处删除';
 
-    expect(thirdPartyWrapperCount).toBe(1);
-    expect(sideBySideCount).toBeGreaterThan(0);
+    expect(monacoRootCount).toBe(1);
+    expect(monacoDiffEditorCount).toBeGreaterThan(0);
     expect(legacyPreviewCount).toBe(0);
     expect(hasNonZeroCount).toBe(true);
   });
@@ -80,7 +80,7 @@ test.describe('Diff Count Bug - TDD', () => {
     await page.waitForTimeout(500);
 
     // Click "分析" button
-    await page.locator('button:has-text("分析")').click();
+    await page.getByRole('button', { name: '分析', exact: true }).click();
     await page.waitForTimeout(3000);
 
     // Click "自动修复" button
@@ -88,26 +88,32 @@ test.describe('Diff Count Bug - TDD', () => {
     await autoFixButton.click();
     await page.waitForTimeout(3000);
 
-    // Check the container - now it's fullscreen, so it uses overflow:hidden
-    // and relies on the browser's scroll
-    const container = await page.locator('.diff-container');
+    // Check the compact modal container and the internal scroll area
+    const container = page.locator('.diff-container.diff-container-compact');
     const containerOverflow = await container.evaluate(el => {
       const style = window.getComputedStyle(el);
       return style.overflow;
     });
+    const diffContent = page.locator('.diff-unified-content');
+    const diffScrollState = await diffContent.evaluate(el => ({
+      overflowY: window.getComputedStyle(el).overflowY,
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight
+    }));
 
     console.log('Container overflow:', containerOverflow);
+    console.log('Diff content scroll state:', diffScrollState);
 
-    // Fullscreen modal uses hidden overflow, relying on browser scroll
-    // The key is that the modal is displayed and covers the viewport
-    const isFullscreen = await container.evaluate(el => {
+    const isCompactWithinViewport = await container.evaluate(el => {
       const rect = el.getBoundingClientRect();
-      return rect.width >= window.innerWidth && rect.height >= window.innerHeight;
+      return rect.width < window.innerWidth && rect.height < window.innerHeight;
     });
 
-    console.log('Is fullscreen:', isFullscreen);
+    console.log('Is compact within viewport:', isCompactWithinViewport);
 
-    // Should be fullscreen now
-    expect(isFullscreen).toBe(true);
+    expect(isCompactWithinViewport).toBe(true);
+    expect(containerOverflow).toBe('hidden');
+    expect(diffScrollState.overflowY === 'auto' || diffScrollState.overflowY === 'scroll').toBe(true);
+    expect(diffScrollState.scrollHeight).toBeGreaterThanOrEqual(diffScrollState.clientHeight);
   });
 });
