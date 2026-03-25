@@ -204,10 +204,7 @@ paths:
           description: OK
 ```
 
-上面这两份 YAML，我实际用 Maven 插件分别跑过，生成出来的 Controller 内容一致。
-下面是实际生成结果，不是示意代码。
-
-示例命令：
+生成命令示例：
 
 ```bash
 mvn com.apicgen:api-codegen-maven-plugin:generate \
@@ -216,33 +213,13 @@ mvn com.apicgen:api-codegen-maven-plugin:generate \
   -DoutputDir=./out
 ```
 
-实际生成文件：
+实际输出路径：
 
 - `./out/generated/api/com/example/user/api/UserApi.java`
 - `./out/src/main/java/rsp/com/example/user/rsp/Response.java`
 
-`UserApi.java` 实际内容片段：
-
-```java
-/**
- * 此文件由 api-codegen 自动生成，请勿手动修改
- */
-@Path("/api")
-@Secured
-@AuditLog(action='USER_QUERY')
-public class UserApi {
-
-    @Permission('user:create')
-    @AuditLog(action='CREATE_USER')
-    @POST
-    @Path("/users")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response create() {
-        return null;
-    }
-}
-```
+输入与实际生成结果：
+![Annotation Generation Output](docs/images/11-annotation-generation-output.png)
 
 > 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
 

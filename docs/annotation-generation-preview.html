@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annotation Generation Preview</title>
+    <style>
+        :root {
+            --bg: #f5efe4;
+            --ink: #1f2937;
+            --muted: #6b7280;
+            --panel: rgba(255, 255, 255, 0.88);
+            --panel-strong: rgba(255, 255, 255, 0.96);
+            --line: rgba(148, 163, 184, 0.28);
+            --swagger: #b45309;
+            --openapi: #1d4ed8;
+            --java: #166534;
+            --shadow: 0 24px 60px rgba(59, 44, 24, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(245, 158, 11, 0.18), transparent 32%),
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 28%),
+                linear-gradient(180deg, #fbf7ef 0%, var(--bg) 100%);
+        }
+
+        .sheet {
+            width: 1600px;
+            min-height: 980px;
+            margin: 0 auto;
+            padding: 52px 56px 44px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sheet::before,
+        .sheet::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            filter: blur(28px);
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .sheet::before {
+            width: 240px;
+            height: 240px;
+            background: rgba(245, 158, 11, 0.18);
+            top: -72px;
+            left: -36px;
+        }
+
+        .sheet::after {
+            width: 280px;
+            height: 280px;
+            background: rgba(37, 99, 235, 0.14);
+            top: 42px;
+            right: -80px;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            font-size: 12px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #92400e;
+        }
+
+        h1 {
+            margin: 18px 0 12px;
+            font-size: 54px;
+            line-height: 1.04;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+        }
+
+        .subtitle {
+            max-width: 980px;
+            font-size: 18px;
+            line-height: 1.7;
+            color: #475569;
+        }
+
+        .flow {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 26px 0 26px;
+            color: #7c2d12;
+            font-size: 15px;
+            letter-spacing: 0.02em;
+        }
+
+        .flow-arrow {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            color: #475569;
+            font-size: 18px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.18fr;
+            gap: 18px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, 0.72);
+            border-radius: 26px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 20px 14px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+            border-bottom: 1px solid var(--line);
+        }
+
+        .panel-title {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .panel-title strong {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .panel-title small {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 94px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .badge.swagger {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--swagger);
+        }
+
+        .badge.openapi {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--openapi);
+        }
+
+        .badge.java {
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--java);
+        }
+
+        pre {
+            margin: 0;
+            padding: 18px 20px 22px;
+            background: var(--panel-strong);
+            color: #0f172a;
+            font-family: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, monospace;
+            font-size: 13.5px;
+            line-height: 1.68;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .panel.output pre {
+            font-size: 13px;
+            line-height: 1.62;
+        }
+
+        .footer-note {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-top: 22px;
+        }
+
+        .note {
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 18px;
+            padding: 18px 20px;
+            box-shadow: 0 18px 40px rgba(71, 85, 105, 0.08);
+        }
+
+        .note strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .note code {
+            font-family: "JetBrains Mono", "Fira Code", monospace;
+            font-size: 13px;
+            color: #0f172a;
+        }
+
+        .note p {
+            margin: 0;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+    <main class="sheet">
+        <div class="eyebrow">Annotation Mapping Snapshot</div>
+        <h1>同一个注解扩展字段，在 Swagger 2.0 与 OpenAPI 3.0 中写法一致，生成结果也保持一致。</h1>
+        <p class="subtitle">
+            这张图用于 README 说明单文件输入场景。左侧和中间是两种 YAML 入口，右侧是 Maven 插件实际生成的
+            <code>UserApi.java</code> 片段与真实输出目录。
+        </p>
+
+        <div class="flow">
+            <span>单文件 YAML 输入</span>
+            <span class="flow-arrow">→</span>
+            <span>Maven 插件生成</span>
+            <span class="flow-arrow">→</span>
+            <span>统一 Controller 输出</span>
+        </div>
+
+        <section class="grid">
+            <article class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <strong>Swagger 2.0</strong>
+                        <small>path 级类注解 + operation 级方法注解</small>
+                    </div>
+                    <span class="badge swagger">Swagger</span>
+                </div>
+                <pre>swagger: "2.0"
+info:
+  title: User API
+  version: "1.0"
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@Secured"
+      - "@AuditLog(action='USER_QUERY')"
+    post:
+      operationId: createUser
+      x-java-method-annotations:
+        - "@Permission('user:create')"
+        - "@AuditLog(action='CREATE_USER')"
+      responses:
+        "200":
+          description: OK</pre>
+            </article>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <strong>OpenAPI 3.0</strong>
+                        <small>同样使用 x-java-class / method annotations</small>
+                    </div>
+                    <span class="badge openapi">OpenAPI</span>
+                </div>
+                <pre>openapi: 3.0.1
+info:
+  title: User API
+  version: "1.0"
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@Secured"
+      - "@AuditLog(action='USER_QUERY')"
+    post:
+      operationId: createUser
+      x-java-method-annotations:
+        - "@Permission('user:create')"
+        - "@AuditLog(action='CREATE_USER')"
+      responses:
+        "200":
+          description: OK</pre>
+            </article>
+
+            <article class="panel output">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <strong>实际生成结果</strong>
+                        <small>Maven 插件输出的真实 <code>UserApi.java</code> 片段</small>
+                    </div>
+                    <span class="badge java">Generated</span>
+                </div>
+                <pre>/**
+ * 此文件由 api-codegen 自动生成，请勿手动修改
+ */
+package com.example.user.api;
+
+import javax.ws.rs.*;
+import javax.validation.Valid;
+import com.example.user.rsp.Response;
+
+@Path("/api")
+@Secured
+@AuditLog(action='USER_QUERY')
+public class UserApi {
+
+    @Permission('user:create')
+    @AuditLog(action='CREATE_USER')
+    @POST
+    @Path("/users")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response create() {
+        return null;
+    }
+}</pre>
+            </article>
+        </section>
+
+        <section class="footer-note">
+            <div class="note">
+                <strong>真实输出目录</strong>
+                <p><code>./out/generated/api/com/example/user/api/UserApi.java</code></p>
+                <p><code>./out/src/main/java/rsp/com/example/user/rsp/Response.java</code></p>
+            </div>
+            <div class="note">
+                <strong>说明</strong>
+                <p>README 里不再写“我实际跑过”的口语证明，直接展示输入与生成结果的对应截图。</p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
