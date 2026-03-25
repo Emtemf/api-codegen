@@ -235,6 +235,23 @@ test.describe('Diff Feature Verification', () => {
         && monacoApi.modifiedVersionX !== null
         && monacoApi.originalVersionX > monacoApi.originalInfoX
         && monacoApi.modifiedVersionX > monacoApi.modifiedInfoX;
+
+      await expect(page.getByRole('button', { name: 'YAML 变更' })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Controller 影响' })).toBeVisible();
+      await expect(page.getByRole('button', { name: '实体变化' })).toBeVisible();
+
+      await page.getByRole('button', { name: 'Controller 影响' }).click();
+      await expect(page.locator('#diff-panel-controller')).toBeVisible();
+      await expect(page.locator('#diff-controller-index')).toContainText('Controller.java');
+      await expect(page.locator('#diff-api-after')).toContainText('Response');
+
+      await page.getByRole('button', { name: '实体变化' }).click();
+      await expect(page.locator('#diff-panel-model')).toBeVisible();
+      await expect(page.locator('#diff-model-index')).toContainText('.java');
+      await expect(page.locator('#diff-field-after')).toContainText('@');
+
+      await page.getByRole('button', { name: 'YAML 变更' }).click();
+      await expect(page.locator('#diff-panel-yaml')).toBeVisible();
     }
 
     // Report

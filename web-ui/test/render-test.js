@@ -111,6 +111,18 @@ function loadComputePreviewDiffFromIndex() {
 
 const computePreviewDiff = loadComputePreviewDiffFromIndex();
 
+function loadBuildImpactArtifactIndexFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const buildImpactArtifactIndexSource = extractFunctionSource(indexHtml, 'buildImpactArtifactIndex');
+
+    return eval(`(() => {
+        ${buildImpactArtifactIndexSource}
+        return buildImpactArtifactIndex;
+    })()`);
+}
+
+const buildImpactArtifactIndex = loadBuildImpactArtifactIndexFromIndex();
+
 function loadFindIssueLocationLineFromIndex() {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     const splitIssueApiRefSource = extractFunctionSource(indexHtml, 'splitIssueApiRef');
@@ -823,6 +835,55 @@ paths:
     return {
         pass: hasVisibleChange === false,
         message: `仅缩进差异不应产生新增/删除片段，当前: ${JSON.stringify(diff)}`
+    };
+});
+
+test('buildImpactArtifactIndex', '应汇总 Controller 与实体产物变化索引', function() {
+    const impact = {
+        apis: [
+            {
+                name: 'getUser',
+                path: '/users/{id}',
+                method: 'get',
+                changes: [{ prop: '参数 id minimum', before: '(无)', after: 1 }]
+            },
+            {
+                name: 'createUser',
+                path: '/users',
+                method: 'post',
+                changes: [{ prop: 'requestBody.username minLength', before: '(无)', after: 1 }]
+            }
+        ],
+        fields: [
+            {
+                className: 'CreateUserReq',
+                field: 'username',
+                changes: [{ prop: 'minLength', before: '(无)', after: 1 }]
+            },
+            {
+                className: 'CreateUserReq',
+                field: 'email',
+                changes: [{ prop: 'format', before: '(无)', after: 'email' }]
+            },
+            {
+                className: 'UserModel',
+                field: 'phone',
+                changes: [{ prop: 'pattern', before: '(无)', after: '^1[3-9]\\\\d{9}$' }]
+            }
+        ]
+    };
+
+    const index = buildImpactArtifactIndex(impact);
+
+    return {
+        pass: index.controllerCount === 2 &&
+            index.modelClassCount === 2 &&
+            Array.isArray(index.controllers) &&
+            index.controllers[0].fileName === 'GetUserController.java' &&
+            Array.isArray(index.models) &&
+            index.models.some(item => item.fileName === 'CreateUserReq.java' && item.changeCount === 2) &&
+            index.models.some(item => item.fileName === 'UserModel.java' && item.changeCount === 1),
+        message: JSON.stringify(index)
     };
 });
 

@@ -652,6 +652,94 @@
             background: #f8fafc;
         }
 
+        .diff-preview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 16px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.24);
+            flex-shrink: 0;
+        }
+        .diff-preview-tabs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .diff-preview-tab {
+            border: 1px solid rgba(148, 163, 184, 0.26);
+            background: rgba(255, 255, 255, 0.72);
+            color: #475569;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .diff-preview-tab:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            color: #0f172a;
+            background: #ffffff;
+        }
+        .diff-preview-tab.active {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            border-color: rgba(15, 23, 42, 0.9);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+        }
+        .diff-preview-tab-count {
+            min-width: 22px;
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.18);
+            font-size: 11px;
+            line-height: 1.4;
+            text-align: center;
+        }
+        .diff-preview-tab.active .diff-preview-tab-count {
+            background: rgba(255, 255, 255, 0.14);
+            color: #e2e8f0;
+        }
+        .diff-impact-summary {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .diff-impact-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .diff-impact-pill strong {
+            color: #1d4ed8;
+            font-size: 12px;
+        }
+        .diff-preview-panel {
+            display: none;
+            flex: 1;
+            min-height: 0;
+        }
+        .diff-preview-panel.active {
+            display: flex;
+            flex-direction: column;
+        }
+
         /* 统一 Diff 面板 */
         .diff-unified-panel {
             flex: 1;
@@ -690,6 +778,161 @@
         .diff-unified-content::-webkit-scrollbar-thumb {
             background: #94a3b8;
             border-radius: 4px;
+        }
+        .impact-layout {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+            gap: 14px;
+            padding: 14px 16px 16px;
+            background: linear-gradient(180deg, #f8fafc 0%, #edf3fb 100%);
+        }
+        .impact-index {
+            min-height: 0;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.86);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .impact-index-header {
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+        }
+        .impact-index-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .impact-index-copy {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        .impact-index-list {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .impact-index-item {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 14px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            padding: 12px 12px 10px;
+        }
+        .impact-index-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            word-break: break-word;
+        }
+        .impact-index-meta {
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .impact-index-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.1);
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .impact-index-kind {
+            background: rgba(15, 23, 42, 0.06);
+            color: #475569;
+        }
+        .impact-index-empty {
+            margin: auto;
+            padding: 16px;
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .impact-detail {
+            min-width: 0;
+            min-height: 0;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.86);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .impact-detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            flex-shrink: 0;
+        }
+        .impact-detail-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .impact-detail-copy {
+            margin-top: 4px;
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+        .impact-detail-count {
+            padding: 5px 10px;
+            border-radius: 999px;
+            background: rgba(29, 78, 216, 0.08);
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .impact-detail-columns {
+            flex: 1;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0;
+        }
+        .impact-detail-column {
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: rgba(248, 250, 252, 0.7);
+        }
+        .impact-detail-column + .impact-detail-column {
+            border-left: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        .impact-detail-head {
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 800;
+            color: #334155;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(255, 255, 255, 0.72);
+            flex-shrink: 0;
+        }
+        .impact-detail-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 14px;
         }
 
         /* API 块配对 - 确保前后对齐 */
@@ -1676,6 +1919,19 @@
             border-radius: 8px;
             background: rgba(15, 52, 96, 0.22);
             border: 1px solid rgba(125, 211, 252, 0.22);
+        }
+        .impact-detail-scroll .diff-field-empty {
+            min-height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.6;
+            border: 1px dashed rgba(148, 163, 184, 0.22);
+            border-radius: 12px;
+            background: rgba(248, 250, 252, 0.72);
         }
         .diff-resource-row {
             display: flex;
@@ -2769,6 +3025,12 @@
                 padding-right: 14px;
             }
 
+            .diff-preview-toolbar,
+            .impact-layout {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+
             .diff-footer {
                 flex-direction: column;
                 align-items: stretch;
@@ -2776,6 +3038,10 @@
 
             .diff-actions {
                 justify-content: flex-end;
+            }
+
+            .impact-layout {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -2875,18 +3141,99 @@
                 <button class="btn btn-secondary" onclick="closeDiffModal()">关闭</button>
             </div>
             <div class="diff-body">
-                <!-- 统一 Diff 视图 -->
+                <div class="diff-preview-toolbar">
+                    <div class="diff-preview-tabs">
+                        <button class="diff-preview-tab active" id="diff-tab-yaml" type="button" onclick="activateDiffPreviewTab('yaml')">
+                            <span>YAML 变更</span>
+                            <span class="diff-preview-tab-count" id="diff-tab-yaml-count">0</span>
+                        </button>
+                        <button class="diff-preview-tab" id="diff-tab-controller" type="button" onclick="activateDiffPreviewTab('controller')">
+                            <span>Controller 影响</span>
+                            <span class="diff-preview-tab-count" id="diff-tab-controller-count">0</span>
+                        </button>
+                        <button class="diff-preview-tab" id="diff-tab-model" type="button" onclick="activateDiffPreviewTab('model')">
+                            <span>实体变化</span>
+                            <span class="diff-preview-tab-count" id="diff-tab-model-count">0</span>
+                        </button>
+                    </div>
+                    <div class="diff-impact-summary" id="diff-impact-summary"></div>
+                </div>
+
+                <section class="diff-preview-panel active" id="diff-panel-yaml">
                     <div class="diff-unified-panel">
                         <div class="diff-unified-header">
-                        <div class="diff-unified-heading">
-                            <span class="diff-panel-badge before">原始 YAML</span>
-                            <span class="diff-panel-arrow">→</span>
-                            <span class="diff-panel-badge after">回写结果</span>
+                            <div class="diff-unified-heading">
+                                <span class="diff-panel-badge before">原始 YAML</span>
+                                <span class="diff-panel-arrow">→</span>
+                                <span class="diff-panel-badge after">回写结果</span>
+                            </div>
+                            <span class="diff-unified-helper">基于 core 返回结果生成的结构化预览</span>
                         </div>
-                        <span class="diff-unified-helper">基于 core 返回结果生成的结构化预览</span>
+                        <div class="diff-unified-content" id="diff-unified"></div>
+                    </div>
+                </section>
+
+                <section class="diff-preview-panel" id="diff-panel-controller">
+                    <div class="impact-layout">
+                        <aside class="impact-index">
+                            <div class="impact-index-header">
+                                <div class="impact-index-title">Controller 产物</div>
+                                <div class="impact-index-copy">先看有哪些接口方法会改变，再进代码对比。</div>
+                            </div>
+                            <div class="impact-index-list" id="diff-controller-index"></div>
+                        </aside>
+                        <div class="impact-detail">
+                            <div class="impact-detail-header">
+                                <div>
+                                    <div class="impact-detail-title">Controller 代码预览</div>
+                                    <div class="impact-detail-copy">左边是修复前推导结果，右边是修复后生成结果。</div>
+                                </div>
+                                <div class="impact-detail-count" id="diff-api-count">0</div>
+                            </div>
+                            <div class="impact-detail-columns">
+                                <div class="impact-detail-column">
+                                    <div class="impact-detail-head">修复前 Controller</div>
+                                    <div class="impact-detail-scroll" id="diff-api-before"></div>
+                                </div>
+                                <div class="impact-detail-column">
+                                    <div class="impact-detail-head">修复后 Controller</div>
+                                    <div class="impact-detail-scroll" id="diff-api-after"></div>
+                                </div>
+                            </div>
                         </div>
-                    <div class="diff-unified-content" id="diff-unified"></div>
-                </div>
+                    </div>
+                </section>
+
+                <section class="diff-preview-panel" id="diff-panel-model">
+                    <div class="impact-layout">
+                        <aside class="impact-index">
+                            <div class="impact-index-header">
+                                <div class="impact-index-title">实体 / DTO 产物</div>
+                                <div class="impact-index-copy">按类归并字段与注解变化，直接看 Request / Response / Model 影响。</div>
+                            </div>
+                            <div class="impact-index-list" id="diff-model-index"></div>
+                        </aside>
+                        <div class="impact-detail">
+                            <div class="impact-detail-header">
+                                <div>
+                                    <div class="impact-detail-title">实体代码预览</div>
+                                    <div class="impact-detail-copy">按类展示字段与校验注解的前后差异。</div>
+                                </div>
+                                <div class="impact-detail-count" id="diff-field-count">0</div>
+                            </div>
+                            <div class="impact-detail-columns">
+                                <div class="impact-detail-column">
+                                    <div class="impact-detail-head">修复前实体</div>
+                                    <div class="impact-detail-scroll" id="diff-field-before"></div>
+                                </div>
+                                <div class="impact-detail-column">
+                                    <div class="impact-detail-head">修复后实体</div>
+                                    <div class="impact-detail-scroll" id="diff-field-after"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
             </div>
             <div class="diff-footer">
                 <div class="diff-hint">
@@ -5074,6 +5421,7 @@ definitions:
             try {
                 var diffHost = document.getElementById('diff-unified');
                 var diffStats = computePreviewDiff(before || '', after || '');
+                var impact = computeImpact(before || '', after || '');
                 var addCount = 0;
                 var removeCount = 0;
                 var hasVisibleChanges = false;
@@ -5092,6 +5440,8 @@ definitions:
 
                 window.pendingFixedContent = after;
                 document.getElementById('diff-modal').classList.add('active');
+                activateDiffPreviewTab('yaml');
+                renderImpactPreview(impact);
                 await waitForNextFrame();
 
                 if (!hasVisibleChanges) {
@@ -5999,6 +6349,137 @@ definitions:
             }).replace(/^\w/, function(c) {
                 return c.toLowerCase();
             });
+        }
+
+        function activateDiffPreviewTab(tabName) {
+            ['yaml', 'controller', 'model'].forEach(function(candidate) {
+                var button = document.getElementById('diff-tab-' + candidate);
+                var panel = document.getElementById('diff-panel-' + candidate);
+                var active = candidate === tabName;
+                if (button) {
+                    button.classList.toggle('active', active);
+                }
+                if (panel) {
+                    panel.classList.toggle('active', active);
+                }
+            });
+        }
+
+        function buildImpactArtifactIndex(impact) {
+            function toPascalCase(value) {
+                var normalized = String(value || 'api')
+                    .replace(/[^a-zA-Z0-9]+(.)?/g, function(match, chr) {
+                        return chr ? chr.toUpperCase() : '';
+                    })
+                    .replace(/^[^a-zA-Z]+/, '');
+                if (!normalized) {
+                    return 'Api';
+                }
+                return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+            }
+
+            function inferEntityKind(className) {
+                if (/Req(uest)?$/i.test(className)) return 'Request';
+                if (/Rsp(onse)?$/i.test(className)) return 'Response';
+                return 'Model';
+            }
+
+            var controllers = (impact && impact.apis ? impact.apis : []).map(function(api) {
+                var baseName = toPascalCase(api && (api.name || api.operationId || api.summary || api.path || 'Api'));
+                return {
+                    id: 'controller-' + baseName,
+                    fileName: baseName + 'Controller.java',
+                    changeCount: (api && api.changes ? api.changes.length : 0) || 1,
+                    label: (api && api.method ? String(api.method).toUpperCase() : 'GET') + ' ' + (api && api.path ? api.path : ''),
+                    kind: 'Controller'
+                };
+            });
+
+            var modelMap = {};
+            (impact && impact.fields ? impact.fields : []).forEach(function(field) {
+                var className = field && field.className ? field.className : 'Model';
+                if (!modelMap[className]) {
+                    modelMap[className] = {
+                        id: 'model-' + className,
+                        fileName: className + '.java',
+                        changeCount: 0,
+                        fieldCount: 0,
+                        label: inferEntityKind(className),
+                        kind: inferEntityKind(className)
+                    };
+                }
+                modelMap[className].fieldCount += 1;
+                modelMap[className].changeCount += (field && field.changes ? field.changes.length : 0) || 1;
+            });
+
+            var models = Object.keys(modelMap).map(function(key) {
+                return modelMap[key];
+            }).sort(function(a, b) {
+                return a.fileName.localeCompare(b.fileName);
+            });
+
+            return {
+                controllerCount: controllers.length,
+                modelClassCount: models.length,
+                fieldChangeCount: (impact && impact.fields ? impact.fields.length : 0),
+                controllers: controllers,
+                models: models
+            };
+        }
+
+        function renderImpactSummary(index) {
+            var summaryEl = document.getElementById('diff-impact-summary');
+            if (!summaryEl) {
+                return;
+            }
+            index = index || { controllerCount: 0, modelClassCount: 0, fieldChangeCount: 0 };
+            summaryEl.innerHTML =
+                '<span class="diff-impact-pill"><strong>' + index.controllerCount + '</strong><span>个 Controller 受影响</span></span>' +
+                '<span class="diff-impact-pill"><strong>' + index.modelClassCount + '</strong><span>个实体类受影响</span></span>' +
+                '<span class="diff-impact-pill"><strong>' + index.fieldChangeCount + '</strong><span>处字段/注解变化</span></span>';
+        }
+
+        function renderImpactArtifactList(containerId, items, emptyText) {
+            var container = document.getElementById(containerId);
+            if (!container) {
+                return;
+            }
+            if (!items || items.length === 0) {
+                container.innerHTML = '<div class="impact-index-empty">' + escapeHtml(emptyText) + '</div>';
+                return;
+            }
+            container.innerHTML = items.map(function(item) {
+                return '<div class="impact-index-item">' +
+                    '<div class="impact-index-name">' + escapeHtml(item.fileName || '') + '</div>' +
+                    '<div class="impact-index-meta">' +
+                        '<span class="impact-index-badge">' + escapeHtml(String(item.changeCount || 0)) + ' 处变化</span>' +
+                        '<span class="impact-index-badge impact-index-kind">' + escapeHtml(item.kind || '') + '</span>' +
+                    '</div>' +
+                    (item.label ? '<div class="impact-index-copy">' + escapeHtml(item.label) + '</div>' : '') +
+                    '</div>';
+            }).join('');
+        }
+
+        function renderImpactPreview(impact) {
+            var artifactIndex = buildImpactArtifactIndex(impact || { apis: [], fields: [] });
+            renderImpactSummary(artifactIndex);
+            renderImpactArtifactList('diff-controller-index', artifactIndex.controllers, '这次修复不会改变 Controller 生成结果。');
+            renderImpactArtifactList('diff-model-index', artifactIndex.models, '这次修复不会改变实体 / DTO 生成结果。');
+            renderApiChanges(impact || { apis: [], fields: [] });
+            renderFieldChanges(impact || { apis: [], fields: [] });
+
+            var yamlTabCount = document.getElementById('diff-tab-yaml-count');
+            var controllerTabCount = document.getElementById('diff-tab-controller-count');
+            var modelTabCount = document.getElementById('diff-tab-model-count');
+            if (yamlTabCount) {
+                yamlTabCount.textContent = String((window.currentFixStats && window.currentFixStats.paramsFixed) || 0);
+            }
+            if (controllerTabCount) {
+                controllerTabCount.textContent = String(artifactIndex.controllerCount || 0);
+            }
+            if (modelTabCount) {
+                modelTabCount.textContent = String(artifactIndex.modelClassCount || 0);
+            }
         }
 
         /**
@@ -7012,6 +7493,7 @@ definitions:
             document.getElementById('diff-modal').classList.remove('active');
             window.pendingFixedContent = null;
             disposeDiffPreviewEditor();
+            activateDiffPreviewTab('yaml');
         }
 
         /**

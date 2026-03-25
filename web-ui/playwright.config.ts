@@ -5,10 +5,13 @@ const BASE_URL = `http://localhost:${DEFAULT_PORT}`;
 
 export default defineConfig({
   testDir: './e2e',
+  timeout: 60000,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // The local suite drives Monaco + YAML examples heavily; capping workers keeps
+  // the browser/server pair stable and avoids timeout-only flakes.
+  workers: process.env.CI ? 1 : 2,
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
     ['list']
