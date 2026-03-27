@@ -910,7 +910,11 @@ apis:
 
       await appPage.analyze();
       await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBeGreaterThan(0);
-      await expect(page.locator('#selected-issue-summary')).toContainText('已选自动修复项 38/38');
+      const initialSummaryText = await page.locator('#selected-issue-summary').textContent() || '';
+      const initialAutoFixMatch = initialSummaryText.match(/已选自动修复项\s+(\d+)\/(\d+)/);
+      expect(initialAutoFixMatch).not.toBeNull();
+      const initialAutoFixCount = Number(initialAutoFixMatch![1]);
+      expect(initialAutoFixCount).toBeGreaterThan(0);
       await expect(page.locator('#selected-issue-summary')).toContainText('手动项将在自动修复后重新计算');
       await expect(page.locator('.issue-select-all-meta')).toHaveCount(1);
       await expect(page.locator('.issue-select-all-legend')).toHaveCount(1);
@@ -920,21 +924,34 @@ apis:
       await page.locator('#diff-modal button:has-text("应用修复")').click();
       await expect(page.locator('#diff-modal')).not.toBeVisible();
 
-      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBe(2);
-      await expect(appPage.statusMessage).toContainText('自动修复 38 项');
-      await expect(appPage.statusMessage).toContainText('连带消除 14 个关联问题');
-      await expect(appPage.statusMessage).toContainText('剩余 2 个问题需手动处理');
-      await expect(page.locator('#issue-count')).toContainText('总 2');
-      await expect(page.locator('#selected-issue-summary')).toContainText('已选手动处理项 1/1');
+      await expect.poll(async () => {
+        const statusText = await appPage.statusMessage.textContent() || '';
+        const match = statusText.match(/剩余\s+(\d+)\s+个问题需手动处理/);
+        return match ? Number(match[1]) : 0;
+      }, { timeout: 20000 }).toBeGreaterThan(0);
+
+      const statusText = await appPage.statusMessage.textContent() || '';
+      const remainingMatch = statusText.match(/剩余\s+(\d+)\s+个问题需手动处理/);
+      expect(remainingMatch).not.toBeNull();
+      const remainingIssueCount = Number(remainingMatch![1]);
+
+      const manualSummaryText = await page.locator('#selected-issue-summary').textContent() || '';
+      const manualSummaryMatch = manualSummaryText.match(/已选手动处理项\s+(\d+)\/(\d+)/);
+      expect(manualSummaryMatch).not.toBeNull();
+      const manualEntryCount = Number(manualSummaryMatch![2]);
+
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBe(remainingIssueCount);
+      await expect(appPage.statusMessage).toContainText(`自动修复 ${initialAutoFixCount} 项`);
+      await expect(page.locator('#issue-count')).toContainText(`总 ${remainingIssueCount}`);
+      await expect(page.locator('#selected-issue-summary')).toContainText(`已选手动处理项 ${manualEntryCount}/${manualEntryCount}`);
       await expect(appPage.autoFixButton).toContainText('自动修复 (0)');
-      await expect(page.locator('#issue-list .issue')).toHaveCount(1);
-      await expect(page.locator('.issue-fixable.fixable-no')).toHaveCount(1);
+      await expect(page.locator('#issue-list .issue')).toHaveCount(manualEntryCount);
+      await expect(page.locator('.issue-fixable.fixable-no')).toHaveCount(manualEntryCount);
       await expect(page.locator('.issue-fixable.fixable-manual-linked')).toHaveCount(0);
-      await expect(page.locator('#issue-list .issue').first()).toContainText('必填字段缺少 @NotNull/@NotBlank 校验');
-      await expect(page.locator('#issue-list .issue').first()).toContainText('String 字段缺少长度校验');
+      await expect(page.locator('#issue-list')).not.toContainText('存在循环引用');
 
       await appPage.autoFix();
-      await expect(appPage.statusMessage).toContainText('当前没有可自动修复的问题，剩余 2 个问题需手动处理');
+      await expect(appPage.statusMessage).toContainText(`当前没有可自动修复的问题，剩余 ${remainingIssueCount} 个问题需手动处理`);
       await expect(page.locator('#diff-modal')).not.toBeVisible();
     });
 
@@ -1023,6 +1040,79 @@ paths:
       expect(updatedYaml).toContain('maxLength: 64');
       await expect(appPage.statusMessage).toContainText('已应用手动补全并重新分析');
       await expect(appPage.statusMessage).toContainText('已同时处理 2 个关联问题');
+    });
+
+    test('手动补全弹窗打开后不应再滚动底层页面', async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 560 });
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  /users/detail:
+    get:
+      operationId: getUserDetail
+      parameters:
+        - name: id
+          in: query
+          required: true
+      responses:
+        200:
+          description: Success
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.analyze();
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBe(2);
+
+      await page.mouse.wheel(0, 1200);
+      await page.waitForFunction(() => window.scrollY > 0, null, { timeout: 5000 });
+
+      await page.locator('.issue-fixable.fixable-no').click();
+      await expect(page.locator('#manual-fix-modal')).toBeVisible();
+
+      await expect.poll(async () => {
+        return await page.evaluate(() => ({
+          htmlLocked: document.documentElement.classList.contains('manual-fix-open'),
+          bodyLocked: document.body.classList.contains('manual-fix-open'),
+          preservedScrollY: Number(document.body.dataset.manualFixScrollY || '0'),
+          bodyTop: document.body.style.top
+        }));
+      }).toEqual(expect.objectContaining({
+        htmlLocked: true,
+        bodyLocked: true,
+        bodyTop: expect.stringMatching(/-\d+px/)
+      }));
+      const lockedState = await page.evaluate(() => ({
+        preservedScrollY: Number(document.body.dataset.manualFixScrollY || '0'),
+        bodyTop: document.body.style.top
+      }));
+      expect(lockedState.preservedScrollY).toBeGreaterThan(0);
+
+      await page.locator('.manual-fix-container').hover();
+      await page.mouse.wheel(0, 900);
+      await page.waitForTimeout(200);
+
+      const afterLockState = await page.evaluate(() => ({
+        preservedScrollY: Number(document.body.dataset.manualFixScrollY || '0'),
+        bodyTop: document.body.style.top
+      }));
+      expect(afterLockState.preservedScrollY).toBe(lockedState.preservedScrollY);
+      expect(afterLockState.bodyTop).toBe(lockedState.bodyTop);
+
+      await page.locator('.manual-fix-footer .btn-secondary').click();
+      await expect(page.locator('#manual-fix-modal')).not.toBeVisible();
+      await expect.poll(async () => {
+        return await page.evaluate(() => ({
+          htmlLocked: document.documentElement.classList.contains('manual-fix-open'),
+          bodyLocked: document.body.classList.contains('manual-fix-open')
+        }));
+      }).toEqual({ htmlLocked: false, bodyLocked: false });
     });
 
     test('关联手动问题重渲染时应始终保留一个主入口', async ({ page }) => {

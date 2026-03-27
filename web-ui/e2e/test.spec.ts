@@ -169,6 +169,86 @@ apis:
       await expect(appPage.analyzeButton).toBeVisible();
       await expect(appPage.autoFixButton).toBeVisible();
     });
+
+    test('should keep analysis sidebar visible on medium laptop screens', async ({ page }) => {
+      await page.setViewportSize({ width: 1160, height: 780 });
+
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const layout = await page.evaluate(() => {
+        const main = document.querySelector('.main');
+        const apiPanel = document.querySelector('.api-panel');
+        const analysis = document.querySelector('.analysis');
+        if (!main || !apiPanel || !analysis) {
+          return null;
+        }
+
+        const mainStyle = window.getComputedStyle(main);
+        const apiRect = apiPanel.getBoundingClientRect();
+        const analysisRect = analysis.getBoundingClientRect();
+
+        return {
+          mainDisplay: mainStyle.display,
+          mainColumns: mainStyle.gridTemplateColumns,
+          mainRows: mainStyle.gridTemplateRows,
+          apiBottomWithinViewport: apiRect.bottom <= window.innerHeight,
+          analysisBottomWithinViewport: analysisRect.bottom <= window.innerHeight,
+          analysisBesideApi: analysisRect.left >= apiRect.right - 2,
+        };
+      });
+
+      expect(layout).not.toBeNull();
+      expect(layout?.mainDisplay).toBe('grid');
+      expect(layout?.mainColumns).toBeTruthy();
+      expect(layout?.analysisBesideApi).toBe(true);
+      expect(layout?.apiBottomWithinViewport).toBe(true);
+      expect(layout?.analysisBottomWithinViewport).toBe(true);
+    });
+
+    test('should allow scrolling analysis results when content exceeds viewport', async ({ page }) => {
+      await page.setViewportSize({ width: 1365, height: 768 });
+
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      page.on('dialog', async dialog => {
+        await dialog.accept('1');
+      });
+
+      await appPage.loadExampleButton.click();
+      await page.waitForTimeout(1500);
+      await appPage.analyze();
+
+      await expect.poll(async () => await appPage.getIssueCount(), { timeout: 20000 }).toBeGreaterThan(0);
+
+      const scrollState = await page.evaluate(() => {
+        const bodyStyle = window.getComputedStyle(document.body);
+        const issueList = document.querySelector('#issue-list');
+        if (!issueList) {
+          return null;
+        }
+        const issueStyle = window.getComputedStyle(issueList);
+        return {
+          bodyOverflowY: bodyStyle.overflowY,
+          pageScrollable: document.documentElement.scrollHeight >= window.innerHeight,
+          issueOverflowY: issueStyle.overflowY,
+          issueScrollable: issueList.scrollHeight > issueList.clientHeight,
+        };
+      });
+
+      expect(scrollState).not.toBeNull();
+      expect(scrollState?.bodyOverflowY).not.toBe('hidden');
+      expect(
+        scrollState?.pageScrollable === true ||
+        (
+          (scrollState?.issueOverflowY === 'auto' || scrollState?.issueOverflowY === 'scroll') &&
+          scrollState?.issueScrollable === true
+        )
+      ).toBe(true);
+    });
   });
 
   test.describe('🟡 IMPORTANT: Load Example', () => {

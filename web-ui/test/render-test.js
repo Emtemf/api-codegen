@@ -52,11 +52,13 @@ function loadComputeImpactFromIndex() {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     const normalizePathForDiffSource = extractFunctionSource(indexHtml, 'normalizePathForDiff');
     const getSwaggerFieldChangesSource = extractFunctionSource(indexHtml, 'getSwaggerFieldChanges');
+    const mapSchemaTypeToJavaSource = extractFunctionSource(indexHtml, 'mapSchemaTypeToJava');
     const computeImpactSource = extractFunctionSource(indexHtml, 'computeImpact');
 
     return eval(`(() => {
         ${normalizePathForDiffSource}
         ${getSwaggerFieldChangesSource}
+        ${mapSchemaTypeToJavaSource}
         ${computeImpactSource}
         return computeImpact;
     })()`);
@@ -113,15 +115,80 @@ const computePreviewDiff = loadComputePreviewDiffFromIndex();
 
 function loadBuildImpactArtifactIndexFromIndex() {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const toPascalCasePreviewSource = extractFunctionSource(indexHtml, 'toPascalCasePreview');
+    const inferEntityKindPreviewSource = extractFunctionSource(indexHtml, 'inferEntityKindPreview');
+    const sortArtifactsByPreviewPrioritySource = extractFunctionSource(indexHtml, 'sortArtifactsByPreviewPriority');
+    const getImpactStatusCopySource = extractFunctionSource(indexHtml, 'getImpactStatusCopy');
+    const sortImpactIndexChildrenSource = extractFunctionSource(indexHtml, 'sortImpactIndexChildren');
+    const buildControllerIndexChildrenSource = extractFunctionSource(indexHtml, 'buildControllerIndexChildren');
+    const buildNestedModelIndexTreeSource = extractFunctionSource(indexHtml, 'buildNestedModelIndexTree');
+    const buildModelIndexChildrenSource = extractFunctionSource(indexHtml, 'buildModelIndexChildren');
     const buildImpactArtifactIndexSource = extractFunctionSource(indexHtml, 'buildImpactArtifactIndex');
+    const flattenImpactIndexTreeSource = extractFunctionSource(indexHtml, 'flattenImpactIndexTree');
 
     return eval(`(() => {
+        ${toPascalCasePreviewSource}
+        ${inferEntityKindPreviewSource}
+        ${sortArtifactsByPreviewPrioritySource}
+        ${getImpactStatusCopySource}
+        ${sortImpactIndexChildrenSource}
+        ${buildControllerIndexChildrenSource}
+        ${buildNestedModelIndexTreeSource}
+        ${buildModelIndexChildrenSource}
         ${buildImpactArtifactIndexSource}
-        return buildImpactArtifactIndex;
+        ${flattenImpactIndexTreeSource}
+        return { buildImpactArtifactIndex, flattenImpactIndexTree };
     })()`);
 }
 
-const buildImpactArtifactIndex = loadBuildImpactArtifactIndexFromIndex();
+const { buildImpactArtifactIndex, flattenImpactIndexTree } = loadBuildImpactArtifactIndexFromIndex();
+
+function loadBuildControllerClassSummaryMessagesFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const buildControllerClassSummaryMessagesSource = extractFunctionSource(indexHtml, 'buildControllerClassSummaryMessages');
+
+    return eval(`(() => {
+        ${buildControllerClassSummaryMessagesSource}
+        return buildControllerClassSummaryMessages;
+    })()`);
+}
+
+const buildControllerClassSummaryMessages = loadBuildControllerClassSummaryMessagesFromIndex();
+
+function loadBuildModelClassSummaryMessagesFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const buildModelClassSummaryMessagesSource = extractFunctionSource(indexHtml, 'buildModelClassSummaryMessages');
+
+    return eval(`(() => {
+        ${buildModelClassSummaryMessagesSource}
+        return buildModelClassSummaryMessages;
+    })()`);
+}
+
+const buildModelClassSummaryMessages = loadBuildModelClassSummaryMessagesFromIndex();
+
+function loadGenerateJavaControllerClassStructureCodeFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const highlightJavaAnnotationPreviewSource = extractFunctionSource(indexHtml, 'highlightJavaAnnotationPreview');
+    const generateJavaControllerClassStructureCodeSource = extractFunctionSource(indexHtml, 'generateJavaControllerClassStructureCode');
+
+    return eval(`(() => {
+        const currentFramework = 'spring';
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        ${highlightJavaAnnotationPreviewSource}
+        ${generateJavaControllerClassStructureCodeSource}
+        return generateJavaControllerClassStructureCode;
+    })()`);
+}
+
+const generateJavaControllerClassStructureCode = loadGenerateJavaControllerClassStructureCodeFromIndex();
 
 function loadFindIssueLocationLineFromIndex() {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -838,6 +905,85 @@ paths:
     };
 });
 
+test('computeImpact', 'Swagger 预览应按单个统一 Controller 聚合方法', function() {
+    const before = `openapi: "3.0.0"
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+  /users:
+    post:
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+`;
+
+    const after = `openapi: "3.0.0"
+paths:
+  /users/{id}:
+    get:
+      operationId: getUser
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+  /users:
+    post:
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+`;
+
+    const impact = computeImpact(before, after);
+    const controllers = impact.generatedArtifacts && impact.generatedArtifacts.controllers
+        ? impact.generatedArtifacts.controllers
+        : [];
+    const controller = controllers[0] || {};
+    const methods = controller.methods || [];
+
+    return {
+        pass: controllers.length === 1 &&
+            controller.fileName === 'ApicgenApi.java' &&
+            controller.kind === 'Unified Controller' &&
+            controller.methodCount === 2 &&
+            controller.changedMethodCount === 1 &&
+            Array.isArray(methods) &&
+            methods.length === 2 &&
+            methods.some(item => item.operationId === 'getUser' && item.status === 'modified') &&
+            methods.some(item => item.operationId === 'createUser' && item.status === 'unchanged'),
+        message: JSON.stringify(controller)
+    };
+});
+
 test('buildImpactArtifactIndex', '应汇总 Controller 与实体产物变化索引', function() {
     const impact = {
         apis: [
@@ -884,6 +1030,361 @@ test('buildImpactArtifactIndex', '应汇总 Controller 与实体产物变化索�
             index.models.some(item => item.fileName === 'CreateUserReq.java' && item.changeCount === 2) &&
             index.models.some(item => item.fileName === 'UserModel.java' && item.changeCount === 1),
         message: JSON.stringify(index)
+    };
+});
+
+test('buildImpactArtifactIndex', '应将未变化产物归入参考区并排在变更项之后', function() {
+    const impact = {
+        apis: [],
+        fields: [],
+        generatedArtifacts: {
+            controllers: [
+                {
+                    fileName: 'CreateUserController.java',
+                    kind: 'Controller',
+                    label: 'POST /users',
+                    changeCount: 2,
+                    status: 'modified'
+                },
+                {
+                    fileName: 'GetUserController.java',
+                    kind: 'Controller',
+                    label: 'GET /users/{id}',
+                    changeCount: 0,
+                    status: 'unchanged'
+                }
+            ],
+            models: [
+                {
+                    fileName: 'CreateUserReq.java',
+                    kind: 'Request',
+                    label: 'Request',
+                    changeCount: 1,
+                    status: 'modified'
+                },
+                {
+                    fileName: 'UserModel.java',
+                    kind: 'Model',
+                    label: 'Model',
+                    changeCount: 0,
+                    status: 'unchanged'
+                }
+            ]
+        }
+    };
+
+    const index = buildImpactArtifactIndex(impact);
+
+    return {
+        pass: index.controllerCount === 2 &&
+            index.changedControllerCount === 1 &&
+            index.referenceControllerCount === 1 &&
+            index.modelClassCount === 2 &&
+            index.changedModelCount === 1 &&
+            index.referenceModelCount === 1 &&
+            index.controllers[0].fileName === 'CreateUserController.java' &&
+            index.controllers[0].section === 'changed' &&
+            index.controllers[1].fileName === 'GetUserController.java' &&
+            index.controllers[1].section === 'reference' &&
+            index.models[0].fileName === 'CreateUserReq.java' &&
+            index.models[0].section === 'changed' &&
+            index.models[1].fileName === 'UserModel.java' &&
+            index.models[1].section === 'reference',
+        message: JSON.stringify(index)
+    };
+});
+
+test('buildImpactArtifactIndex', '统一 Controller 应暴露方法层级，且未变化方法也应可见', function() {
+    const impact = {
+        apis: [],
+        fields: [],
+        generatedArtifacts: {
+            controllers: [
+                {
+                    id: 'controller-unified',
+                    fileName: 'ApicgenApi.java',
+                    className: 'ApicgenApi',
+                    kind: 'Unified Controller',
+                    label: '3 个接口方法 · 1 个有变化',
+                    changeCount: 1,
+                    status: 'modified',
+                    methods: [
+                        {
+                            id: 'controller-method-get-users-id',
+                            method: 'get',
+                            path: '/users/{id}',
+                            originalPath: '/users/{id}',
+                            operationId: 'getUserDetail',
+                            status: 'modified',
+                            changeCount: 1
+                        },
+                        {
+                            id: 'controller-method-post-users',
+                            method: 'post',
+                            path: '/users',
+                            originalPath: '/users',
+                            operationId: 'createUser',
+                            status: 'unchanged',
+                            changeCount: 0
+                        },
+                        {
+                            id: 'controller-method-put-users-tags',
+                            method: 'put',
+                            path: '/users/tags',
+                            originalPath: '/users/tags',
+                            operationId: 'setTags',
+                            status: 'unchanged',
+                            changeCount: 0
+                        }
+                    ]
+                }
+            ],
+            models: []
+        }
+    };
+
+    const index = buildImpactArtifactIndex(impact);
+    const controller = index.controllers[0] || {};
+    const children = controller.children || [];
+
+    return {
+        pass: index.controllerCount === 1 &&
+            Array.isArray(children) &&
+            children.length === 3 &&
+            children[0].section === 'changed' &&
+            children[0].label === 'GET /users/{id}' &&
+            children[0].copy === 'getUserDetail' &&
+            children[1].section === 'reference' &&
+            children[1].label === 'POST /users' &&
+            children[2].section === 'reference' &&
+            children[2].copy === 'setTags',
+        message: JSON.stringify(index)
+    };
+});
+
+test('buildImpactArtifactIndex', '扁平实体索引不再按字段展开，保留类级入口即可', function() {
+    const impact = {
+        apis: [],
+        fields: [],
+        generatedArtifacts: {
+            controllers: [],
+            models: [
+                {
+                    id: 'model-CreateUserReq',
+                    fileName: 'CreateUserReq.java',
+                    className: 'CreateUserReq',
+                    kind: 'Request',
+                    label: 'Request',
+                    changeCount: 2,
+                    status: 'modified',
+                    fields: [
+                        {
+                            id: 'model-field-CreateUserReq-username',
+                            field: 'username',
+                            fieldType: 'String',
+                            status: 'modified',
+                            changeCount: 1
+                        },
+                        {
+                            id: 'model-field-CreateUserReq-email',
+                            field: 'email',
+                            fieldType: 'String',
+                            status: 'modified',
+                            changeCount: 1
+                        },
+                        {
+                            id: 'model-field-CreateUserReq-birthday',
+                            field: 'birthday',
+                            fieldType: 'LocalDate',
+                            status: 'unchanged',
+                            changeCount: 0
+                        }
+                    ]
+                }
+            ]
+        }
+    };
+
+    const index = buildImpactArtifactIndex(impact);
+    const model = index.models[0] || {};
+
+    return {
+        pass: index.modelClassCount === 1 &&
+            Array.isArray(model.children) &&
+            model.children.length === 0 &&
+            model.section === 'changed' &&
+            model.fileName === 'CreateUserReq.java' &&
+            model.kind === 'Request',
+        message: JSON.stringify(index)
+    };
+});
+
+test('buildImpactArtifactIndex', '嵌套实体索引应按实体引用关系生成层级', function() {
+    const impact = {
+        apis: [],
+        fields: [],
+        generatedArtifacts: {
+            controllers: [],
+            models: [
+                {
+                    id: 'model-UserModel',
+                    fileName: 'UserModel.java',
+                    className: 'UserModel',
+                    kind: 'Model',
+                    label: 'Model',
+                    changeCount: 2,
+                    status: 'modified',
+                    nestedModelRefs: ['AddressInfo'],
+                    fields: []
+                },
+                {
+                    id: 'model-AddressInfo',
+                    fileName: 'AddressInfo.java',
+                    className: 'AddressInfo',
+                    kind: 'Model',
+                    label: 'Model',
+                    changeCount: 0,
+                    status: 'unchanged',
+                    nestedModelRefs: ['GeoPoint'],
+                    fields: []
+                },
+                {
+                    id: 'model-GeoPoint',
+                    fileName: 'GeoPoint.java',
+                    className: 'GeoPoint',
+                    kind: 'Model',
+                    label: 'Model',
+                    changeCount: 0,
+                    status: 'unchanged',
+                    nestedModelRefs: [],
+                    fields: []
+                }
+            ]
+        }
+    };
+
+    const index = buildImpactArtifactIndex(impact);
+    const root = index.models[0] || {};
+    const child = (root.children || [])[0] || {};
+    const grandChild = (child.children || [])[0] || {};
+
+    return {
+        pass: index.modelClassCount === 3 &&
+            index.models.length === 1 &&
+            root.fileName === 'UserModel.java' &&
+            root.section === 'changed' &&
+            child.fileName === 'AddressInfo.java' &&
+            child.section === 'reference' &&
+            grandChild.fileName === 'GeoPoint.java' &&
+            grandChild.section === 'reference',
+        message: JSON.stringify(index)
+    };
+});
+
+test('buildImpactArtifactIndex', '嵌套实体预览顺序应与左侧树一致', function() {
+    const impact = {
+        apis: [],
+        fields: [],
+        generatedArtifacts: {
+            controllers: [],
+            models: [
+                {
+                    id: 'model-UserModel',
+                    fileName: 'UserModel.java',
+                    className: 'UserModel',
+                    kind: 'Model',
+                    label: 'Model',
+                    changeCount: 0,
+                    status: 'unchanged',
+                    nestedModelRefs: ['AddressInfo'],
+                    fields: []
+                },
+                {
+                    id: 'model-AddressInfo',
+                    fileName: 'AddressInfo.java',
+                    className: 'AddressInfo',
+                    kind: 'Model',
+                    label: 'Model',
+                    changeCount: 0,
+                    status: 'unchanged',
+                    nestedModelRefs: ['GeoPoint'],
+                    fields: []
+                },
+                {
+                    id: 'model-GeoPoint',
+                    fileName: 'GeoPoint.java',
+                    className: 'GeoPoint',
+                    kind: 'Model',
+                    label: 'Model',
+                    changeCount: 0,
+                    status: 'unchanged',
+                    nestedModelRefs: [],
+                    fields: []
+                }
+            ]
+        }
+    };
+
+    const index = buildImpactArtifactIndex(impact);
+    const ordered = flattenImpactIndexTree(index.models).map(item => item.fileName);
+
+    return {
+        pass: JSON.stringify(ordered) === JSON.stringify(['UserModel.java', 'AddressInfo.java', 'GeoPoint.java']),
+        message: JSON.stringify(ordered)
+    };
+});
+
+test('previewSummary', '统一 Controller 类级摘要应保持简短，不重复展开所有方法变化', function() {
+    const summary = buildControllerClassSummaryMessages({
+        beforeClassAnnotations: [],
+        afterClassAnnotations: ['@Secured'],
+        methods: [
+            { status: 'modified' },
+            { status: 'modified' },
+            { status: 'unchanged' },
+            { status: 'added' }
+        ]
+    });
+
+    return {
+        pass: summary.before.length === 2 &&
+            summary.after.length === 2 &&
+            summary.before.includes('类级注解待同步') &&
+            summary.after.includes('类级注解已同步') &&
+            summary.before.includes('3 个方法生成结果待同步') &&
+            summary.after.includes('3 个方法已同步到统一 Controller'),
+        message: JSON.stringify(summary)
+    };
+});
+
+test('previewSummary', '实体类级摘要应汇总为字段数量，不重复铺开字段明细', function() {
+    const summary = buildModelClassSummaryMessages({
+        fields: [
+            { status: 'modified' },
+            { status: 'unchanged' },
+            { status: 'added' }
+        ]
+    });
+
+    return {
+        pass: summary.before.length === 1 &&
+            summary.after.length === 1 &&
+            summary.before[0] === '2 个字段生成结果待同步' &&
+            summary.after[0] === '2 个字段已同步到实体生成结果',
+        message: JSON.stringify(summary)
+    };
+});
+
+test('previewSummary', '统一 Controller 类级预览应只展示类骨架，不再重复方法代码', function() {
+    const code = generateJavaControllerClassStructureCode('ApicgenApi', ['@Secured'], 13);
+
+    return {
+        pass: code.includes('public</span> <span class="syntax-keyword">class</span> <span class="syntax-type">ApicgenApi</span>') &&
+            code.includes('具体方法见上方方法明细（共 13 个）') &&
+            code.includes('@Secured') &&
+            !code.includes('Mapping(&quot;') &&
+            !code.includes('return</span> <span class="syntax-keyword">null</span>;'),
+        message: code
     };
 });
 

@@ -141,17 +141,19 @@ function loadDiffHelpersFromIndex() {
     const getSwaggerFieldChangesSource = extractFunctionSource(indexHtml, 'getSwaggerFieldChanges');
     const computeImpactSource = extractFunctionSource(indexHtml, 'computeImpact');
     const computeDiffSource = extractFunctionSource(indexHtml, 'computeDiff');
+    const summarizeMonacoLineChangesSource = extractFunctionSource(indexHtml, 'summarizeMonacoLineChanges');
 
     return eval(`(() => {
         ${normalizePathForDiffSource}
         ${getSwaggerFieldChangesSource}
         ${computeImpactSource}
         ${computeDiffSource}
-        return { computeDiff, computeImpact };
+        ${summarizeMonacoLineChangesSource}
+        return { computeDiff, computeImpact, summarizeMonacoLineChanges };
     })()`);
 }
 
-const { computeDiff, computeImpact } = loadDiffHelpersFromIndex();
+const { computeDiff, computeImpact, summarizeMonacoLineChanges } = loadDiffHelpersFromIndex();
 
 // ============================================
 // 测试用例
@@ -189,6 +191,37 @@ test('computeDiff: 相同内容应标记为 equal', () => {
     const equal = diff.filter(d => !d.added && !d.removed);
     assertEqual(equal.length, 1, '相同内容应合并为一段 unchanged diff');
     assertEqual(equal[0].value, before, 'unchanged diff 内容应保留原始文本');
+});
+
+test('summarizeMonacoLineChanges: 应区分新增、删除和修改行', () => {
+    const summary = summarizeMonacoLineChanges([
+        {
+            originalStartLineNumber: 10,
+            originalEndLineNumber: 0,
+            modifiedStartLineNumber: 11,
+            modifiedEndLineNumber: 13
+        },
+        {
+            originalStartLineNumber: 20,
+            originalEndLineNumber: 22,
+            modifiedStartLineNumber: 0,
+            modifiedEndLineNumber: 0
+        },
+        {
+            originalStartLineNumber: 30,
+            originalEndLineNumber: 31,
+            modifiedStartLineNumber: 35,
+            modifiedEndLineNumber: 36
+        }
+    ]);
+
+    assertEqual(summary, {
+        addedLines: 3,
+        removedLines: 3,
+        modifiedLines: 2,
+        changedLines: 8,
+        changeBlocks: 3
+    }, 'Monaco 行变化汇总口径应稳定');
 });
 
 console.log('\n========================================');

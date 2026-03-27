@@ -37,7 +37,7 @@ export class AppPage {
     // Use button text selectors
     this.analyzeButton = page.getByRole('button', { name: '分析', exact: true });
     this.autoFixButton = page.locator('button:has-text("自动修复")');
-    this.loadExampleButton = page.locator('button:has-text("加载示例")');
+    this.loadExampleButton = page.getByRole('button', { name: /^(示例|加载示例)$/ });
 
     // Use CodeMirror class - it's the visible editor wrapper
     this.yamlEditor = page.locator('.api-panel .CodeMirror');

@@ -59,6 +59,40 @@ definitions:
         items:
           type: string
         description: 标签
+      address:
+        $ref: '#/definitions/AddressInfo'
+  AddressInfo:
+    type: object
+    description: 用户地址
+    properties:
+      province:
+        type: string
+        description: 省份
+        minLength: 1
+        maxLength: 32
+      city:
+        type: string
+        description: 城市
+        minLength: 1
+        maxLength: 32
+      geo:
+        $ref: '#/definitions/GeoPoint'
+  GeoPoint:
+    type: object
+    description: 地理坐标
+    properties:
+      longitude:
+        type: number
+        format: double
+        description: 经度
+        minimum: -180
+        maximum: 180
+      latitude:
+        type: number
+        format: double
+        description: 纬度
+        minimum: -90
+        maximum: 90
 
 paths:
   # ========== 正常API - 作为对比 ==========
@@ -399,33 +433,6 @@ paths:
       responses:
         '201':
           description: 创建成功
-
-  # ========== 使用 definitions 的示例 - 测试字段变更 ==========
-  # 此 API 使用 $ref 引用 definitions 中的模型
-  # 用于测试"字段变更"功能的检测
-  /model/user:
-    get:
-      summary: 获取用户模型信息
-      operationId: getUserModel
-      responses:
-        '200':
-          description: 成功
-          schema:
-            $ref: '#/definitions/UserModel'
-
-  /model/users:
-    post:
-      summary: 创建用户模型
-      operationId: createUserModel
-      parameters:
-        - name: body
-          in: body
-          required: true
-          schema:
-            $ref: '#/definitions/UserModel'
-      responses:
-        '200':
-          description: 成功
 
   # ========== 自定义注解场景 - x-java-class-annotations ==========
   # 场景1: 类级别注解（path级别）

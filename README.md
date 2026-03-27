@@ -56,48 +56,25 @@ node server.js
 Web UI 必须通过本地 `server.js` 调用 `api-codegen-core` 作为统一分析/修复入口，
 不能直接双击打开 `web-ui/index.html`。
 
-### Web UI 界面预览
+### Web UI 核心流程预览
 
-> 注意：如果图片未正常显示，请尝试强制刷新浏览器 (Ctrl+F5)
+下面这些截图直接来自当前 `web-ui` 实际界面，展示的是现在推荐的 core-first 工作流：
+只维护一份原始 Swagger / OpenAPI YAML，分析、自动修复、Controller 影响、实体变化都通过同一个入口完成。
 
-**1. 初始状态** - Core-first workspace，等待输入原始 YAML
-![Initial State](docs/images/05-initial-state.png)
+**1. 原始 YAML 工作区** - 左侧始终编辑用户原始 YAML，右侧保留分析控制台
+![Workspace](docs/images/readme-workspace.png)
 
-**2. Swagger 2.0 示例载入** - 直接展示当前原始 YAML 工作区
-![Swagger Demo](docs/images/01-swagger-demo.png)
+**2. 分析结果** - 优先展示当前可自动修复项，再处理需要手动补全的项
+![Analysis](docs/images/readme-analysis.png)
 
-**3. 点击加载示例后** - 示例会直接写入左侧原始 YAML 编辑器
-![Load Example](docs/images/05-load-example.png)
+**3. YAML 修复预览** - Monaco 双栏对比原始 YAML 与修复后 YAML，只突出真实变更行
+![YAML Diff](docs/images/readme-diff-yaml.png)
 
-**4. Swagger 2.0 示例已加载** - 左侧只编辑用户原始 YAML
-![Swagger Loaded](docs/images/05-swagger-loaded.png)
+**4. Controller 影响** - 同一份 YAML 最终汇总到统一 Controller 预览，方法变化和未变化方法分区展示
+![Controller Impact](docs/images/readme-diff-controller.png)
 
-**5. Swagger 分析结果** - 右侧验证面板展示问题总览
-![Swagger Analyze](docs/images/05-swagger-analyze.png)
-
-**6. 详细校验结果** - 优先展示当前可自动修复项
-![Validation Results](docs/images/06-validation-results.png)
-
-**7. 自动修复预览** - Monaco 双栏对比原始 YAML 与修复后 YAML
-![Diff Preview](docs/images/04-autofix-preview.png)
-
-**8. 自动修复后的手动处理组** - 同字段关联问题归并为一个补全入口
-![Manual Group](docs/images/07-manual-grouped.png)
-
-**9. OpenAPI 3.0 示例载入** - 与 Swagger 共用同一套编辑工作区
-![OpenAPI Demo](docs/images/02-openapi-demo.png)
-
-**10. OpenAPI 3.0 初始视图** - 输入文件仍然只保留一份原始 YAML
-![OpenAPI Initial](docs/images/09-openapi-initial.png)
-
-**11. OpenAPI 3.0 分析结果** - 与 Swagger 共用同一套 core 分析/修复能力
-![OpenAPI Analyze](docs/images/10-openapi-analyze.png)
-
-**12. 路径错误示例** - 路径重复斜杠和缺少前导 `/` 的原始输入
-![Path Error](docs/images/03-path-error.png)
-
-**13. 路径错误分析结果** - 自动修复项与需手动项会拆开展示
-![Path Error Analyze](docs/images/03-path-error-analysis.png)
+**5. 实体变化** - 直接查看 Request / Response / Model 生成结果差异与引用层级
+![Model Impact](docs/images/readme-diff-model.png)
 
 ### Web UI 与 Core 的关系
 
@@ -135,8 +112,8 @@ mvn com.apicgen:api-codegen-maven-plugin:generate \
 
 - 读取 `yamlFile` 指向的 API 定义
 - 先做解析与校验，再生成统一 Controller 和对应的 Request / Response 类
-- 默认输出根目录是 `${basedir}/src/main/java`，再拼接 controller / request / response 子路径
-- 当前默认子路径分别是 `generated/api/`、`src/main/java/req/`、`src/main/java/rsp/`
+- 输出目录以 `outputDir` 为根，再拼接当前默认的 controller / request / response 子路径
+- 当前代码中的默认子路径分别是 `generated/api/`、`src/main/java/req/`、`src/main/java/rsp/`
 
 ### Java 直接运行
 
@@ -215,13 +192,10 @@ mvn com.apicgen:api-codegen-maven-plugin:generate \
   -DoutputDir=./out
 ```
 
-实际输出路径：
+当前示例命令的输出路径：
 
 - `./out/generated/api/com/example/user/api/UserApi.java`
 - `./out/src/main/java/rsp/com/example/user/rsp/Response.java`
-
-输入与实际生成结果：
-![Annotation Generation Output](docs/images/11-annotation-generation-output.png)
 
 > 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
 
@@ -248,8 +222,8 @@ mvn com.apicgen:api-codegen-maven-plugin:generate [参数]
 
 - 默认 `force=false`，如果目标文件已存在，插件会跳过写入
 - `force=true` 时，插件会先生成 `.bak` 备份，再覆盖原文件
+- `analyze=true` 时只输出规则分析结果，不进入代码生成
 - `autoFix=true` 时会直接回写 YAML，不继续进入代码生成
-- Maven 插件默认不再隐式读取项目根目录的第二份配置文件
 
 ## 校验规则
 
@@ -339,8 +313,11 @@ public Response getUserById(
 
 - `swagger2-example.yaml` - Swagger 2.0 示例
 - `openapi3-example.yaml` - OpenAPI 3.0 示例
-- `web-ui/demo-swagger.html` - Web UI Swagger 示例
-- `web-ui/demo-openapi.html` - Web UI OpenAPI 示例
+- `api-example.yaml` - 简化 API 示例
+- `web-ui/demo-swagger.html` - Swagger 演示入口
+- `web-ui/demo-autofix.html` - 自动修复演示入口
+- `web-ui/demo-path-error.html` - 路径错误演示入口
+- `web-ui/demo-comprehensive.html` - 综合演示入口
 
 ## 测试
 
@@ -377,7 +354,7 @@ cd web-ui && npm run test:e2e
 
 ```bash
 # Web UI bridge / diff / render 回归
-cd web-ui && npm test
+cd web-ui && npm run test:ci
 
 # E2E 测试
 cd web-ui && npm run test:e2e
