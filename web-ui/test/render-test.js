@@ -206,6 +206,165 @@ function loadFindIssueLocationLineFromIndex() {
 
 const findIssueLocationLine = loadFindIssueLocationLineFromIndex();
 
+function loadTableEditorFunctionsFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const normalizePathForDiffSource = extractFunctionSource(indexHtml, 'normalizePathForDiff');
+    const escapeYamlTableScalarSource = extractFunctionSource(indexHtml, 'escapeYamlTableScalar');
+    const splitTableAnnotationTextSource = extractFunctionSource(indexHtml, 'splitTableAnnotationText');
+    const normalizeTableEditorPathSource = extractFunctionSource(indexHtml, 'normalizeTableEditorPath');
+    const normalizeTableEditorMethodSource = extractFunctionSource(indexHtml, 'normalizeTableEditorMethod');
+    const inferYamlDocumentKindSource = extractFunctionSource(indexHtml, 'inferYamlDocumentKind');
+    const isHttpOperationKeySource = extractFunctionSource(indexHtml, 'isHttpOperationKey');
+    const getTableEditorPathKeysSource = extractFunctionSource(indexHtml, 'getTableEditorPathKeys');
+    const extractTableEditorSchemaRefsSource = extractFunctionSource(indexHtml, 'extractTableEditorSchemaRefs');
+    const extractSchemaMetaForTableEditorSource = extractFunctionSource(indexHtml, 'extractSchemaMetaForTableEditor');
+    const createTableParameterRowSource = extractFunctionSource(indexHtml, 'createTableParameterRow');
+    const parseYamlForTableEditorSource = extractFunctionSource(indexHtml, 'parseYamlForTableEditor');
+    const buildTableSchemaFromRowSource = extractFunctionSource(indexHtml, 'buildTableSchemaFromRow');
+    const buildOperationParameterFromTableRowSource = extractFunctionSource(indexHtml, 'buildOperationParameterFromTableRow');
+    const buildOpenApiRequestBodyFromRowSource = extractFunctionSource(indexHtml, 'buildOpenApiRequestBodyFromRow');
+    const ensureTableOperationResponsesSource = extractFunctionSource(indexHtml, 'ensureTableOperationResponses');
+    const clonePlainObjectSource = extractFunctionSource(indexHtml, 'clonePlainObject');
+    const applyTableEditorStateToYamlSource = extractFunctionSource(indexHtml, 'applyTableEditorStateToYaml');
+
+    return eval(`(() => {
+        ${normalizePathForDiffSource}
+        ${escapeYamlTableScalarSource}
+        ${splitTableAnnotationTextSource}
+        ${normalizeTableEditorPathSource}
+        ${normalizeTableEditorMethodSource}
+        ${inferYamlDocumentKindSource}
+        ${isHttpOperationKeySource}
+        ${getTableEditorPathKeysSource}
+        ${extractTableEditorSchemaRefsSource}
+        ${extractSchemaMetaForTableEditorSource}
+        ${createTableParameterRowSource}
+        ${parseYamlForTableEditorSource}
+        ${buildTableSchemaFromRowSource}
+        ${buildOperationParameterFromTableRowSource}
+        ${buildOpenApiRequestBodyFromRowSource}
+        ${ensureTableOperationResponsesSource}
+        ${clonePlainObjectSource}
+        ${applyTableEditorStateToYamlSource}
+        return { parseYamlForTableEditor, applyTableEditorStateToYaml };
+    })()`);
+}
+
+const { parseYamlForTableEditor, applyTableEditorStateToYaml } = loadTableEditorFunctionsFromIndex();
+
+function loadTableEditorMarkupFunctionsFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const escapeHtmlSource = extractFunctionSource(indexHtml, 'escapeHtml');
+    const escapeJsStringSource = extractFunctionSource(indexHtml, 'escapeJsString');
+    const escapeYamlTableScalarSource = extractFunctionSource(indexHtml, 'escapeYamlTableScalar');
+    const normalizeAnnotationBundleSource = extractFunctionSource(indexHtml, 'normalizeAnnotationBundle');
+    const highlightJavaAnnotationPreviewSource = extractFunctionSource(indexHtml, 'highlightJavaAnnotationPreview');
+    const toCamelCaseSource = extractFunctionSource(indexHtml, 'toCamelCase');
+    const toPascalCasePreviewSource = extractFunctionSource(indexHtml, 'toPascalCasePreview');
+    const generateJavaControllerMethodCodeSource = extractFunctionSource(indexHtml, 'generateJavaControllerMethodCode');
+    const generateJavaControllerClassStructureCodeSource = extractFunctionSource(indexHtml, 'generateJavaControllerClassStructureCode');
+    const getTableParameterDomIdSource = extractFunctionSource(indexHtml, 'getTableParameterDomId');
+    const renderTableParameterLocationOptionsSource = extractFunctionSource(indexHtml, 'renderTableParameterLocationOptions');
+    const renderTableParameterEditorKindOptionsSource = extractFunctionSource(indexHtml, 'renderTableParameterEditorKindOptions');
+    const inferTableParameterEditorKindSource = extractFunctionSource(indexHtml, 'inferTableParameterEditorKind');
+    const getAvailableTableEditorSchemaRefsSource = extractFunctionSource(indexHtml, 'getAvailableTableEditorSchemaRefs');
+    const getTableEditorCreatedSchemasSource = extractFunctionSource(indexHtml, 'getTableEditorCreatedSchemas');
+    const buildDefaultTableEditorSchemaRefSource = extractFunctionSource(indexHtml, 'buildDefaultTableEditorSchemaRef');
+    const isKnownTableEditorSchemaRefSource = extractFunctionSource(indexHtml, 'isKnownTableEditorSchemaRef');
+    const suggestTableEditorSchemaNameSource = extractFunctionSource(indexHtml, 'suggestTableEditorSchemaName');
+    const ensureUniqueTableEditorSchemaNameSource = extractFunctionSource(indexHtml, 'ensureUniqueTableEditorSchemaName');
+    const renderTableParameterRefOptionsSource = extractFunctionSource(indexHtml, 'renderTableParameterRefOptions');
+    const buildTableParameterReferenceEditorSource = extractFunctionSource(indexHtml, 'buildTableParameterReferenceEditor');
+    const buildTableParameterModelingHintSource = extractFunctionSource(indexHtml, 'buildTableParameterModelingHint');
+    const buildTableParameterAddMenuSource = extractFunctionSource(indexHtml, 'buildTableParameterAddMenu');
+    const resolveTableEditorControllerClassAnnotationsSource = extractFunctionSource(indexHtml, 'resolveTableEditorControllerClassAnnotations');
+    const buildTableEditorJavaPreviewSource = extractFunctionSource(indexHtml, 'buildTableEditorJavaPreview');
+    const buildTableEditorApiTableSource = extractFunctionSource(indexHtml, 'buildTableEditorApiTable');
+    const buildTableEditorParameterJumpNavSource = extractFunctionSource(indexHtml, 'buildTableEditorParameterJumpNav');
+    const buildTableEditorParameterTableSource = extractFunctionSource(indexHtml, 'buildTableEditorParameterTable');
+    const buildTableEditorDetailSource = extractFunctionSource(indexHtml, 'buildTableEditorDetail');
+
+    return eval(`(() => {
+        var currentFramework = 'spring';
+        var tableEditorState = null;
+        var tableEditorSelectedOperationId = '';
+        var tableEditorFocusedParamKey = '';
+        var tableEditorParameterMenuOperationId = '';
+        var document = {
+            createElement() {
+                return {
+                    _text: '',
+                    innerHTML: '',
+                    set textContent(value) {
+                        this._text = String(value || '');
+                        this.innerHTML = this._text
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/'/g, '&#39;');
+                    },
+                    get textContent() {
+                        return this._text;
+                    },
+                    set innerText(value) {
+                        this.textContent = value;
+                    },
+                    get innerText() {
+                        return this._text;
+                    }
+                };
+            },
+            getElementById() { return null; },
+            querySelectorAll() { return []; }
+        };
+        ${escapeHtmlSource}
+        ${escapeJsStringSource}
+        ${escapeYamlTableScalarSource}
+        ${normalizeAnnotationBundleSource}
+        ${highlightJavaAnnotationPreviewSource}
+        ${toCamelCaseSource}
+        ${toPascalCasePreviewSource}
+        ${generateJavaControllerMethodCodeSource}
+        ${generateJavaControllerClassStructureCodeSource}
+        ${getTableParameterDomIdSource}
+        ${renderTableParameterLocationOptionsSource}
+        ${renderTableParameterEditorKindOptionsSource}
+        ${inferTableParameterEditorKindSource}
+        ${getAvailableTableEditorSchemaRefsSource}
+        ${getTableEditorCreatedSchemasSource}
+        ${buildDefaultTableEditorSchemaRefSource}
+        ${isKnownTableEditorSchemaRefSource}
+        ${suggestTableEditorSchemaNameSource}
+        ${ensureUniqueTableEditorSchemaNameSource}
+        ${renderTableParameterRefOptionsSource}
+        ${buildTableParameterReferenceEditorSource}
+        ${buildTableParameterModelingHintSource}
+        ${buildTableParameterAddMenuSource}
+        ${resolveTableEditorControllerClassAnnotationsSource}
+        ${buildTableEditorJavaPreviewSource}
+        ${buildTableEditorApiTableSource}
+        ${buildTableEditorParameterJumpNavSource}
+        ${buildTableEditorParameterTableSource}
+        ${buildTableEditorDetailSource}
+        return {
+            setTableEditorState(value) {
+                tableEditorState = value;
+            },
+            setSelectedOperationId(value) {
+                tableEditorSelectedOperationId = value;
+            },
+            setFocusedParamKey(value) {
+                tableEditorFocusedParamKey = value;
+            },
+            buildTableEditorApiTable,
+            buildTableEditorDetail
+        };
+    })()`);
+}
+
+const tableEditorMarkup = loadTableEditorMarkupFunctionsFromIndex();
+
 function uniqueStrings(values) {
     const seen = new Set();
     return (values || []).filter(value => {
@@ -1581,6 +1740,492 @@ paths:
     return {
         pass: line === 2,
         message: `期望定位到路径行 3，当前: ${line + 1}`
+    };
+});
+
+console.log('\n--- 8. YAML 表格编辑转换测试 ---\n');
+
+test('tableEditor', '应能把 Swagger YAML 解析为 API 与参数表格行', function() {
+    const yaml = `swagger: "2.0"
+info:
+  title: User API
+  version: "1.0"
+paths:
+  /users:
+    x-java-class-annotations:
+      - "@Secured"
+    get:
+      summary: 查询用户
+      operationId: getUsers
+      x-java-method-annotations:
+        - "@Permission(\\"user.read\\")"
+      parameters:
+        - name: keyword
+          in: query
+          description: 搜索词
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 32
+      responses:
+        "200":
+          description: OK`;
+
+    const state = parseYamlForTableEditor(yaml);
+    const operation = state.operations[0] || {};
+    const parameter = (operation.parameters || [])[0] || {};
+
+    return {
+        pass: state.kind === 'swagger2' &&
+            state.operations.length === 1 &&
+            operation.path === '/users' &&
+            operation.method === 'get' &&
+            operation.operationId === 'getUsers' &&
+            Array.isArray(operation.classAnnotations) &&
+            operation.classAnnotations[0] === '@Secured' &&
+            Array.isArray(operation.methodAnnotations) &&
+            operation.methodAnnotations[0] === '@Permission("user.read")' &&
+            parameter.name === 'keyword' &&
+            parameter.in === 'query' &&
+            parameter.type === 'string' &&
+            parameter.minLength === '1' &&
+            parameter.maxLength === '32',
+        message: JSON.stringify(state)
+    };
+});
+
+test('tableEditor', '应能把 OpenAPI requestBody 解析为表格行', function() {
+    const yaml = `openapi: 3.0.1
+info:
+  title: User API
+  version: "1.0"
+paths:
+  /users:
+    post:
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserReq'
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    CreateUserReq:
+      type: object`;
+
+    const state = parseYamlForTableEditor(yaml);
+    const operation = state.operations[0] || {};
+    const parameter = (operation.parameters || [])[0] || {};
+
+    return {
+        pass: state.kind === 'openapi3' &&
+            Array.isArray(state.schemaRefs) &&
+            state.schemaRefs.length === 1 &&
+            state.schemaRefs[0].ref === '#/components/schemas/CreateUserReq' &&
+            operation.method === 'post' &&
+            parameter.in === 'body' &&
+            parameter.ref === '#/components/schemas/CreateUserReq' &&
+            parameter.required === true,
+        message: JSON.stringify(parameter)
+    };
+});
+
+test('tableEditor', '应能把表格编辑结果回写为 YAML 并保留定义区', function() {
+    const yaml = `swagger: "2.0"
+info:
+  title: User API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: 查询用户
+      parameters:
+        - name: keyword
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer`;
+
+    const state = parseYamlForTableEditor(yaml);
+    state.operations[0].path = '/members';
+    state.operations[0].method = 'post';
+    state.operations[0].operationId = 'createMember';
+    state.operations[0].summary = '创建成员';
+    state.operations[0].description = '通过表格回写';
+    state.operations[0].classAnnotations = ['@Secured'];
+    state.operations[0].methodAnnotations = ['@AuditLog("create-member")'];
+    state.operations[0].parameters[0].required = true;
+    state.operations[0].parameters[0].minLength = '1';
+    state.operations[0].parameters[0].maxLength = '64';
+
+    const nextYaml = applyTableEditorStateToYaml(yaml, state);
+    const parsed = jsyaml.load(nextYaml);
+    const operation = parsed.paths['/members'].post;
+    const parameter = operation.parameters[0];
+
+    return {
+        pass: !!parsed.definitions.User &&
+            !parsed.paths['/users'] &&
+            operation.operationId === 'createMember' &&
+            operation.summary === '创建成员' &&
+            operation.description === '通过表格回写' &&
+            parsed.paths['/members']['x-java-class-annotations'][0] === '@Secured' &&
+            operation['x-java-method-annotations'][0] === '@AuditLog("create-member")' &&
+            parameter.required === true &&
+            parameter.schema.minLength === 1 &&
+            parameter.schema.maxLength === 64,
+        message: nextYaml
+    };
+});
+
+test('tableEditor', '应能把表格新增 OpenAPI requestBody 回写为 requestBody 结构', function() {
+    const baseYaml = `openapi: 3.0.1
+info:
+  title: Demo
+  version: "1.0"
+paths: {}
+components:
+  schemas:
+    CreateUserReq:
+      type: object`;
+
+    const state = {
+        kind: 'openapi3',
+        operations: [
+            {
+                path: '/users',
+                method: 'post',
+                operationId: 'createUser',
+                summary: '创建用户',
+                description: '',
+                classAnnotations: [],
+                methodAnnotations: [],
+                parameters: [
+                    {
+                        name: 'body',
+                        in: 'body',
+                        required: true,
+                        type: '',
+                        format: '',
+                        description: '',
+                        minimum: '',
+                        maximum: '',
+                        minLength: '',
+                        maxLength: '',
+                        pattern: '',
+                        ref: '#/components/schemas/CreateUserReq'
+                    }
+                ]
+            }
+        ]
+    };
+
+    const nextYaml = applyTableEditorStateToYaml(baseYaml, state);
+    const parsed = jsyaml.load(nextYaml);
+    const operation = parsed.paths['/users'].post;
+
+    return {
+        pass: !!operation.requestBody &&
+            operation.requestBody.required === true &&
+            operation.requestBody.content['application/json'].schema.$ref === '#/components/schemas/CreateUserReq' &&
+            (!operation.parameters || operation.parameters.length === 0),
+        message: nextYaml
+    };
+});
+
+test('tableEditor', '应能把新建实体骨架一起回写到 Swagger definitions', function() {
+    const baseYaml = `swagger: "2.0"
+info:
+  title: Demo
+  version: "1.0"
+paths: {}`;
+
+    const state = {
+        kind: 'swagger2',
+        operations: [
+            {
+                path: '/users',
+                method: 'post',
+                operationId: 'createUser',
+                summary: '创建用户',
+                description: '',
+                classAnnotations: [],
+                methodAnnotations: [],
+                parameters: [
+                    {
+                        name: 'body',
+                        in: 'body',
+                        required: true,
+                        type: 'object',
+                        ref: '#/definitions/CreateUserReq'
+                    }
+                ]
+            }
+        ],
+        createdSchemas: {
+            CreateUserReq: {
+                type: 'object',
+                description: 'TODO: 完善 CreateUserReq 字段',
+                properties: {}
+            }
+        }
+    };
+
+    const nextYaml = applyTableEditorStateToYaml(baseYaml, state);
+    const parsed = jsyaml.load(nextYaml);
+
+    return {
+        pass: !!parsed.definitions &&
+            !!parsed.definitions.CreateUserReq &&
+            parsed.definitions.CreateUserReq.type === 'object' &&
+            parsed.paths['/users'].post.parameters[0].schema.$ref === '#/definitions/CreateUserReq' &&
+            !parsed.paths['/users'].post.parameters[0].schema.type,
+        message: nextYaml
+    };
+});
+
+test('tableEditor', 'API 导航卡片应突出当前编辑项并收敛说明文案', function() {
+    const operations = [
+        {
+            id: 'get /users',
+            path: '/users',
+            method: 'get',
+            operationId: 'getUsers',
+            summary: '查询用户列表',
+            parameters: [{ name: 'keyword', in: 'query' }]
+        },
+        {
+            id: 'post /users',
+            path: '/users',
+            method: 'post',
+            operationId: 'createUser',
+            summary: '创建用户',
+            parameters: [{ name: 'body', in: 'body' }, { name: 'traceId', in: 'header' }]
+        }
+    ];
+
+    tableEditorMarkup.setTableEditorState({ operations });
+    tableEditorMarkup.setSelectedOperationId('post /users');
+    const html = tableEditorMarkup.buildTableEditorApiTable(operations);
+
+    return {
+        pass: html.includes('当前编辑') &&
+            html.includes('2 个参数') &&
+            !html.includes('编辑当前接口') &&
+            !html.includes('点卡片后在右侧编辑细节'),
+        message: html
+    };
+});
+
+test('tableEditor', '当前接口详情应按基础信息与校验约束分组展示参数编辑区', function() {
+    const operation = {
+        id: 'get /users',
+        path: '/users',
+        method: 'get',
+        operationId: 'getUsers',
+        summary: '查询用户',
+        description: '按关键字搜索用户',
+        classAnnotations: ['@Secured'],
+        methodAnnotations: ['@AuditLog("query-users")'],
+        parameters: [
+            {
+                name: 'keyword',
+                in: 'query',
+                required: false,
+                type: 'string',
+                ref: '',
+                description: '搜索词',
+                minLength: '1',
+                maxLength: '32',
+                minimum: '',
+                maximum: ''
+            }
+        ]
+    };
+
+    tableEditorMarkup.setTableEditorState({ operations: [operation] });
+    tableEditorMarkup.setFocusedParamKey('get /users::0');
+    const html = tableEditorMarkup.buildTableEditorDetail(operation);
+
+    return {
+        pass: html.includes('参数导航') &&
+            html.includes('参数胶囊可跳转') &&
+            html.includes('YAML 原生字段') &&
+            html.includes('校验约束') &&
+            html.includes('说明与引用') &&
+            html.includes('Swagger / OpenAPI 原生字段') &&
+            html.includes('operationId（YAML）') &&
+            html.includes('摘要 summary（YAML）') &&
+            html.includes('代码预览') &&
+            html.includes('注解归属') &&
+            html.includes('类级作用范围') &&
+            html.includes('当前方法注解') &&
+            html.includes('统一 Controller 类') &&
+            html.includes('当前方法预览') &&
+            html.includes('@RestController') &&
+            html.includes('@Secured') &&
+            html.includes('@AuditLog'),
+        message: html
+    };
+});
+
+test('tableEditor', '参数形态应使用固定下拉，并提供引用实体入口', function() {
+    const operation = {
+        id: 'post /users',
+        path: '/users',
+        method: 'post',
+        operationId: 'createUser',
+        summary: '创建用户',
+        description: '',
+        classAnnotations: [],
+        methodAnnotations: [],
+        parameters: [
+            {
+                name: 'body',
+                in: 'body',
+                required: true,
+                type: 'object',
+                ref: '#/definitions/CreateUserReq',
+                description: '请求体',
+                minLength: '',
+                maxLength: '',
+                minimum: '',
+                maximum: ''
+            }
+        ],
+        schemaRefs: [
+            { name: 'CreateUserReq', ref: '#/definitions/CreateUserReq' },
+            { name: 'AddressInfo', ref: '#/definitions/AddressInfo' }
+        ]
+    };
+
+    tableEditorMarkup.setTableEditorState({
+        kind: 'swagger2',
+        operations: [operation],
+        schemaRefs: operation.schemaRefs
+    });
+    const html = tableEditorMarkup.buildTableEditorDetail(operation);
+
+    return {
+        pass: html.includes('参数形态') &&
+            html.includes('实体对象（$ref）') &&
+            html.includes('实体数组（items.$ref）') &&
+            html.includes('已有实体') &&
+            html.includes('CreateUserReq') &&
+            html.includes('新建实体并引用') &&
+            html.includes('高级：自定义 $ref 路径'),
+        message: html
+    };
+});
+
+test('tableEditor', '非 body 参数不应展示实体引用形态', function() {
+    const operation = {
+        id: 'get /users',
+        path: '/users',
+        method: 'get',
+        operationId: 'getUsers',
+        summary: '查询用户',
+        description: '',
+        classAnnotations: [],
+        methodAnnotations: [],
+        parameters: [
+            {
+                name: 'keyword',
+                in: 'query',
+                required: false,
+                type: 'string',
+                ref: '',
+                description: '搜索词'
+            }
+        ]
+    };
+
+    tableEditorMarkup.setTableEditorState({ operations: [operation], schemaRefs: [] });
+    const html = tableEditorMarkup.buildTableEditorDetail(operation);
+
+    return {
+        pass: html.includes('path / query / header') &&
+            !html.includes('实体对象（$ref）') &&
+            !html.includes('实体数组（items.$ref）'),
+        message: html
+    };
+});
+
+test('tableEditor', 'body 参数应明确提示 object 仅支持空壳回写，复杂字段需切回 YAML 或使用 $ref', function() {
+    const operation = {
+        id: 'post /users',
+        path: '/users',
+        method: 'post',
+        operationId: 'createUser',
+        summary: '创建用户',
+        description: '创建用户',
+        classAnnotations: [],
+        methodAnnotations: [],
+        parameters: [
+            {
+                name: 'body',
+                in: 'body',
+                required: true,
+                type: 'object',
+                ref: '',
+                description: '请求体',
+                minLength: '',
+                maxLength: '',
+                minimum: '',
+                maximum: ''
+            }
+        ]
+    };
+
+    tableEditorMarkup.setTableEditorState({ operations: [operation] });
+    const html = tableEditorMarkup.buildTableEditorDetail(operation);
+
+    return {
+        pass: html.includes('当前是 body / requestBody 建模') &&
+            html.includes('内联 object') &&
+            html.includes('暂不展开对象字段') &&
+            html.includes('改用 $ref 或切回 YAML'),
+        message: html
+    };
+});
+
+test('tableEditor', '新增参数入口应提供 query/path/header/body 可选列表', function() {
+    const operation = {
+        id: 'get /users',
+        path: '/users',
+        method: 'get',
+        operationId: 'getUsers',
+        summary: '查询用户',
+        description: '',
+        classAnnotations: [],
+        methodAnnotations: [],
+        parameters: []
+    };
+
+    tableEditorMarkup.setTableEditorState({ operations: [operation] });
+    const html = tableEditorMarkup.buildTableEditorDetail(operation);
+
+    return {
+        pass: html.includes('新增 query 参数') &&
+            html.includes('新增 path 参数') &&
+            html.includes('新增 header 参数') &&
+            html.includes('新增 body 参数'),
+        message: html
     };
 });
 

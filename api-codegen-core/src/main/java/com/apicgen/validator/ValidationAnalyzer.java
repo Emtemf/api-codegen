@@ -132,6 +132,19 @@ public class ValidationAnalyzer {
         String fieldType = field.getType();
         ValidationConfig validation = field.getValidation();
 
+        // 0. 检查缺失类型 - 尝试推断类型并生成可自动修复的 issue
+        if (fieldType == null || fieldType.isBlank()) {
+            String inferredType = inferTypeFromFieldName(fieldName);
+            items.add(new AnalysisItem(
+                    apiName, location, className, fieldName, inferredType,
+                    "字段类型缺失，已推断为 " + inferredType,
+                    "设置 type=" + inferredType,
+                    AnalysisItem.Severity.ERROR
+            ));
+            // 类型为空时仍继续分析其他规则（后续规则用推断类型）
+            fieldType = inferredType;
+        }
+
         // 1. 检查必填字段是否有 @NotNull/@NotBlank 校验
         if (field.isRequired()) {
             if (validation == null || (!isNotNullValidated(validation) && !isNotBlankValidated(validation))) {
@@ -561,32 +574,58 @@ public class ValidationAnalyzer {
 
     /**
      * 检查是否有 @NotNull 校验
-     * Note: In the current model, required field validation is implicitly checked via FieldDefinition.required
-     * This method checks if the validation config indicates required=true or if there's explicit validation
+     * Swagger/OpenAPI 中 required=true 本身就映射到 @NotNull，
+     * 因此只需检查是否存在配套的数值范围校验（min/max）即可。
+     * String 字段的 minLength/maxLength 不等于 @NotBlank，由 isNotBlankValidated 独立判断。
      */
     private boolean isNotNullValidated(ValidationConfig validation) {
         if (validation == null) {
             return false;
         }
-        // Check if required validation is explicitly set
-        // In the model, this could be validation.getRequired() or similar
-        // For now, we check if there's any non-null validation which implies some validation exists
-        return validation.getMin() != null || validation.getMax() != null
-                || validation.getMinLength() != null || validation.getMaxLength() != null
-                || validation.getMinSize() != null || validation.getMaxSize() != null;
+        // 数值范围校验 (min/max) 与 required=true 一起已覆盖 @NotNull
+        return validation.getMin() != null || validation.getMax() != null;
     }
 
     /**
      * 检查是否有 @NotBlank 校验
-     * @NotBlank is specifically for String types to check for blank strings
+     * @NotBlank 检查字符串不为 null、不为空、且至少有一个非空白字符
+     * minLength >= 1 只检查长度，不等同于 @NotBlank
+     * 只有 pattern 或显式的 @NotBlank 标记才算
      */
     private boolean isNotBlankValidated(ValidationConfig validation) {
         if (validation == null) {
             return false;
         }
-        // Similar to isNotNullValidated - presence of any String validation implies some validation
-        return validation.getMinLength() != null || validation.getMaxLength() != null
-                || validation.getPattern() != null || Boolean.TRUE.equals(validation.getEmail());
+        // 只有 pattern 和 email 算作 @NotBlank 的替代
+        // minLength >= 1 只检查长度，不检查空白字符，所以不算
+        return validation.getPattern() != null || Boolean.TRUE.equals(validation.getEmail());
+    }
+
+    /**
+     * 根据字段名推断类型（与 SwaggerConverter 中的逻辑保持一致）
+     */
+    private String inferTypeFromFieldName(String fieldName) {
+        if (fieldName == null || fieldName.isBlank()) {
+            return "String";
+        }
+        String lower = fieldName.toLowerCase();
+
+        if (lower.matches("^(id|_id)$") || lower.endsWith("id")) return "Long";
+        if (lower.matches("^(name|username|nickname)$")) return "String";
+        if (lower.matches("^(price|amount|total|fee|cost|balance|salary)$")) return "Double";
+        if (lower.matches("^(count|quantity|num|number|age|size)$")) return "Integer";
+        if (lower.matches("^(page|pagenum|pageno|pagenumber)$")) return "Integer";
+        if (lower.matches("^(pagesize|perpage|limit)$")) return "Integer";
+        if (lower.matches("^(score|rating)$")) return "Double";
+        if (lower.matches("^(email|mail|e_mail)$")) return "String";
+        if (lower.matches("^(phone|mobile|tel|telephone)$")) return "String";
+        if (lower.matches("^(createdat|updatedat|deletedat|created_at|updated_at|deleted_at)$")) return "LocalDateTime";
+        if (lower.matches("^(date|birthday|dob|birthdate)$")) return "LocalDate";
+        if (lower.matches("^(is|has|can|should|enable|disable|active|visible|deleted|enabled|disabled|hidden).*")) return "Boolean";
+        if (lower.matches("^(url|link|href|uri)$")) return "String";
+        if (lower.matches("^(code|orderno|nonumber)$")) return "String";
+
+        return "String";
     }
 
     /**

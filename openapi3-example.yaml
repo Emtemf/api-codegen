@@ -38,10 +38,89 @@ servers:
 # 注意：这里的字段故意缺少校验规则，用于测试"字段变更"功能
 components:
   schemas:
-    # 故意缺少校验规则的模型，用于测试字段变更检测
+    # ========== 实体字段变更示例场景 ==========
+    # 下面的模型故意展示"实体前后变化"的典型场景：
+    # - 字段新增（added）：修复后新增字段
+    # - 字段删除（deleted）：修复后删除字段
+    # - 字段修改（modified）：修复后字段类型或校验规则变化
+
+    # 场景A: UserModel 演示字段新增
+    UserModel:
+      type: object
+      description: 用户模型 - 演示字段新增场景
+      properties:
+        userId:
+          type: integer
+          description: 用户ID
+        username:
+          type: string
+          description: 用户名
+          minLength: 2
+          maxLength: 50
+        email:
+          type: string
+          description: 邮箱
+          format: email
+        phone:
+          type: string
+          description: 手机号
+          pattern: '^1[3-9]\d{9}$'
+        # 注意：修复后会新增以下字段（age, status, avatarUrl, createdAt）
+        # 这些字段在当前版本中故意不存在，用于测试"新增字段"场景
+
+    # 场景B: LegacyUserModel 演示字段删除
+    LegacyUserModel:
+      type: object
+      description: 旧版用户模型 - 演示字段删除场景
+      properties:
+        userId:
+          type: integer
+          description: 用户ID
+        username:
+          type: string
+          description: 用户名
+        oldPasswordField:
+          type: string
+          description: "旧密码字段(已废弃,修复后将被删除)"
+        deprecatedFlag:
+          type: boolean
+          description: "已废弃标记(修复后将被删除)"
+        legacyUserCode:
+          type: string
+          description: "旧版编码(修复后将被删除)"
+        email:
+          type: string
+          description: 邮箱
+
+    # 场景C: ProductModel 演示字段修改
+    ProductModel:
+      type: object
+      description: 商品模型 - 演示字段修改场景
+      properties:
+        productId:
+          type: integer
+          description: 商品ID
+        productName:
+          type: string
+          description: 商品名称
+          minLength: 1
+          maxLength: 100
+        price:
+          type: number
+          format: double
+          description: "价格(修复后将从number改为decimal并增加minimum)"
+        quantity:
+          type: integer
+          description: "数量(修复后将增加范围校验minimum:0)"
+        category:
+          type: string
+          description: "分类(修复后将增加枚举限制)"
+        # 注意：以上字段故意缺少完整校验，修复后会变化
+
+    # 场景D: OrderModel 演示综合变更(新增+删除+修改)
     OrderModel:
       type: object
-      description: 订单模型（故意缺少校验规则）
+      description: 订单模型 - 演示综合字段变更场景(故意缺少校验规则)
       properties:
         orderId:
           type: integer
@@ -58,16 +137,102 @@ components:
         contactPhone:
           type: string
           description: 联系电话
+        # 删除字段:legacyOrderType(已废弃,修复后删除)
+        legacyOrderType:
+          type: string
+          description: "旧版订单类型(修复后删除)"
+        # 修改字段:totalAmount(修复后增加范围校验)
         totalAmount:
           type: number
-          description: 订单金额
+          description: "订单金额(修复后将增加minimum:0)"
+        # 新增字段:修复后会新增orderStatus,paymentMethod
         productList:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/OrderItemModel'
           description: 商品列表
 
+    OrderItemModel:
+      type: object
+      description: 订单商品明细
+      properties:
+        productId:
+          type: integer
+          description: 商品ID
+        productName:
+          type: string
+          description: 商品名称
+        quantity:
+          type: integer
+          description: "数量(修复后将增加minimum:1)"
+        unitPrice:
+          type: number
+          description: "单价(修复后将增加minimum:0)"
+
 paths:
+  # ========== 实体变更展示API - 使用 $ref 引用 components/schemas ==========
+  /model/user:
+    get:
+      summary: 获取用户模型 - 字段新增场景
+      operationId: getUserModel
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserModel'
+
+  /model/legacy-user:
+    get:
+      summary: 获取旧版用户模型 - 字段删除场景
+      operationId: getLegacyUserModel
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegacyUserModel'
+
+  /model/product:
+    get:
+      summary: 获取商品模型 - 字段修改场景
+      operationId: getProductModel
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductModel'
+
+  /model/order:
+    get:
+      summary: 获取订单模型 - 综合变更场景
+      operationId: getOrderModel
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderModel'
+
+  /model/orders:
+    post:
+      summary: 创建订单 - 使用 OrderModel
+      operationId: createOrderModel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderModel'
+      responses:
+        '200':
+          description: 成功
+
   # ========== 正常API - 作为对比 ==========
   /orders:
     get:
@@ -641,62 +806,3 @@ paths:
       responses:
         '200':
           description: 成功
-
-    Order:
-      type: object
-      description: 订单信息
-      properties:
-        id:
-          type: integer
-          description: 订单ID
-        orderNo:
-          type: string
-          description: 订单编号
-        customerId:
-          type: integer
-          description: 客户ID
-        totalAmount:
-          type: number
-          format: double
-          description: 订单总金额
-        status:
-          type: string
-          description: 订单状态
-          enum: [PENDING, PAID, SHIPPED, COMPLETED, CANCELLED]
-        createdAt:
-          type: string
-          format: date-time
-          description: 创建时间
-
-    OrderItem:
-      type: object
-      description: 订单商品明细
-      properties:
-        id:
-          type: integer
-          description: 明细ID
-        orderId:
-          type: integer
-          description: 订单ID
-        productId:
-          type: integer
-          description: 商品ID
-        productName:
-          type: string
-          description: 商品名称
-        quantity:
-          type: integer
-          minimum: 1
-          description: 数量
-
-    OrderResponse:
-      type: object
-      properties:
-        code:
-          type: integer
-          description: 响应码
-        message:
-          type: string
-          description: 响应消息
-        data:
-          $ref: '#/components/schemas/Order'

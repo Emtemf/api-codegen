@@ -35,9 +35,16 @@ basePath: /api/v1
 # ========== definitions - 用于测试字段级别变更 ==========
 # 注意：这里的字段故意缺少校验规则，用于测试"字段变更"功能
 definitions:
+  # ========== 实体字段变更示例场景 ==========
+  # 下面的模型故意展示"实体前后变化"的典型场景：
+  # - 字段新增（added）：修复后新增字段
+  # - 字段删除（deleted）：修复后删除字段
+  # - 字段修改（modified）：修复后字段类型或校验规则变化
+
+  # 场景A: UserModel 演示字段新增
   UserModel:
     type: object
-    description: 用户模型
+    description: 用户模型 - 演示字段新增场景
     properties:
       id:
         type: integer
@@ -45,22 +52,116 @@ definitions:
       username:
         type: string
         description: 用户名
+        minLength: 2
+        maxLength: 50
       email:
         type: string
         description: 邮箱
+        format: email
       phone:
         type: string
         description: 手机号
-      age:
+        pattern: '^1[3-9]\d{9}$'
+      # 注意：修复后会新增以下字段（age, status, avatarUrl）
+      # 这些字段在当前版本中故意不存在，用于测试"新增字段"场景
+
+  # 场景B: LegacyUserModel 演示字段删除
+  LegacyUserModel:
+    type: object
+    description: 旧版用户模型 - 演示字段删除场景
+    properties:
+      id:
         type: integer
-        description: 年龄
-      tags:
+        description: 用户ID
+      username:
+        type: string
+        description: 用户名
+      oldPasswordField:
+        type: string
+        description: "旧密码字段(已废弃,修复后将被删除)"
+      deprecatedFlag:
+        type: boolean
+        description: "已废弃标记(修复后将被删除)"
+      legacyCode:
+        type: string
+        description: "旧版编码(修复后将被删除)"
+      email:
+        type: string
+        description: 邮箱
+
+  # 场景C: ProductModel 演示字段修改
+  ProductModel:
+    type: object
+    description: 商品模型 - 演示字段修改场景
+    properties:
+      id:
+        type: integer
+        description: 商品ID
+      name:
+        type: string
+        description: 商品名称
+        minLength: 1
+        maxLength: 100
+      price:
+        type: number
+        format: double
+        description: "价格(修复后将从number改为decimal)"
+      quantity:
+        type: integer
+        description: "数量(修复后将增加范围校验minimum:0)"
+      category:
+        type: string
+        description: "分类(修复后将增加枚举限制)"
+      # 注意:以上字段故意缺少完整校验,修复后会变化
+
+  # 场景D: OrderModel 演示综合变更(新增+删除+修改)
+  OrderModel:
+    type: object
+    description: 订单模型 - 演示综合字段变更场景
+    properties:
+      orderId:
+        type: integer
+        description: 订单ID
+      orderNo:
+        type: string
+        description: 订单编号
+        minLength: 10
+        maxLength: 30
+      customerId:
+        type: integer
+        description: 客户ID
+      # 删除字段:legacyOrderType(已废弃)
+      legacyOrderType:
+        type: string
+        description: "旧版订单类型(修复后删除)"
+      # 修改字段:totalAmount(修复后增加范围校验)
+      totalAmount:
+        type: number
+        description: "订单金额(修复后将增加minimum:0)"
+      # 新增字段:修复后会新增orderStatus,paymentMethod,deliveryAddress
+      productList:
         type: array
         items:
-          type: string
-        description: 标签
-      address:
-        $ref: '#/definitions/AddressInfo'
+          $ref: '#/definitions/OrderItemModel'
+        description: 商品列表
+
+  OrderItemModel:
+    type: object
+    description: 订单商品明细
+    properties:
+      productId:
+        type: integer
+        description: 商品ID
+      productName:
+        type: string
+        description: 商品名称
+      quantity:
+        type: integer
+        description: "数量(修复后将增加minimum:1)"
+      unitPrice:
+        type: number
+        description: 单价
+
   AddressInfo:
     type: object
     description: 用户地址
@@ -77,6 +178,7 @@ definitions:
         maxLength: 32
       geo:
         $ref: '#/definitions/GeoPoint'
+
   GeoPoint:
     type: object
     description: 地理坐标
@@ -368,6 +470,61 @@ paths:
         '200':
           description: 成功
 
+  # ========== 实体变更展示API - 使用 $ref 引用 definitions ==========
+  /model/user:
+    get:
+      summary: 获取用户模型 - 字段新增场景
+      operationId: getUserModel
+      responses:
+        '200':
+          description: 成功
+          schema:
+            $ref: '#/definitions/UserModel'
+
+  /model/legacy-user:
+    get:
+      summary: 获取旧版用户模型 - 字段删除场景
+      operationId: getLegacyUserModel
+      responses:
+        '200':
+          description: 成功
+          schema:
+            $ref: '#/definitions/LegacyUserModel'
+
+  /model/product:
+    get:
+      summary: 获取商品模型 - 字段修改场景
+      operationId: getProductModel
+      responses:
+        '200':
+          description: 成功
+          schema:
+            $ref: '#/definitions/ProductModel'
+
+  /model/order:
+    get:
+      summary: 获取订单模型 - 综合变更场景
+      operationId: getOrderModel
+      responses:
+        '200':
+          description: 成功
+          schema:
+            $ref: '#/definitions/OrderModel'
+
+  /model/orders:
+    post:
+      summary: 创建订单 - 使用 OrderModel
+      operationId: createOrderModel
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/OrderModel'
+      responses:
+        '200':
+          description: 成功
+
   # ========== 创建用户 - 完整请求体示例 ==========
   /users/create:
     post:
@@ -641,3 +798,41 @@ paths:
       responses:
         '200':
           description: 成功
+
+  # ========== DFX-021: 参数缺少显式 type (需手动补全) ==========
+  /manual/param-no-type:
+    get:
+      summary: 参数缺少类型 - 需手动补全
+      operationId: manualParamNoType
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: 用户ID（缺少 type）
+        - name: userName
+          in: query
+          description: 用户名（缺少 type）
+        - name: amount
+          in: query
+          description: 金额（缺少 type）
+      responses:
+        '200':
+          description: 成功
+
+  # ========== DFX-022: response 字段缺少 type (需手动补全) ==========
+  /manual/response-no-type:
+    get:
+      summary: 响应字段缺少类型 - 需手动补全
+      operationId: manualResponseNoType
+      responses:
+        '200':
+          description: 成功
+          schema:
+            type: object
+            properties:
+              orderId:
+                description: 订单ID（缺少 type）
+              totalPrice:
+                description: 总价（缺少 type）
+              status:
+                description: 状态（缺少 type）

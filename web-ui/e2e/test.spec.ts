@@ -86,6 +86,290 @@ apis:
       const content = await appPage.getYamlContent();
       expect(content).toContain('testApi');
     });
+
+    test('should support switching to table view and syncing edits back to YAML', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Demo API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: 查询用户
+      parameters:
+        - name: keyword
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.tableViewButton.click();
+
+      await expect(page.locator('#table-editor-api-list .table-editor-nav-card')).toBeVisible();
+      await page.locator('#table-editor-api-list .table-editor-nav-card').first().click();
+      await page.locator('#table-editor-parameter-panel textarea').first().fill('表格模式下编辑描述');
+      await page.locator('#table-editor-parameter-panel .table-parameter-card input').first().fill('searchKeyword');
+
+      await appPage.yamlViewButton.click();
+      const content = await appPage.getYamlContent();
+
+      expect(content).toContain('name: searchKeyword');
+      expect(content).toContain('description: 表格模式下编辑描述');
+    });
+
+    test('should focus the target parameter card when clicking parameter navigation chips', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Demo API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: 查询用户
+      parameters:
+        - name: keyword
+          in: query
+          type: string
+        - name: pageNo
+          in: query
+          type: integer
+      responses:
+        "200":
+          description: OK
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.tableViewButton.click();
+
+      const secondJump = page.locator('#table-editor-parameter-panel .table-editor-param-jump').nth(1);
+      await expect(secondJump).toContainText('pageNo');
+      await secondJump.click();
+
+      await expect(page.locator('#table-editor-parameter-panel .table-parameter-card.focused').nth(0)).toContainText('pageNo');
+      await expect(page.locator('#table-editor-parameter-panel .table-editor-param-jump.active').nth(0)).toContainText('pageNo');
+    });
+
+    test('should show controller and current method code preview in table view', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Demo API
+  version: "1.0"
+paths:
+  /admin/users:
+    x-java-class-annotations:
+      - "@Secured"
+    get:
+      operationId: getAdminUsers
+      summary: 获取用户列表
+      x-java-method-annotations:
+        - "@Permission(\\"admin:user:read\\")"
+      parameters:
+        - name: keyword
+          in: query
+          type: string
+      responses:
+        "200":
+          description: OK
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.tableViewButton.click();
+
+      const preview = page.locator('#table-editor-parameter-panel .table-editor-code-preview');
+      await expect(preview).toBeVisible();
+      await expect(preview).toContainText('注解归属');
+      await expect(preview).toContainText('类级作用范围');
+      await expect(preview).toContainText('当前方法注解');
+      await expect(preview).toContainText('统一 Controller 类');
+      await expect(preview).toContainText('当前方法预览');
+      await expect(preview).toContainText('@RestController');
+      await expect(preview).toContainText('@Secured');
+      await expect(preview).toContainText('@Permission');
+      await expect(preview).toContainText('getAdminUsers');
+      await expect(page.locator('#table-editor-parameter-panel')).toContainText('YAML 原生字段');
+      await expect(page.locator('#table-editor-parameter-panel')).toContainText('operationId（YAML）');
+      await expect(page.locator('#table-editor-parameter-panel')).toContainText('摘要 summary（YAML）');
+    });
+
+    test('should explain body object limits in table view and guide users to $ref or YAML', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Demo API
+  version: "1.0"
+paths:
+  /users:
+    post:
+      operationId: createUser
+      summary: 创建用户
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        "200":
+          description: OK
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.tableViewButton.click();
+
+      const panel = page.locator('#table-editor-parameter-panel');
+      await expect(panel).toContainText('当前是 body / requestBody 建模');
+      await expect(panel).toContainText('内联 object');
+      await expect(panel).toContainText('改用 $ref 或切回 YAML');
+    });
+
+    test('should allow choosing parameter kind when adding a new parameter', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Demo API
+  version: "1.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: 查询用户
+      responses:
+        "200":
+          description: OK
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.tableViewButton.click();
+
+      await page.getByRole('button', { name: '新增参数' }).click();
+      await page.getByRole('button', { name: '新增 path 参数' }).click();
+
+      const panel = page.locator('#table-editor-parameter-panel');
+      await expect(panel).toContainText('PATH');
+      await expect(panel.locator('.table-parameter-card').first()).toContainText('path');
+    });
+
+    test('should offer selectable parameter shape and schema ref options', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Demo API
+  version: "1.0"
+paths:
+  /users:
+    post:
+      operationId: createUser
+      summary: 创建用户
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        "200":
+          description: OK
+definitions:
+  CreateUserReq:
+    type: object
+  AddressInfo:
+    type: object
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.tableViewButton.click();
+
+      const editorKind = page.locator('[data-table-param-editor-kind="post /users::0"]');
+      await expect(editorKind).toBeVisible();
+      await editorKind.selectOption('ref-object');
+
+      const refSelect = page.locator('[data-table-param-ref-select="post /users::0"]');
+      await expect(refSelect).toBeVisible();
+      await expect(refSelect).toContainText('CreateUserReq');
+      await expect(refSelect).toContainText('AddressInfo');
+
+      const refInput = page.locator('[data-table-param-ref-input="post /users::0"]');
+      await expect(refInput).toBeVisible();
+      await expect(page.locator('#table-editor-parameter-panel')).toContainText('自定义 $ref 路径');
+    });
+
+    test('should create a schema shell and bind it when choosing entity modeling', async ({ page }) => {
+      const appPage = new AppPage(page);
+      await appPage.goto();
+      await appPage.waitForLoad();
+
+      const swaggerYaml = `
+swagger: "2.0"
+info:
+  title: Demo API
+  version: "1.0"
+paths:
+  /users:
+    post:
+      operationId: createUser
+      summary: 创建用户
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+      responses:
+        "200":
+          description: OK
+`.trim();
+
+      await appPage.setYamlContent(swaggerYaml);
+      await appPage.tableViewButton.click();
+
+      const editorKind = page.locator('[data-table-param-editor-kind="post /users::0"]');
+      await editorKind.selectOption('ref-object');
+
+      const createName = page.locator('[data-table-param-create-name="post /users::0"]').first();
+      await createName.fill('CreateUserReq');
+      await page.getByRole('button', { name: '新建实体并引用' }).first().click();
+
+      await appPage.yamlViewButton.click();
+      const yaml = await appPage.getYamlContent();
+      expect(yaml).toContain('definitions:');
+      expect(yaml).toContain('CreateUserReq:');
+      expect(yaml).toContain('$ref: "#/definitions/CreateUserReq"');
+      expect(yaml).not.toContain('type: object\n            $ref:');
+    });
   });
 
   test.describe('🟡 IMPORTANT: Analysis Feature', () => {

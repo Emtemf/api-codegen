@@ -17,6 +17,8 @@ export class AppPage {
   readonly analyzeButton: Locator;
   readonly autoFixButton: Locator;
   readonly loadExampleButton: Locator;
+  readonly yamlViewButton: Locator;
+  readonly tableViewButton: Locator;
 
   // Editors - CodeMirror creates a wrapper div
   readonly yamlEditor: Locator;
@@ -38,6 +40,8 @@ export class AppPage {
     this.analyzeButton = page.getByRole('button', { name: '分析', exact: true });
     this.autoFixButton = page.locator('button:has-text("自动修复")');
     this.loadExampleButton = page.getByRole('button', { name: /^(示例|加载示例)$/ });
+    this.yamlViewButton = page.locator('#workspace-view-yaml-btn');
+    this.tableViewButton = page.locator('#workspace-view-table-btn');
 
     // Use CodeMirror class - it's the visible editor wrapper
     this.yamlEditor = page.locator('.api-panel .CodeMirror');

@@ -240,8 +240,8 @@ mvn com.apicgen:api-codegen-maven-plugin:generate [参数]
 
 | 场景 | 规则 | DFX代码 |
 |------|------|---------|
-| 必填字段缺少 @NotNull | required=true | DFX-003 |
-| String 必填使用 @NotBlank | required=true 且 type=String | DFX-003 |
+| 必填字段缺少 @NotNull | required=true → 需手动确认 | DFX-003 |
+| String 必填使用 @NotBlank | required=true 且 type=String → 需手动确认 | DFX-003 |
 | page/pageNum 分页参数 | min: 1, max: 2147483647 | DFX-011 |
 | pageSize/limit/size | min: 1, max: 100 | DFX-012 |
 | 路径参数（数值） | min: 1 | DFX-014 |
@@ -368,7 +368,7 @@ cd web-ui && npm run test:e2e
 | DFX-001 | 路径包含 `//` → 自动删除重复斜杠 |
 | DFX-002 | 路径不以 `/` 开头 → 自动添加前缀 |
 | **参数校验** |
-| DFX-003 | 必填参数缺少 `@NotNull` → 自动添加 |
+| DFX-003 | 必填参数缺少 `@NotNull` → 需手动确认添加 |
 | DFX-011 | page 参数缺少范围 → 自动添加 `min:1, max:2147483647` |
 | DFX-012 | pageSize 参数缺少范围 → 自动添加 `min:1, max:100` |
 | DFX-014 | 路径参数缺少校验 → 自动添加 `min:1` 或 `minLength:1` |

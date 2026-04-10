@@ -104,6 +104,17 @@ public class ValidationFixer {
                 .filter(i -> fieldName.equals(i.getFieldName()))
                 .toList();
 
+        // 先处理类型推断问题（设置字段类型）
+        for (ValidationAnalyzer.AnalysisItem issue : fieldIssues) {
+            String issueText = issue.getIssue();
+            if (issueText != null && issueText.startsWith("字段类型缺失，已推断为")) {
+                String inferredType = issue.getFieldType();
+                if (inferredType != null && !inferredType.isBlank()) {
+                    field.setType(inferredType);
+                }
+            }
+        }
+
         // 如果没有校验配置，创建新的
         if (field.getValidation() == null) {
             field.setValidation(new ValidationConfig());
@@ -128,6 +139,13 @@ public class ValidationFixer {
      */
     private void applyFix(ValidationConfig validation, ValidationAnalyzer.AnalysisItem issue) {
         String issueText = issue.getIssue();
+
+        // 处理类型推断修复
+        if (issueText != null && issueText.startsWith("字段类型缺失，已推断为")) {
+            // 类型推断的修复不在这里处理（类型已经在 SwaggerConverter 层面设置）
+            // 这里只是为了匹配 fixable=true 的情况，让前端可以自动修复
+            return;
+        }
 
         switch (issueText) {
             // String 字段修复

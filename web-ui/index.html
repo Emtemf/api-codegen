@@ -114,6 +114,1036 @@
             min-height: 0;
         }
 
+        .workspace-view-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.08);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+        }
+        .workspace-view-btn {
+            border: none;
+            border-radius: 999px;
+            background: transparent;
+            color: #64748b;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .workspace-view-btn.active {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+        }
+        .workspace-view-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.7);
+            color: #0f172a;
+        }
+        .editor-view {
+            display: none;
+            height: 100%;
+            min-height: 0;
+        }
+        .editor-view.active {
+            display: flex;
+        }
+        .editor-view-yaml {
+            flex: 1;
+            min-height: 0;
+            padding: 16px;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.08), transparent 22%),
+                radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.06), transparent 24%),
+                linear-gradient(180deg, #f7faff 0%, #f3f7fc 100%);
+        }
+        .yaml-workbench {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            gap: 14px;
+            padding: 16px;
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(191, 219, 254, 0.82);
+            box-shadow: 0 22px 60px rgba(148, 163, 184, 0.18);
+        }
+        .yaml-workbench-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 2px 2px 0;
+        }
+        .yaml-workbench-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .yaml-workbench-kicker {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+            font-weight: 800;
+        }
+        .yaml-workbench-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+        .yaml-workbench-copy small {
+            max-width: 680px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .yaml-workbench-badges {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .yaml-workbench-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .yaml-editor-stage {
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            border-radius: 24px;
+            border: 1px solid rgba(191, 219, 254, 0.86);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(248, 251, 255, 0.96) 100%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.84),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+        }
+        .yaml-editor-stage .CodeMirror {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 24px;
+        }
+        .editor-view-table {
+            flex: 1;
+            min-height: 0;
+            background:
+                radial-gradient(circle at top left, rgba(59, 130, 246, 0.08), transparent 24%),
+                radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.07), transparent 28%),
+                linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
+        }
+        .table-editor-shell {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            gap: 14px;
+            padding: 16px 16px 18px;
+            overflow: auto;
+        }
+        .table-editor-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 251, 255, 0.92) 100%);
+            border: 1px solid rgba(191, 219, 254, 0.86);
+            box-shadow: 0 16px 40px rgba(148, 163, 184, 0.16);
+        }
+        .table-editor-toolbar-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .table-editor-toolbar-kicker {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+            font-weight: 800;
+        }
+        .table-editor-toolbar-title {
+            font-size: 16px;
+            color: #0f172a;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+        .table-editor-toolbar-copy small {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+            max-width: 560px;
+        }
+        .table-editor-toolbar-stats {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .table-editor-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .table-editor-grid {
+            display: grid;
+            grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+            gap: 14px;
+            min-height: 0;
+        }
+        .table-editor-section {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            border-radius: 24px;
+            border: 1px solid rgba(191, 219, 254, 0.88);
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 22px 54px rgba(148, 163, 184, 0.16);
+            overflow: hidden;
+        }
+        .table-editor-section-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.94);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.9) 100%);
+        }
+        .table-editor-section-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .table-editor-section-copy {
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .table-editor-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 14px 16px 16px;
+        }
+        .table-editor-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 780px;
+            color: #0f172a;
+        }
+        .table-editor-nav-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .table-editor-nav-card {
+            border-radius: 18px;
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(247, 250, 252, 0.95) 100%);
+            padding: 13px 14px;
+            cursor: pointer;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+        }
+        .table-editor-nav-card:hover {
+            border-color: rgba(147, 197, 253, 0.95);
+            box-shadow: 0 12px 24px rgba(148, 163, 184, 0.12);
+            transform: translateY(-1px);
+        }
+        .table-editor-nav-card.selected {
+            border-color: rgba(59, 130, 246, 0.95);
+            box-shadow: 0 18px 32px rgba(59, 130, 246, 0.14);
+            background:
+                linear-gradient(180deg, rgba(239, 246, 255, 0.99) 0%, rgba(224, 236, 255, 0.9) 100%);
+        }
+        .table-editor-nav-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .table-editor-nav-main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .table-editor-nav-path {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .table-editor-nav-meta {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+        .table-editor-nav-state {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, 0.12);
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+        .table-editor-nav-id {
+            font-size: 12px;
+            color: #475569;
+            font-weight: 700;
+        }
+        .table-editor-nav-summary {
+            margin-top: 8px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .table-editor-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .table-editor-nav-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 9px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(226, 232, 240, 0.96);
+            color: #334155;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .table-editor-table tbody tr {
+            cursor: pointer;
+        }
+        .table-editor-table th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8fbff;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.96);
+        }
+        .table-editor-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.78);
+            vertical-align: top;
+            background: rgba(255, 255, 255, 0.92);
+        }
+        .table-editor-table tr.selected td {
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.98) 0%, rgba(219, 234, 254, 0.78) 100%);
+        }
+        .table-editor-table tr.selected td:first-child {
+            box-shadow: inset 3px 0 0 #2563eb;
+        }
+        .table-editor-table tr:hover td {
+            background: rgba(248, 250, 252, 0.96);
+        }
+        .table-editor-cell-input,
+        .table-editor-cell-select,
+        .table-editor-cell-textarea {
+            width: 100%;
+            border: 1px solid rgba(203, 213, 225, 0.96);
+            border-radius: 12px;
+            background: #ffffff;
+            color: #0f172a;
+            padding: 9px 10px;
+            font-size: 12px;
+            line-height: 1.45;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+        }
+        .table-editor-cell-input:focus,
+        .table-editor-cell-select:focus,
+        .table-editor-cell-textarea:focus {
+            outline: none;
+            border-color: rgba(37, 99, 235, 0.66);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+            background: #ffffff;
+        }
+        .table-editor-cell-textarea {
+            min-height: 88px;
+            resize: vertical;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+        .table-editor-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+        .table-editor-chip.get { background: rgba(219, 234, 254, 0.98); color: #1d4ed8; }
+        .table-editor-chip.post { background: rgba(220, 252, 231, 0.96); color: #15803d; }
+        .table-editor-chip.put { background: rgba(254, 249, 195, 0.98); color: #a16207; }
+        .table-editor-chip.delete { background: rgba(254, 226, 226, 0.98); color: #dc2626; }
+        .table-editor-chip.patch,
+        .table-editor-chip.options,
+        .table-editor-chip.head { background: rgba(243, 232, 255, 0.98); color: #7c3aed; }
+        .table-editor-chip.query { background: rgba(239, 246, 255, 0.96); color: #1d4ed8; }
+        .table-editor-chip.path { background: rgba(254, 249, 195, 0.98); color: #a16207; }
+        .table-editor-chip.header { background: rgba(236, 253, 245, 0.98); color: #0f766e; }
+        .table-editor-chip.body { background: rgba(243, 232, 255, 0.98); color: #7c3aed; }
+        .table-editor-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .table-editor-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .table-editor-link-btn {
+            border: none;
+            background: transparent;
+            color: #2563eb;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+        }
+        .table-editor-link-btn.primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .table-editor-link-btn.primary:hover {
+            background: #dbeafe;
+        }
+        .table-editor-link-btn.danger {
+            color: #dc2626;
+        }
+        .table-editor-subgrid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 14px;
+        }
+        .table-editor-card {
+            border-radius: 18px;
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+            padding: 16px;
+        }
+        .table-editor-card-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 10px;
+        }
+        .table-editor-field-hint {
+            margin-top: -6px;
+            margin-bottom: 8px;
+            color: #64748b;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+        .table-editor-detail-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+            gap: 14px;
+            margin-top: 14px;
+        }
+        .table-editor-form-block {
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.92);
+            background: rgba(255, 255, 255, 0.84);
+            padding: 14px;
+        }
+        .table-editor-form-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .table-editor-form-subtitle {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .table-editor-code-preview {
+            margin-top: 14px;
+        }
+        .table-editor-code-intro {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .table-editor-code-intro-copy {
+            min-width: 0;
+        }
+        .table-editor-code-intro-copy .table-editor-card-title {
+            margin-bottom: 4px;
+        }
+        .table-editor-code-intro-copy p {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.55;
+            color: #64748b;
+        }
+        .table-editor-code-intro-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(239, 246, 255, 0.92);
+            border: 1px solid rgba(191, 219, 254, 0.92);
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .table-editor-annotation-scope {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .table-editor-annotation-card {
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            background: rgba(255, 255, 255, 0.84);
+            padding: 13px 14px;
+        }
+        .table-editor-annotation-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .table-editor-annotation-copy {
+            margin-top: 4px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #64748b;
+        }
+        .table-editor-annotation-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .table-editor-annotation-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 9px;
+            border-radius: 12px;
+            background: rgba(248, 250, 252, 0.96);
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            color: #4c1d95;
+            font-size: 11px;
+            font-weight: 700;
+            font-family: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+            line-height: 1.45;
+        }
+        .table-editor-annotation-empty {
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #94a3b8;
+        }
+        .table-editor-code-grid {
+            display: grid;
+            grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.1fr);
+            gap: 14px;
+        }
+        .table-editor-code-card {
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            background: rgba(255, 255, 255, 0.84);
+            overflow: hidden;
+        }
+        .table-editor-code-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.94);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.92) 100%);
+        }
+        .table-editor-code-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .table-editor-code-copy {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #64748b;
+            margin-top: 3px;
+        }
+        .table-editor-code-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(239, 246, 255, 0.94);
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid rgba(191, 219, 254, 0.92);
+        }
+        .table-editor-code-frame {
+            padding: 0;
+            background:
+                linear-gradient(180deg, rgba(248, 250, 252, 0.98) 0%, rgba(241, 245, 249, 0.98) 100%);
+        }
+        .table-editor-code-frame .diff-java-code {
+            margin: 0;
+            padding: 14px 16px 16px;
+            min-height: 180px;
+            color: #0f172a;
+            font-size: 12.5px;
+            line-height: 1.68;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            text-shadow: none;
+            overflow-x: auto;
+        }
+        .table-editor-code-frame .diff-java-code .syntax-keyword { color: #9f1239; font-weight: 700; }
+        .table-editor-code-frame .diff-java-code .syntax-type { color: #1d4ed8; font-weight: 700; }
+        .table-editor-code-frame .diff-java-code .syntax-field { color: #92400e; font-weight: 600; }
+        .table-editor-code-frame .diff-java-code .syntax-string { color: #0f766e; }
+        .table-editor-code-frame .diff-java-code .syntax-number { color: #5b21b6; font-weight: 700; }
+        .table-editor-code-frame .diff-java-code .syntax-comment { color: #64748b; font-style: italic; }
+        .table-editor-code-frame .diff-java-code .syntax-method { color: #6d28d9; font-weight: 700; }
+        .table-editor-code-frame .diff-java-code .syntax-annotation { color: #7c3aed; font-weight: 700; }
+        .table-editor-selected-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .table-editor-selected-copy {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.55;
+            margin-bottom: 12px;
+        }
+        .table-editor-current-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .table-editor-current-meta {
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .table-editor-current-path {
+            font-size: 16px;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            word-break: break-word;
+        }
+        .table-editor-current-operation {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(226, 232, 240, 0.96);
+            color: #475569;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .table-editor-current-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .table-editor-quick-guide {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .table-editor-quick-guide-item {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 11px;
+            border-radius: 999px;
+            background: rgba(239, 246, 255, 0.88);
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .table-editor-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+            border: 1px dashed rgba(148, 163, 184, 0.34);
+            border-radius: 18px;
+            color: #64748b;
+            background: rgba(248, 250, 252, 0.72);
+            text-align: center;
+            padding: 24px;
+            line-height: 1.7;
+        }
+        .table-editor-empty strong {
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+        .table-editor-param-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 920px;
+        }
+        .table-parameter-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .table-parameter-card {
+            border-radius: 18px;
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.94) 100%);
+            padding: 14px;
+            transition: border-color 0.16s ease, box-shadow 0.16s ease;
+        }
+        .table-parameter-card.focused {
+            border-color: rgba(245, 158, 11, 0.92);
+            box-shadow: 0 14px 26px rgba(245, 158, 11, 0.12);
+            background: linear-gradient(180deg, rgba(255, 251, 235, 0.98) 0%, rgba(255, 247, 210, 0.92) 100%);
+        }
+        .table-parameter-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .table-parameter-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .table-parameter-card-name {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .table-parameter-section {
+            border-top: 1px solid rgba(226, 232, 240, 0.9);
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+        .table-parameter-section:first-of-type {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        .table-parameter-section-title {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        .table-parameter-model-note {
+            margin-bottom: 12px;
+            padding: 10px 11px;
+            border-radius: 14px;
+            background: rgba(239, 246, 255, 0.88);
+            border: 1px solid rgba(191, 219, 254, 0.88);
+        }
+        .table-parameter-model-title {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+        }
+        .table-parameter-model-copy {
+            margin-top: 5px;
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .table-parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .table-parameter-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .table-parameter-field.wide {
+            grid-column: 1 / -1;
+        }
+        .table-parameter-field label {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 800;
+        }
+        .table-parameter-field-copy {
+            margin-top: -2px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .table-parameter-ref-shell {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.88) 0%, rgba(248, 250, 252, 0.96) 100%);
+            border: 1px solid rgba(191, 219, 254, 0.8);
+        }
+        .table-parameter-ref-shell-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .table-parameter-ref-shell-title {
+            font-size: 12px;
+            font-weight: 800;
+            color: #1e3a8a;
+        }
+        .table-parameter-ref-shell-copy {
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .table-parameter-ref-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 9px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(191, 219, 254, 0.9);
+            color: #1d4ed8;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        @media (max-width: 980px) {
+            .table-parameter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .table-editor-param-table tbody tr.focused td {
+            background: linear-gradient(180deg, rgba(254, 249, 195, 0.98) 0%, rgba(254, 240, 138, 0.66) 100%);
+        }
+        .table-editor-param-table th,
+        .table-editor-param-table td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.88);
+            vertical-align: top;
+        }
+        .table-editor-param-table th {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            background: rgba(248, 250, 252, 0.92);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .table-editor-note {
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(248, 250, 252, 0.84);
+            color: #475569;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .table-editor-note strong {
+            color: #0f172a;
+        }
+        .table-editor-param-nav {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        .table-editor-add-menu {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+        }
+        .table-editor-add-menu-panel {
+            display: none;
+            min-width: 174px;
+            padding: 8px;
+            border-radius: 16px;
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 18px 34px rgba(148, 163, 184, 0.18);
+        }
+        .table-editor-add-menu.open .table-editor-add-menu-panel {
+            display: grid;
+            gap: 6px;
+        }
+        .table-editor-add-option {
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            background: rgba(248, 250, 252, 0.96);
+            color: #0f172a;
+            border-radius: 12px;
+            padding: 9px 10px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+        }
+        .table-editor-add-option:hover {
+            background: rgba(239, 246, 255, 0.96);
+            border-color: rgba(147, 197, 253, 0.92);
+            color: #1d4ed8;
+        }
+        .table-editor-param-nav-label {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #64748b;
+            font-weight: 800;
+            padding-top: 8px;
+        }
+        .table-editor-param-jumps {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+        .table-editor-param-jump {
+            border: 1px solid rgba(226, 232, 240, 0.94);
+            border-radius: 14px;
+            padding: 9px 11px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.16s ease;
+            text-align: left;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 116px;
+        }
+        .table-editor-param-jump:hover {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border-color: rgba(147, 197, 253, 0.9);
+        }
+        .table-editor-param-jump.active {
+            background: #1d4ed8;
+            color: #fff;
+            border-color: #1d4ed8;
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.18);
+        }
+        .table-editor-param-jump-name {
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .table-editor-param-jump-meta {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            opacity: 0.72;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 1320px) {
+            .table-editor-grid {
+                grid-template-columns: 1fr;
+            }
+            .table-editor-detail-grid {
+                grid-template-columns: 1fr;
+            }
+            .table-editor-annotation-scope,
+            .table-editor-code-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .CodeMirror {
             height: 100% !important;
             font-size: 13px;
@@ -4215,6 +5245,10 @@
                             <small>这里只维护原始 YAML，修复结果会直接回写。</small>
                         </div>
                         <div class="panel-header-meta">
+                            <div class="workspace-view-switch" role="tablist" aria-label="编辑视图切换">
+                                <button class="workspace-view-btn active" id="workspace-view-yaml-btn" type="button" onclick="setWorkspaceViewMode('yaml')">YAML</button>
+                                <button class="workspace-view-btn" id="workspace-view-table-btn" type="button" onclick="setWorkspaceViewMode('table')">表格</button>
+                            </div>
                             <span id="yaml-info" class="panel-meta-pill">-</span>
                             <div class="panel-header-actions">
                                 <button class="panel-load-btn" onclick="loadExample()">示例</button>
@@ -4225,7 +5259,57 @@
                     </div>
                 </div>
                 <div class="editor-wrapper">
-                    <textarea id="yaml-editor" class="original-textarea"></textarea>
+                    <div class="editor-view editor-view-yaml active" id="workspace-view-yaml">
+                        <div class="yaml-workbench">
+                            <div class="yaml-workbench-header">
+                                <div class="yaml-workbench-copy">
+                                    <span class="yaml-workbench-kicker">Raw Source</span>
+                                    <div class="yaml-workbench-title">原始 YAML 工作区</div>
+                                    <small>这里只有一份真实输入。表格视图只是低门槛编辑层，任何修改最终都会同步回这份 YAML。</small>
+                                </div>
+                                <div class="yaml-workbench-badges">
+                                    <span class="yaml-workbench-badge">单文件输入</span>
+                                    <span class="yaml-workbench-badge">支持表格双向同步</span>
+                                </div>
+                            </div>
+                            <div class="yaml-editor-stage">
+                                <textarea id="yaml-editor" class="original-textarea"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="editor-view editor-view-table" id="workspace-view-table">
+                        <div class="table-editor-shell">
+                            <div class="table-editor-toolbar">
+                                <div class="table-editor-toolbar-copy">
+                                    <span class="table-editor-toolbar-kicker">Structured Assist</span>
+                                    <div class="table-editor-toolbar-title">结构化编辑台</div>
+                                    <small>把当前 YAML 映射成接口工作台。适合维护 API、参数和注解；复杂 schema 仍建议直接编辑 YAML。</small>
+                                </div>
+                                <div class="table-editor-toolbar-stats" id="table-editor-stats"></div>
+                            </div>
+                            <div class="table-editor-grid">
+                                <section class="table-editor-section">
+                                    <div class="table-editor-section-header">
+                                        <div>
+                                            <div class="table-editor-section-title">API 列表</div>
+                                            <div class="table-editor-section-copy">左侧按接口导航。点卡片后，在右侧维护当前接口。</div>
+                                        </div>
+                                        <button class="panel-load-btn" type="button" onclick="addTableOperation()">新增 API</button>
+                                    </div>
+                                    <div class="table-editor-scroll" id="table-editor-api-list"></div>
+                                </section>
+                                <section class="table-editor-section">
+                                    <div class="table-editor-section-header">
+                                        <div>
+                                            <div class="table-editor-section-title">参数与扩展</div>
+                                            <div class="table-editor-section-copy">当前接口的描述、注解和参数都在这里维护。改动会立即回写 YAML。</div>
+                                        </div>
+                                    </div>
+                                    <div class="table-editor-scroll" id="table-editor-parameter-panel"></div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -4434,6 +5518,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/5.2.0/diff.min.js"></script>
     <script>
         var yamlEditor;
+        var workspaceViewMode = 'yaml';
+        var tableEditorState = null;
+        var tableEditorSelectedOperationId = '';
+        var tableEditorFocusedParamKey = '';
+        var tableEditorParameterMenuOperationId = '';
+        var isSyncingTableToYaml = false;
 
         // Default YAML content (使用Swagger 2.0格式，包含实体对象示例)
         var defaultYaml = `swagger: "2.0"
@@ -4842,7 +5932,7 @@ definitions:
                 if (filePath) {
                     loadYamlFromFile(filePath).then(function(yaml) {
                         if (yaml) {
-                            yamlEditor.setValue(yaml);
+                            setYamlEditorContent(yaml, { infoText: example.name + ' (URL参数)', syncTableView: workspaceViewMode === 'table' });
                             originalYaml = yaml;
                             updateStatus();
                         }
@@ -4869,14 +5959,18 @@ definitions:
 
             // Set default content (blank, user can click "加载示例" to load)
             var currentYaml = '';
-            yamlEditor.setValue(currentYaml);
+            setYamlEditorContent(currentYaml, { syncTableView: false });
             originalYaml = currentYaml;  // 保存为原始版本
 
             // Events
             yamlEditor.on('cursorActivity', updateStatus);
             yamlEditor.on('change', function() {
                 updateStatus();
-                document.getElementById('yaml-info').textContent = '已修改';
+                if (!isSyncingTableToYaml) {
+                    tableEditorState = null;
+                    tableEditorSelectedOperationId = '';
+                }
+                document.getElementById('yaml-info').textContent = isSyncingTableToYaml ? '表格已同步' : '已修改';
                 window.currentIssues = [];
                 selectedIssues = {};
                 document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">内容已变更，请重新分析</div></div>';
@@ -4888,6 +5982,7 @@ definitions:
             updateStatus();
             updateAutoFixButton(0, 0, 0);
             bindDiffModalInteractions();
+            setWorkspaceViewMode('yaml');
         }
 
         function updateStatus() {
@@ -4898,19 +5993,22 @@ definitions:
                 var content = yamlEditor.getValue();
                 var parsed = jsyaml.load(content);
 
-                if (!parsed || !parsed.apis) {
-                    document.getElementById('status-api').textContent = 'API: 0';
-                    document.getElementById('status-field').textContent = '字段: 0';
-                    return;
-                }
-
-                var apiCount = parsed.apis.length;
+                var apiCount = 0;
                 var fieldCount = 0;
-
-                parsed.apis.forEach(function(api) {
-                    if (api.request && api.request.fields) fieldCount += api.request.fields.length;
-                    if (api.response && api.response.fields) fieldCount += api.response.fields.length;
-                });
+                if (parsed && parsed.paths) {
+                    apiCount = parseYamlForTableEditor(content).operations.length;
+                    var definitions = parsed.definitions || (parsed.components && parsed.components.schemas) || {};
+                    Object.keys(definitions).forEach(function(className) {
+                        var schema = definitions[className] || {};
+                        fieldCount += Object.keys(schema.properties || {}).length;
+                    });
+                } else if (parsed && parsed.apis) {
+                    apiCount = parsed.apis.length;
+                    parsed.apis.forEach(function(api) {
+                        if (api.request && api.request.fields) fieldCount += api.request.fields.length;
+                        if (api.response && api.response.fields) fieldCount += api.response.fields.length;
+                    });
+                }
 
                 document.getElementById('status-api').textContent = 'API: ' + apiCount;
                 document.getElementById('status-field').textContent = '字段: ' + fieldCount;
@@ -4918,6 +6016,909 @@ definitions:
                 document.getElementById('status-api').textContent = 'API: -';
                 document.getElementById('status-field').textContent = '字段: -';
             }
+        }
+
+        function setYamlEditorContent(content, options) {
+            options = options || {};
+            yamlEditor.setValue(String(content == null ? '' : content));
+            yamlEditor.refresh();
+            if (options.infoText !== undefined) {
+                document.getElementById('yaml-info').textContent = options.infoText;
+            }
+            if (options.syncTableView && workspaceViewMode === 'table') {
+                syncTableViewFromYaml(options.keepSelection !== false);
+            }
+        }
+
+        function setWorkspaceViewMode(mode) {
+            workspaceViewMode = mode === 'table' ? 'table' : 'yaml';
+            var yamlBtn = document.getElementById('workspace-view-yaml-btn');
+            var tableBtn = document.getElementById('workspace-view-table-btn');
+            var yamlView = document.getElementById('workspace-view-yaml');
+            var tableView = document.getElementById('workspace-view-table');
+
+            yamlBtn.classList.toggle('active', workspaceViewMode === 'yaml');
+            tableBtn.classList.toggle('active', workspaceViewMode === 'table');
+            yamlView.classList.toggle('active', workspaceViewMode === 'yaml');
+            tableView.classList.toggle('active', workspaceViewMode === 'table');
+
+            if (workspaceViewMode === 'yaml') {
+                yamlEditor.refresh();
+                updateStatus();
+                return;
+            }
+
+            syncTableViewFromYaml(true);
+        }
+
+        function syncTableViewFromYaml(keepSelection) {
+            try {
+                var nextState = parseYamlForTableEditor(yamlEditor.getValue());
+                tableEditorState = nextState;
+                if (!keepSelection || !findTableOperationById(tableEditorSelectedOperationId)) {
+                    tableEditorSelectedOperationId = nextState.operations[0] ? nextState.operations[0].id : '';
+                }
+                renderTableEditor();
+                setMessage('已切换到表格编辑，可直接回写 YAML');
+            } catch (e) {
+                workspaceViewMode = 'yaml';
+                document.getElementById('workspace-view-yaml-btn').classList.add('active');
+                document.getElementById('workspace-view-table-btn').classList.remove('active');
+                document.getElementById('workspace-view-yaml').classList.add('active');
+                document.getElementById('workspace-view-table').classList.remove('active');
+                setMessage('当前 YAML 无法解析为表格: ' + e.message);
+            }
+        }
+
+        function renderTableEditor() {
+            var statsEl = document.getElementById('table-editor-stats');
+            var apiListEl = document.getElementById('table-editor-api-list');
+            var detailEl = document.getElementById('table-editor-parameter-panel');
+            var state = tableEditorState || { operations: [] };
+            var selectedOperation = findTableOperationById(tableEditorSelectedOperationId);
+            var paramCount = state.operations.reduce(function(total, operation) {
+                return total + (operation.parameters ? operation.parameters.length : 0);
+            }, 0);
+
+            statsEl.innerHTML =
+                '<span class="table-editor-stat">格式: ' + escapeHtml(state.kind === 'openapi3' ? 'OpenAPI 3' : 'Swagger 2') + '</span>' +
+                '<span class="table-editor-stat">API: ' + state.operations.length + '</span>' +
+                '<span class="table-editor-stat">参数: ' + paramCount + '</span>';
+
+            if (!state.operations.length) {
+                apiListEl.innerHTML = '<div class="table-editor-empty"><strong>还没有 API 行</strong><span>可以先点击右上角“新增 API”，或者切回 YAML 粘贴现有 Swagger / OpenAPI。</span></div>';
+                detailEl.innerHTML = '<div class="table-editor-empty"><strong>没有可编辑项</strong><span>先新增一个 API，右侧才会出现参数和扩展字段。</span></div>';
+                return;
+            }
+
+            if (!selectedOperation) {
+                tableEditorSelectedOperationId = state.operations[0].id;
+                selectedOperation = state.operations[0];
+            }
+
+            apiListEl.innerHTML = buildTableEditorApiTable(state.operations);
+            detailEl.innerHTML = buildTableEditorDetail(selectedOperation);
+            applyTableParameterFocusState();
+        }
+
+        function buildTableEditorApiTable(operations) {
+            return '<div class="table-editor-nav-list">' + operations.map(function(operation, index) {
+                var selected = operation.id === tableEditorSelectedOperationId ? 'selected' : '';
+                var selectedState = selected ? '<span class="table-editor-nav-state">当前编辑</span>' : '';
+                var operationId = escapeHtml(escapeYamlTableScalar(operation.operationId) || '未命名 operationId');
+                var summary = escapeHtml(escapeYamlTableScalar(operation.summary) || '建议补一行摘要，方便快速识别接口用途。');
+                return '<article class="table-editor-nav-card ' + selected + '" data-operation-id="' + escapeHtml(operation.id) + '" onclick="selectTableOperation(\'' + escapeJsString(operation.id) + '\')">' +
+                    '<div class="table-editor-nav-top">' +
+                        '<div class="table-editor-nav-main">' +
+                            '<div class="table-editor-nav-meta">' +
+                                '<span class="table-editor-chip ' + escapeHtml(operation.method) + '">' + escapeHtml(operation.method.toUpperCase()) + '</span>' +
+                                selectedState +
+                            '</div>' +
+                            '<div class="table-editor-nav-path">' + escapeHtml(escapeYamlTableScalar(operation.path)) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="table-editor-nav-summary">' + summary + '</div>' +
+                    '<div class="table-editor-nav-actions">' +
+                        '<span class="table-editor-nav-action">operationId · ' + operationId + '</span>' +
+                        '<span class="table-editor-nav-action">' + ((operation.parameters || []).length) + ' 个参数</span>' +
+                        '<button class="table-editor-link-btn danger" type="button" onclick="event.stopPropagation(); removeTableOperation(' + index + ')">删除</button>' +
+                    '</div>' +
+                '</article>';
+            }).join('') + '</div>';
+        }
+
+        function buildTableEditorDetail(operation) {
+            if (!operation) {
+                return '<div class="table-editor-empty"><strong>请选择一个 API</strong><span>左侧点“定位”后，这里会展示该接口的参数和扩展字段。</span></div>';
+            }
+
+            var params = operation.parameters || [];
+            var annotationText = escapeHtml((operation.methodAnnotations || []).join('\n'));
+            var classAnnotationText = escapeHtml((operation.classAnnotations || []).join('\n'));
+            var methodSummary = '<div class="table-editor-current-head">' +
+                '<div class="table-editor-current-meta">' +
+                    '<span class="table-editor-chip ' + escapeHtml(operation.method) + '">' + escapeHtml(operation.method.toUpperCase()) + '</span>' +
+                    '<strong class="table-editor-current-path">' + escapeHtml(operation.path) + '</strong>' +
+                    '<span class="table-editor-current-operation">' + escapeHtml(escapeYamlTableScalar(operation.operationId) || '未命名 operationId') + '</span>' +
+                '</div>' +
+                '<div class="table-editor-current-stats">' +
+                    '<span class="table-editor-nav-action">' + params.length + ' 个参数</span>' +
+                    '<span class="table-editor-nav-action">改动立即回写 YAML</span>' +
+                '</div>' +
+            '</div>' +
+            '<div class="table-editor-selected-copy">描述、注解、参数都在这一区域维护。复杂 schema 或深层结构再切回 YAML 原文编辑。</div>' +
+            '<div class="table-editor-quick-guide">' +
+                '<span class="table-editor-quick-guide-item">左侧选接口</span>' +
+                '<span class="table-editor-quick-guide-item">参数胶囊可跳转</span>' +
+                '<span class="table-editor-quick-guide-item">改动立即回写 YAML</span>' +
+            '</div>';
+            var paramNav = buildTableEditorParameterJumpNav(operation);
+            var codePreview = buildTableEditorJavaPreview(operation);
+
+            return '<div class="table-editor-subgrid">' +
+                '<div class="table-editor-card">' +
+                    '<div class="table-editor-card-title">当前接口</div>' +
+                    methodSummary +
+                    '<div class="table-editor-detail-grid">' +
+                        '<div class="table-editor-form-block">' +
+                            '<div class="table-editor-form-subtitle">YAML 原生字段</div>' +
+                            '<div class="table-editor-form-stack">' +
+                                '<div>' +
+                                    '<div class="table-editor-card-title">operationId（YAML）</div>' +
+                                    '<div class="table-editor-field-hint">Swagger / OpenAPI 原生字段，用于生成方法名和唯一标识。</div>' +
+                                    '<input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(operation.operationId)) + '" oninput="handleTableOperationInputById(\'' + escapeJsString(operation.id) + '\', \'operationId\', this.value)" placeholder="getUsers">' +
+                                '</div>' +
+                                '<div>' +
+                                    '<div class="table-editor-card-title">摘要 summary（YAML）</div>' +
+                                    '<div class="table-editor-field-hint">Swagger / OpenAPI 原生字段，用于接口摘要说明，不是系统内部标识。</div>' +
+                                    '<input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(operation.summary)) + '" oninput="handleTableOperationInputById(\'' + escapeJsString(operation.id) + '\', \'summary\', this.value)" placeholder="一句话概括接口">' +
+                                '</div>' +
+                                '<div>' +
+                                    '<div class="table-editor-card-title">描述 description（YAML）</div>' +
+                                    '<div class="table-editor-field-hint">同样是 Swagger / OpenAPI 原生字段，适合写更完整的接口说明。</div>' +
+                                    '<textarea class="table-editor-cell-textarea" oninput="handleTableOperationInputById(\'' + escapeJsString(operation.id) + '\', \'description\', this.value)" placeholder="这里写接口说明">' + escapeHtml(escapeYamlTableScalar(operation.description)) + '</textarea>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="table-editor-form-block">' +
+                            '<div class="table-editor-form-subtitle">自定义扩展注解</div>' +
+                            '<div class="table-editor-form-stack">' +
+                                '<div>' +
+                                    '<div class="table-editor-card-title">Controller 类注解</div>' +
+                                    '<div class="table-editor-field-hint">回写到 path 层的 `x-java-class-annotations`。</div>' +
+                                    '<textarea class="table-editor-cell-textarea" oninput="handleTableAnnotationInput(\'' + escapeJsString(operation.id) + '\', \'classAnnotations\', this.value)" placeholder="@Secured&#10;@Tag(name = &quot;用户管理&quot;)">' + classAnnotationText + '</textarea>' +
+                                '</div>' +
+                                '<div>' +
+                                    '<div class="table-editor-card-title">方法注解</div>' +
+                                    '<div class="table-editor-field-hint">回写到方法层的 `x-java-method-annotations`。</div>' +
+                                    '<textarea class="table-editor-cell-textarea" oninput="handleTableAnnotationInput(\'' + escapeJsString(operation.id) + '\', \'methodAnnotations\', this.value)" placeholder="@Permission(&quot;user.create&quot;)&#10;@AuditLog(&quot;创建用户&quot;)">' + annotationText + '</textarea>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    codePreview +
+                '</div>' +
+                '<div class="table-editor-card">' +
+                    '<div class="table-editor-section-header" style="padding:0 0 14px;border-bottom:none;background:none;">' +
+                        '<div>' +
+                            '<div class="table-editor-section-title">参数编辑</div>' +
+                            '<div class="table-editor-section-copy">支持 path / query / header / body，参数胶囊可直接跳到对应编辑卡片。</div>' +
+                        '</div>' +
+                        buildTableParameterAddMenu(operation) +
+                    '</div>' +
+                    '<div class="table-editor-note"><strong>说明：</strong>这里优先覆盖日常 API 与参数维护；复杂嵌套 schema、`oneOf` / `allOf` 仍建议切回 YAML 原文。</div>' +
+                    paramNav +
+                    '<div style="overflow:auto;margin-top:14px;">' + buildTableEditorParameterTable(operation) + '</div>' +
+                '</div>' +
+                '</div>';
+        }
+
+        function buildTableParameterAddMenu(operation) {
+            var operationId = operation && operation.id ? operation.id : '';
+            var isOpen = tableEditorParameterMenuOperationId === operationId;
+            return '<div class="table-editor-add-menu' + (isOpen ? ' open' : '') + '">' +
+                '<button class="panel-load-btn" type="button" onclick="toggleTableParameterMenu(\'' + escapeJsString(operationId) + '\')">新增参数</button>' +
+                '<div class="table-editor-add-menu-panel">' +
+                    '<button class="table-editor-add-option" type="button" onclick="addTableParameter(\'' + escapeJsString(operationId) + '\', \'query\')">新增 query 参数</button>' +
+                    '<button class="table-editor-add-option" type="button" onclick="addTableParameter(\'' + escapeJsString(operationId) + '\', \'path\')">新增 path 参数</button>' +
+                    '<button class="table-editor-add-option" type="button" onclick="addTableParameter(\'' + escapeJsString(operationId) + '\', \'header\')">新增 header 参数</button>' +
+                    '<button class="table-editor-add-option" type="button" onclick="addTableParameter(\'' + escapeJsString(operationId) + '\', \'body\')">新增 body 参数</button>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function resolveTableEditorControllerClassAnnotations(operation) {
+            var operations = tableEditorState && Array.isArray(tableEditorState.operations) ? tableEditorState.operations : [];
+            if (!operations.length) {
+                return (operation && operation.classAnnotations) ? operation.classAnnotations : [];
+            }
+
+            var first = JSON.stringify(operations[0].classAnnotations || []);
+            var consistent = operations.every(function(item) {
+                return JSON.stringify(item.classAnnotations || []) === first;
+            });
+
+            if (consistent) {
+                return operations[0].classAnnotations || [];
+            }
+
+            return (operation && operation.classAnnotations) ? operation.classAnnotations : [];
+        }
+
+        function buildTableEditorJavaPreview(operation) {
+            var controllerClassName = 'ApicgenApi';
+            var controllerAnnotations = resolveTableEditorControllerClassAnnotations(operation);
+            var methodAnnotations = (operation.methodAnnotations || []).concat(operation.annotations || []);
+            var methodAnnotationBundle = {
+                methodAnnotations: operation.methodAnnotations || [],
+                legacyAnnotations: operation.annotations || []
+            };
+            var methodApiName = operation.operationId || operation.summary || operation.path || 'currentApi';
+            var methodCode = generateJavaControllerMethodCode(
+                operation.path || '/',
+                operation.method || 'get',
+                methodApiName,
+                methodAnnotationBundle,
+                operation.description || operation.summary || methodApiName,
+                operation.parameters || []
+            );
+            var classCode = generateJavaControllerClassStructureCode(
+                controllerClassName,
+                controllerAnnotations,
+                tableEditorState && Array.isArray(tableEditorState.operations) ? tableEditorState.operations.length : 1
+            );
+            var classAnnotationHtml = controllerAnnotations.length
+                ? '<div class="table-editor-annotation-chips">' + controllerAnnotations.map(function(annotation) {
+                    return '<span class="table-editor-annotation-chip">' + escapeHtml(annotation) + '</span>';
+                }).join('') + '</div>'
+                : '<div class="table-editor-annotation-empty">当前没有额外类级注解，默认只会保留框架自带的 Controller 注解。</div>';
+            var methodAnnotationHtml = methodAnnotations.length
+                ? '<div class="table-editor-annotation-chips">' + methodAnnotations.map(function(annotation) {
+                    return '<span class="table-editor-annotation-chip">' + escapeHtml(annotation) + '</span>';
+                }).join('') + '</div>'
+                : '<div class="table-editor-annotation-empty">当前方法还没有自定义方法注解，下面的代码只会展示 HTTP 映射和参数约束。</div>';
+
+            return '<div class="table-editor-code-preview">' +
+                '<div class="table-editor-code-intro">' +
+                    '<div class="table-editor-code-intro-copy">' +
+                        '<div class="table-editor-card-title">代码预览</div>' +
+                        '<p>先看注解归属，再看生成结果。类级注解会作用到统一 Controller，方法级注解只作用当前选中的方法。</p>' +
+                    '</div>' +
+                    '<span class="table-editor-code-intro-badge">预览仅代表生成结果，不会改写用户源码结构</span>' +
+                '</div>' +
+                '<div class="table-editor-annotation-scope">' +
+                    '<section class="table-editor-annotation-card">' +
+                        '<div class="table-editor-annotation-title">类级作用范围</div>' +
+                        '<div class="table-editor-annotation-copy">这些注解会挂在统一 Controller 顶部，影响该 YAML 对应的生成类。</div>' +
+                        classAnnotationHtml +
+                    '</section>' +
+                    '<section class="table-editor-annotation-card">' +
+                        '<div class="table-editor-annotation-title">当前方法注解</div>' +
+                        '<div class="table-editor-annotation-copy">这里只看当前选中接口的方法级注解，切换左侧接口时会同步变化。</div>' +
+                        methodAnnotationHtml +
+                    '</section>' +
+                '</div>' +
+                '<div class="table-editor-code-grid">' +
+                    '<section class="table-editor-code-card">' +
+                        '<div class="table-editor-code-card-header">' +
+                            '<div>' +
+                                '<div class="table-editor-code-title">统一 Controller 类</div>' +
+                                '<div class="table-editor-code-copy">这里先确认类级注解会挂在什么位置，以及当前 YAML 最终会落到哪个统一 Controller。</div>' +
+                            '</div>' +
+                            '<span class="table-editor-code-chip">' + escapeHtml(controllerClassName) + '.java</span>' +
+                        '</div>' +
+                        '<div class="table-editor-code-frame">' +
+                            '<pre class="diff-java-code">' + classCode + '</pre>' +
+                        '</div>' +
+                    '</section>' +
+                    '<section class="table-editor-code-card">' +
+                        '<div class="table-editor-code-card-header">' +
+                            '<div>' +
+                                '<div class="table-editor-code-title">当前方法预览</div>' +
+                                '<div class="table-editor-code-copy">当前接口在统一 Controller 里的方法形态。改动参数、描述或方法注解后，这里会同步变化。</div>' +
+                            '</div>' +
+                            '<span class="table-editor-code-chip">' + escapeHtml((operation.method || 'get').toUpperCase()) + ' ' + escapeHtml(operation.path || '/') + '</span>' +
+                        '</div>' +
+                        '<div class="table-editor-code-frame">' +
+                            '<pre class="diff-java-code">' + methodCode + '</pre>' +
+                        '</div>' +
+                    '</section>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function buildTableEditorParameterJumpNav(operation) {
+            var params = operation && operation.parameters ? operation.parameters : [];
+            if (!params.length) {
+                return '<div class="table-editor-param-nav"><span class="table-editor-param-nav-label">参数导航</span><span class="table-editor-selected-copy" style="margin:0;">当前接口还没有参数，先点“新增参数”。</span></div>';
+            }
+
+            var buttons = params.map(function(param, index) {
+                var key = operation.id + '::' + index;
+                var label = escapeHtml(param.name || ('param' + (index + 1)));
+                var meta = escapeHtml((param.in || 'query') + ' · ' + (param.required ? '必填' : '可选'));
+                var active = tableEditorFocusedParamKey === key ? ' active' : '';
+                return '<button class="table-editor-param-jump' + active + '" data-table-param-jump-key="' + escapeHtml(key) + '" type="button" onclick="jumpToTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')"><span class="table-editor-param-jump-name">' + label + '</span><span class="table-editor-param-jump-meta">' + meta + '</span></button>';
+            }).join('');
+
+            return '<div class="table-editor-param-nav"><span class="table-editor-param-nav-label">参数导航</span><div class="table-editor-param-jumps">' + buttons + '</div></div>';
+        }
+
+        function buildTableParameterModelingHint(param) {
+            if (!param || String(param.in || '').toLowerCase() !== 'body') {
+                return '';
+            }
+
+            var ref = String(param.ref || '').trim();
+            var type = String(param.type || '').trim().toLowerCase();
+            var copy = '';
+
+            if (ref) {
+                copy = '当前是 body / requestBody 建模：通过 $ref 指向实体模型。这里适合维护引用路径；实体字段请到 YAML 的 definitions / components.schemas 编辑。';
+            } else if (type === 'object') {
+                copy = '当前是 body / requestBody 建模：这里会回写成内联 object。表格视图暂不展开对象字段；如果要维护实体属性，请改用 $ref 或切回 YAML。';
+            } else if (type === 'array') {
+                copy = '当前是 body / requestBody 建模：这里会回写成数组请求体。若数组元素是实体，建议改用 $ref 并在 YAML 中维护完整 schema。';
+            } else {
+                copy = '当前是 body / requestBody 建模：这里适合基础类型请求体；若要表达实体对象，建议改用 $ref 或切回 YAML。';
+            }
+
+            return '<div class="table-parameter-model-note"><div class="table-parameter-model-title">当前是 body / requestBody 建模</div><div class="table-parameter-model-copy">' + escapeHtml(copy) + '</div></div>';
+        }
+
+        function buildTableEditorParameterTable(operation) {
+            var params = operation.parameters || [];
+            if (!params.length) {
+                return '<div class="table-editor-empty"><strong>当前接口还没有参数</strong><span>可以新增 query/path/header/body 参数，回写后会同步更新 YAML。</span></div>';
+            }
+
+            return '<div class="table-parameter-stack">' + params.map(function(param, index) {
+                var key = operation.id + '::' + index;
+                var focused = tableEditorFocusedParamKey === key ? ' focused' : '';
+                return '<article id="' + getTableParameterDomId(operation.id, index) + '" class="table-parameter-card' + focused + '" data-table-param-key="' + escapeHtml(key) + '">' +
+                    '<div class="table-parameter-card-header">' +
+                        '<div class="table-parameter-card-title">' +
+                            '<span class="table-editor-chip ' + escapeHtml(String(param.in || 'query').toLowerCase()) + '">' + escapeHtml(String(param.in || 'query').toUpperCase()) + '</span>' +
+                            '<span class="table-parameter-card-name">' + escapeHtml(escapeYamlTableScalar(param.name) || ('param' + (index + 1))) + '</span>' +
+                            '<span class="table-editor-badge">' + (param.required ? '必填' : '可选') + '</span>' +
+                        '</div>' +
+                        '<button class="table-editor-link-btn danger" type="button" onclick="removeTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')">删除</button>' +
+                    '</div>' +
+                    buildTableParameterModelingHint(param) +
+                    '<div class="table-parameter-section">' +
+                        '<div class="table-parameter-section-title">基础信息</div>' +
+                        '<div class="table-parameter-grid">' +
+                            '<div class="table-parameter-field"><label>名称</label><input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(param.name)) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'name\', this.value)" placeholder="keyword"></div>' +
+                            '<div class="table-parameter-field"><label>位置</label><select class="table-editor-cell-select" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" onchange="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'in\', this.value)">' + renderTableParameterLocationOptions(param.in) + '</select></div>' +
+                            '<div class="table-parameter-field"><label>必填</label><select class="table-editor-cell-select" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" onchange="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'required\', this.value === \'true\')"><option value="true"' + (param.required ? ' selected' : '') + '>必填</option><option value="false"' + (!param.required ? ' selected' : '') + '>可选</option></select></div>' +
+                            '<div class="table-parameter-field"><label>参数形态</label><select class="table-editor-cell-select" data-table-param-editor-kind="' + escapeHtml(operation.id + '::' + index) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" onchange="handleTableParameterEditorKindChange(\'' + escapeJsString(operation.id) + '\', ' + index + ', this.value)">' + renderTableParameterEditorKindOptions(param) + '</select><div class="table-parameter-field-copy">把基础类型和 `$ref` 建模放到同一个入口里，避免同时维护两套输入。</div></div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="table-parameter-section">' +
+                        '<div class="table-parameter-section-title">说明与引用</div>' +
+                        '<div class="table-parameter-grid">' +
+                            '<div class="table-parameter-field wide"><label>描述</label><input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(param.description)) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'description\', this.value)" placeholder="参数说明"></div>' +
+                            '<div class="table-parameter-field wide"><label>引用方式</label><div class="table-parameter-field-copy">' + (String(param.ref || '').trim() ? '当前已切到实体引用模式，下面可以直接选已有实体或填写自定义路径。' : '当前是基础类型 / 内联模式；如果这个参数要复用实体模型，把“参数形态”切到引用实体即可。') + '</div>' + buildTableParameterReferenceEditor(operation, param, index) + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="table-parameter-section">' +
+                        '<div class="table-parameter-section-title">校验约束</div>' +
+                        '<div class="table-parameter-grid">' +
+                            '<div class="table-parameter-field"><label>minLength</label><input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(param.minLength)) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'minLength\', this.value)" placeholder="1"></div>' +
+                            '<div class="table-parameter-field"><label>maxLength</label><input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(param.maxLength)) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'maxLength\', this.value)" placeholder="255"></div>' +
+                            '<div class="table-parameter-field"><label>minimum</label><input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(param.minimum)) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'minimum\', this.value)" placeholder="0"></div>' +
+                            '<div class="table-parameter-field"><label>maximum</label><input class="table-editor-cell-input" value="' + escapeHtml(escapeYamlTableScalar(param.maximum)) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'maximum\', this.value)" placeholder="100"></div>' +
+                        '</div>' +
+                    '</div>' +
+                '</article>';
+            }).join('') + '</div>';
+        }
+
+        function renderTableMethodOptions(value) {
+            return ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'].map(function(method) {
+                return '<option value="' + method + '"' + (method === normalizeTableEditorMethod(value) ? ' selected' : '') + '>' + method.toUpperCase() + '</option>';
+            }).join('');
+        }
+
+        function renderTableParameterLocationOptions(value) {
+            var current = String(value || 'query').toLowerCase();
+            return ['query', 'path', 'header', 'body'].map(function(location) {
+                var label = location === 'body' ? 'body / requestBody' : location;
+                return '<option value="' + location + '"' + (location === current ? ' selected' : '') + '>' + label + '</option>';
+            }).join('');
+        }
+
+        function renderTableParameterEditorKindOptions(param) {
+            var current = inferTableParameterEditorKind(param);
+            var location = String(param && param.in || 'query').toLowerCase();
+            var options = location === 'body'
+                ? [
+                    { value: 'string', label: '基础值 string' },
+                    { value: 'integer', label: '整数 integer' },
+                    { value: 'number', label: '小数 number' },
+                    { value: 'boolean', label: '布尔 boolean' },
+                    { value: 'object', label: '内联对象 object' },
+                    { value: 'array', label: '基础值数组 array' },
+                    { value: 'ref-object', label: '实体对象（$ref）' },
+                    { value: 'ref-array', label: '实体数组（items.$ref）' }
+                ]
+                : [
+                    { value: 'string', label: '字符串 string' },
+                    { value: 'integer', label: '整数 integer' },
+                    { value: 'number', label: '小数 number' },
+                    { value: 'boolean', label: '布尔 boolean' },
+                    { value: 'array', label: '数组 array' }
+                ];
+            return options.map(function(option) {
+                return '<option value="' + option.value + '"' + (option.value === current ? ' selected' : '') + '>' + option.label + '</option>';
+            }).join('');
+        }
+
+        function inferTableParameterEditorKind(param) {
+            var type = String(param && param.type || '').trim().toLowerCase();
+            var ref = String(param && param.ref || '').trim();
+            if (ref) {
+                return type === 'array' ? 'ref-array' : 'ref-object';
+            }
+            if (['string', 'integer', 'number', 'boolean', 'object', 'array'].indexOf(type) >= 0) {
+                return type;
+            }
+            return String(param && param.in || '').toLowerCase() === 'body' ? 'object' : 'string';
+        }
+
+        function extractTableEditorSchemaRefs(parsed, kind) {
+            var schemas = (parsed && (parsed.definitions || (parsed.components && parsed.components.schemas))) || {};
+            var prefix = kind === 'openapi3' ? '#/components/schemas/' : '#/definitions/';
+            return Object.keys(schemas).sort(function(a, b) {
+                return a.localeCompare(b);
+            }).map(function(name) {
+                return {
+                    name: name,
+                    ref: prefix + name
+                };
+            });
+        }
+
+        function getAvailableTableEditorSchemaRefs() {
+            return tableEditorState && Array.isArray(tableEditorState.schemaRefs) ? tableEditorState.schemaRefs : [];
+        }
+
+        function getTableEditorCreatedSchemas() {
+            return tableEditorState && tableEditorState.createdSchemas ? tableEditorState.createdSchemas : {};
+        }
+
+        function buildDefaultTableEditorSchemaRef() {
+            var refs = getAvailableTableEditorSchemaRefs();
+            if (refs.length) {
+                return refs[0].ref;
+            }
+            return (tableEditorState && tableEditorState.kind === 'openapi3')
+                ? '#/components/schemas/NewModel'
+                : '#/definitions/NewModel';
+        }
+
+        function isKnownTableEditorSchemaRef(refValue) {
+            var ref = String(refValue || '').trim();
+            return getAvailableTableEditorSchemaRefs().some(function(item) {
+                return item.ref === ref;
+            });
+        }
+
+        function suggestTableEditorSchemaName(operation, param) {
+            var base = '';
+            var operationName = operation && (operation.operationId || operation.summary || operation.path) ? String(operation.operationId || operation.summary || operation.path) : 'Api';
+            var paramName = param && param.name ? String(param.name) : 'Body';
+            if (String(param && param.in || '').toLowerCase() === 'body') {
+                base = toPascalCasePreview(operationName) + 'Req';
+            } else {
+                base = toPascalCasePreview(operationName) + toPascalCasePreview(paramName);
+            }
+            return base || 'NewModel';
+        }
+
+        function ensureUniqueTableEditorSchemaName(name) {
+            var candidate = toPascalCasePreview(name || 'NewModel');
+            var refs = getAvailableTableEditorSchemaRefs();
+            var created = getTableEditorCreatedSchemas();
+            var used = {};
+            refs.forEach(function(item) {
+                used[item.name] = true;
+            });
+            Object.keys(created).forEach(function(key) {
+                used[key] = true;
+            });
+            if (!used[candidate]) {
+                return candidate;
+            }
+            var index = 2;
+            while (used[candidate + index]) {
+                index += 1;
+            }
+            return candidate + index;
+        }
+
+        function renderTableParameterRefOptions(selectedRef) {
+            var refs = getAvailableTableEditorSchemaRefs();
+            var current = String(selectedRef || '').trim();
+            var isKnown = isKnownTableEditorSchemaRef(current);
+            var options = ['<option value="">选择已有实体</option>'];
+            refs.forEach(function(item) {
+                options.push('<option value="' + escapeHtml(item.ref) + '"' + (item.ref === current ? ' selected' : '') + '>' + escapeHtml(item.name) + '</option>');
+            });
+            options.push('<option value="__custom__"' + ((!isKnown && current) ? ' selected' : '') + '>自定义引用路径</option>');
+            return options.join('');
+        }
+
+        function buildTableParameterReferenceEditor(operation, param, index) {
+            var editorKind = inferTableParameterEditorKind(param);
+            if (String(param && param.in || '').toLowerCase() !== 'body') {
+                return '<div class="table-parameter-field-copy">`path / query / header` 只维护基础值或基础值数组；实体对象通常应放到 `body / requestBody`。</div>';
+            }
+
+            if (editorKind !== 'ref-object' && editorKind !== 'ref-array') {
+                return '<div class="table-parameter-ref-shell">' +
+                    '<div class="table-parameter-ref-shell-header">' +
+                        '<div>' +
+                            '<div class="table-parameter-ref-shell-title">实体建模</div>' +
+                            '<div class="table-parameter-ref-shell-copy">如果这个请求体要复用实体，直接切到实体模式；也可以在这里就地新建一个实体骨架。</div>' +
+                        '</div>' +
+                        '<span class="table-parameter-ref-pill">' + escapeHtml(getAvailableTableEditorSchemaRefs().length ? ('已识别 ' + getAvailableTableEditorSchemaRefs().length + ' 个实体') : '还没有实体') + '</span>' +
+                    '</div>' +
+                    '<div class="table-parameter-grid">' +
+                        '<div class="table-parameter-field">' +
+                            '<label>推荐动作</label>' +
+                            '<div class="table-parameter-field-copy">把“参数形态”切到“实体对象”或“实体数组”后，这里会出现选择和新建入口。</div>' +
+                        '</div>' +
+                        '<div class="table-parameter-field wide">' +
+                            '<label>新建实体名</label>' +
+                            '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+                                '<input class="table-editor-cell-input" data-table-param-create-name="' + escapeHtml(operation.id + '::' + index) + '" value="' + escapeHtml(escapeYamlTableScalar(param.draftSchemaName || suggestTableEditorSchemaName(operation, param))) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'draftSchemaName\', this.value)" placeholder="CreateUserReq">' +
+                                '<button class="panel-load-btn" type="button" onclick="createTableParameterSchema(\'' + escapeJsString(operation.id) + '\', ' + index + ', false)">新建实体并引用</button>' +
+                            '</div>' +
+                            '<div class="table-parameter-field-copy">会直接在当前 YAML 的 definitions / components.schemas 下插入一个空的 object 模型，然后把当前参数切到实体引用。</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }
+
+            var refs = getAvailableTableEditorSchemaRefs();
+            var currentRef = String(param && param.ref || '').trim();
+            var customVisible = !currentRef || !isKnownTableEditorSchemaRef(currentRef);
+            var modeCopy = editorKind === 'ref-array'
+                ? '当前会回写成 `items.$ref`，适合“数组里每一项都是实体”的场景。'
+                : '当前会回写成 `$ref`，适合直接引用已有请求/响应实体。';
+
+            return '<div class="table-parameter-ref-shell">' +
+                '<div class="table-parameter-ref-shell-header">' +
+                    '<div>' +
+                        '<div class="table-parameter-ref-shell-title">实体引用</div>' +
+                        '<div class="table-parameter-ref-shell-copy">' + escapeHtml(modeCopy) + '</div>' +
+                    '</div>' +
+                    '<span class="table-parameter-ref-pill">' + escapeHtml(refs.length ? ('已识别 ' + refs.length + ' 个实体') : '当前 YAML 尚未声明实体') + '</span>' +
+                '</div>' +
+                '<div class="table-parameter-grid">' +
+                    '<div class="table-parameter-field">' +
+                        '<label>已有实体</label>' +
+                        '<select class="table-editor-cell-select" data-table-param-ref-select="' + escapeHtml(operation.id + '::' + index) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" onchange="handleTableParameterRefSelection(\'' + escapeJsString(operation.id) + '\', ' + index + ', this.value)">' +
+                            renderTableParameterRefOptions(currentRef) +
+                        '</select>' +
+                        '<div class="table-parameter-field-copy">优先从当前 YAML 里已有的 definitions / components.schemas 选择。</div>' +
+                    '</div>' +
+                    '<div class="table-parameter-field">' +
+                        '<label>新建实体名</label>' +
+                        '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">' +
+                            '<input class="table-editor-cell-input" data-table-param-create-name="' + escapeHtml(operation.id + '::' + index) + '" value="' + escapeHtml(escapeYamlTableScalar(param.draftSchemaName || suggestTableEditorSchemaName(operation, param))) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'draftSchemaName\', this.value)" placeholder="CreateUserReq">' +
+                            '<button class="panel-load-btn" type="button" onclick="createTableParameterSchema(\'' + escapeJsString(operation.id) + '\', ' + index + ', ' + (editorKind === 'ref-array' ? 'true' : 'false') + ')">新建实体并引用</button>' +
+                        '</div>' +
+                        '<div class="table-parameter-field-copy">如果目标实体还不存在，直接在这里建；数组模式会自动回写成 `items.$ref`。</div>' +
+                    '</div>' +
+                    '<div class="table-parameter-field wide">' +
+                        '<label>高级：自定义 $ref 路径</label>' +
+                        '<input class="table-editor-cell-input" data-table-param-ref-input="' + escapeHtml(operation.id + '::' + index) + '" value="' + escapeHtml(escapeYamlTableScalar(customVisible ? currentRef : '')) + '" onfocus="focusTableParameter(\'' + escapeJsString(operation.id) + '\', ' + index + ')" oninput="handleTableParameterInput(\'' + escapeJsString(operation.id) + '\', ' + index + ', \'ref\', this.value)" placeholder="' + escapeHtml(buildDefaultTableEditorSchemaRef()) + '">' +
+                        '<div class="table-parameter-field-copy">如果目标实体还没出现在列表里，可以直接填完整路径；后续补上实体定义后也能继续回写。</div>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        }
+
+        function findTableOperationById(id) {
+            if (!tableEditorState || !Array.isArray(tableEditorState.operations)) {
+                return null;
+            }
+            for (var i = 0; i < tableEditorState.operations.length; i++) {
+                if (tableEditorState.operations[i].id === id) {
+                    return tableEditorState.operations[i];
+                }
+            }
+            return null;
+        }
+
+        function getTableParameterDomId(operationId, paramIndex) {
+            return 'table-param-row-' + String(operationId || '')
+                .replace(/[^a-zA-Z0-9_-]+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '') + '-' + paramIndex;
+        }
+
+        function applyTableParameterFocusState() {
+            var activeKey = tableEditorFocusedParamKey;
+            Array.prototype.forEach.call(document.querySelectorAll('[data-table-param-key]'), function(node) {
+                node.classList.toggle('focused', node.getAttribute('data-table-param-key') === activeKey);
+            });
+            Array.prototype.forEach.call(document.querySelectorAll('[data-table-param-jump-key]'), function(node) {
+                node.classList.toggle('active', node.getAttribute('data-table-param-jump-key') === activeKey);
+            });
+        }
+
+        function setFocusedTableParameter(operationId, paramIndex) {
+            tableEditorFocusedParamKey = operationId + '::' + paramIndex;
+            applyTableParameterFocusState();
+        }
+
+        function selectTableOperation(operationId) {
+            tableEditorSelectedOperationId = operationId;
+            tableEditorFocusedParamKey = '';
+            renderTableEditor();
+        }
+
+        function focusTableParameter(operationId, paramIndex) {
+            setFocusedTableParameter(operationId, paramIndex);
+        }
+
+        function jumpToTableParameter(operationId, paramIndex) {
+            tableEditorSelectedOperationId = operationId;
+            tableEditorFocusedParamKey = operationId + '::' + paramIndex;
+            renderTableEditor();
+            setTimeout(function() {
+                setFocusedTableParameter(operationId, paramIndex);
+                var row = document.getElementById(getTableParameterDomId(operationId, paramIndex));
+                if (row && typeof row.scrollIntoView === 'function') {
+                    row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                }
+                var firstInput = row ? row.querySelector('input, select, textarea') : null;
+                if (firstInput && typeof firstInput.focus === 'function') {
+                    firstInput.focus({ preventScroll: true });
+                }
+            }, 0);
+        }
+
+        function handleTableOperationInput(index, field, value) {
+            if (!tableEditorState || !tableEditorState.operations[index]) {
+                return;
+            }
+            tableEditorState.operations[index][field] = value;
+            if (field === 'path' || field === 'method') {
+                var operation = tableEditorState.operations[index];
+                operation.path = normalizeTableEditorPath(operation.path);
+                operation.method = normalizeTableEditorMethod(operation.method);
+                operation.id = operation.method + ' ' + operation.path;
+                tableEditorSelectedOperationId = operation.id;
+                renderTableEditor();
+            }
+            syncTableStateToYaml();
+        }
+
+        function handleTableOperationInputById(operationId, field, value) {
+            var operation = findTableOperationById(operationId);
+            if (!operation) {
+                return;
+            }
+            operation[field] = value;
+            syncTableStateToYaml();
+        }
+
+        function handleTableAnnotationInput(operationId, field, value) {
+            var operation = findTableOperationById(operationId);
+            if (!operation) {
+                return;
+            }
+            operation[field] = splitTableAnnotationText(value);
+            syncTableStateToYaml();
+        }
+
+        function handleTableParameterInput(operationId, paramIndex, field, value) {
+            var operation = findTableOperationById(operationId);
+            if (!operation || !operation.parameters || !operation.parameters[paramIndex]) {
+                return;
+            }
+            operation.parameters[paramIndex][field] = value;
+            if (field === 'in') {
+                if (String(value || '').toLowerCase() === 'body') {
+                    operation.parameters[paramIndex].name = 'body';
+                    if (!String(operation.parameters[paramIndex].type || '').trim()) {
+                        operation.parameters[paramIndex].type = 'object';
+                    }
+                } else if (String(operation.parameters[paramIndex].name || '').trim() === '') {
+                    operation.parameters[paramIndex].name = 'param' + (paramIndex + 1);
+                }
+                if (String(value || '').toLowerCase() !== 'body') {
+                    if (inferTableParameterEditorKind(operation.parameters[paramIndex]).indexOf('ref-') === 0 || String(operation.parameters[paramIndex].type || '').toLowerCase() === 'object') {
+                        operation.parameters[paramIndex].type = 'string';
+                        operation.parameters[paramIndex].ref = '';
+                    }
+                }
+                renderTableEditor();
+            }
+            syncTableStateToYaml();
+        }
+
+        function handleTableParameterEditorKindChange(operationId, paramIndex, editorKind) {
+            var operation = findTableOperationById(operationId);
+            if (!operation || !operation.parameters || !operation.parameters[paramIndex]) {
+                return;
+            }
+            var param = operation.parameters[paramIndex];
+            var kind = String(editorKind || '').toLowerCase();
+            if (kind === 'ref-object') {
+                param.type = 'object';
+                param.ref = String(param.ref || '').trim() || buildDefaultTableEditorSchemaRef();
+            } else if (kind === 'ref-array') {
+                param.type = 'array';
+                param.ref = String(param.ref || '').trim() || buildDefaultTableEditorSchemaRef();
+            } else {
+                param.type = kind || (String(param.in || '').toLowerCase() === 'body' ? 'object' : 'string');
+                param.ref = '';
+            }
+            renderTableEditor();
+            syncTableStateToYaml();
+        }
+
+        function handleTableParameterRefSelection(operationId, paramIndex, value) {
+            var operation = findTableOperationById(operationId);
+            if (!operation || !operation.parameters || !operation.parameters[paramIndex]) {
+                return;
+            }
+            var param = operation.parameters[paramIndex];
+            if (value === '__custom__') {
+                if (!String(param.ref || '').trim() || isKnownTableEditorSchemaRef(param.ref)) {
+                    param.ref = buildDefaultTableEditorSchemaRef();
+                }
+            } else {
+                param.ref = value || '';
+            }
+            if (String(param.ref || '').trim() && String(param.type || '').toLowerCase() !== 'array') {
+                param.type = 'object';
+            }
+            renderTableEditor();
+            syncTableStateToYaml();
+        }
+
+        function createTableParameterSchema(operationId, paramIndex, asArray) {
+            var operation = findTableOperationById(operationId);
+            if (!operation || !operation.parameters || !operation.parameters[paramIndex]) {
+                return;
+            }
+            if (!tableEditorState) {
+                return;
+            }
+            var param = operation.parameters[paramIndex];
+            var requested = String(param.draftSchemaName || '').trim() || suggestTableEditorSchemaName(operation, param);
+            var schemaName = ensureUniqueTableEditorSchemaName(requested);
+            var schemaRef = (tableEditorState.kind === 'openapi3' ? '#/components/schemas/' : '#/definitions/') + schemaName;
+
+            tableEditorState.createdSchemas = tableEditorState.createdSchemas || {};
+            tableEditorState.createdSchemas[schemaName] = {
+                type: 'object',
+                description: 'TODO: 完善 ' + schemaName + ' 字段',
+                properties: {}
+            };
+            tableEditorState.schemaRefs = tableEditorState.schemaRefs || [];
+            tableEditorState.schemaRefs.push({ name: schemaName, ref: schemaRef });
+            tableEditorState.schemaRefs.sort(function(a, b) {
+                return a.name.localeCompare(b.name);
+            });
+
+            param.draftSchemaName = schemaName;
+            param.ref = schemaRef;
+            param.type = asArray ? 'array' : 'object';
+            renderTableEditor();
+            syncTableStateToYaml();
+            setMessage('已新建实体 ' + schemaName + ' 并关联到当前参数');
+        }
+
+        function toggleTableParameterMenu(operationId) {
+            tableEditorParameterMenuOperationId = tableEditorParameterMenuOperationId === operationId ? '' : operationId;
+            renderTableEditor();
+        }
+
+        function addTableOperation() {
+            if (!tableEditorState) {
+                tableEditorState = { kind: 'swagger2', operations: [], schemaRefs: [], createdSchemas: {} };
+            }
+            var path = '/new-path-' + (tableEditorState.operations.length + 1);
+            var operation = {
+                id: 'get ' + path,
+                sourcePath: path,
+                sourceMethod: 'get',
+                path: path,
+                method: 'get',
+                operationId: '',
+                summary: '',
+                description: '',
+                classAnnotations: [],
+                methodAnnotations: [],
+                parameters: []
+            };
+            tableEditorState.operations.push(operation);
+            tableEditorSelectedOperationId = operation.id;
+            renderTableEditor();
+            syncTableStateToYaml();
+        }
+
+        function removeTableOperation(index) {
+            if (!tableEditorState || !tableEditorState.operations[index]) {
+                return;
+            }
+            var removed = tableEditorState.operations.splice(index, 1)[0];
+            if (removed && removed.id === tableEditorSelectedOperationId) {
+                tableEditorSelectedOperationId = tableEditorState.operations[0] ? tableEditorState.operations[0].id : '';
+            }
+            renderTableEditor();
+            syncTableStateToYaml();
+        }
+
+        function addTableParameter(operationId, parameterKind) {
+            var operation = findTableOperationById(operationId);
+            if (!operation) {
+                return;
+            }
+            var kind = String(parameterKind || 'query').toLowerCase();
+            var nextIndex = operation.parameters ? operation.parameters.length : 0;
+            operation.parameters = operation.parameters || [];
+            operation.parameters.push({
+                id: 'param-' + nextIndex,
+                name: kind === 'body' ? 'body' : (kind === 'path' ? 'id' : ('param' + (nextIndex + 1))),
+                in: kind,
+                required: kind === 'path' || kind === 'body',
+                type: kind === 'body' ? 'object' : 'string',
+                format: '',
+                description: '',
+                minimum: '',
+                maximum: '',
+                minLength: '',
+                maxLength: '',
+                pattern: '',
+                ref: '',
+                contentType: 'application/json'
+            });
+            tableEditorParameterMenuOperationId = '';
+            tableEditorFocusedParamKey = operationId + '::' + (operation.parameters.length - 1);
+            renderTableEditor();
+            syncTableStateToYaml();
+        }
+
+        function removeTableParameter(operationId, paramIndex) {
+            var operation = findTableOperationById(operationId);
+            if (!operation || !operation.parameters || !operation.parameters[paramIndex]) {
+                return;
+            }
+            operation.parameters.splice(paramIndex, 1);
+            tableEditorFocusedParamKey = '';
+            renderTableEditor();
+            syncTableStateToYaml();
+        }
+
+        function syncTableStateToYaml() {
+            if (!tableEditorState) {
+                return;
+            }
+            try {
+                var nextYaml = applyTableEditorStateToYaml(yamlEditor.getValue(), tableEditorState);
+                isSyncingTableToYaml = true;
+                setYamlEditorContent(nextYaml, { infoText: '表格已同步', syncTableView: false });
+                updateStatus();
+            } catch (e) {
+                setMessage('表格回写 YAML 失败: ' + e.message);
+            } finally {
+                isSyncingTableToYaml = false;
+            }
+        }
+
+        function escapeJsString(value) {
+            return String(value == null ? '' : value)
+                .replace(/\\/g, '\\\\')
+                .replace(/'/g, '\\\'')
+                .replace(/\n/g, '\\n');
         }
 
         function loadExample() {
@@ -4945,14 +6946,12 @@ definitions:
                 loadYamlFromFile(filePath).then(function(yaml) {
                     if (yaml) {
                         originalYaml = yaml;
-                        yamlEditor.setValue(yaml);
-                        yamlEditor.refresh();
+                        setYamlEditorContent(yaml, { infoText: example.name, syncTableView: workspaceViewMode === 'table' });
                         updateStatus();
                         document.getElementById('issue-list').innerHTML = '<div class="empty"><div class="empty-icon">&#128221;</div><div class="empty-text">点击"分析"检查 YAML</div></div>';
                         document.getElementById('issue-count').textContent = '0';
                         document.getElementById('issue-count').className = 'issue-count';
                         updateAutoFixButton(0, 0, 0);
-                        document.getElementById('yaml-info').textContent = example.name;
                         setMessage('已加载: ' + example.name);
                     } else {
                         setMessage('加载失败，请检查网络或文件是否存在');
@@ -4974,9 +6973,7 @@ definitions:
                     // 上传时直接去掉注释
                     var cleanContent = stripYamlComments(content);
                     originalYaml = cleanContent;  // 保存去掉注释后的内容
-                    yamlEditor.setValue(cleanContent);
-                    yamlEditor.refresh();
-                    document.getElementById('yaml-info').textContent = file.name;
+                    setYamlEditorContent(cleanContent, { infoText: file.name, syncTableView: workspaceViewMode === 'table' });
                     updateStatus();
                     setMessage('已加载 API: ' + file.name);
                 };
@@ -5064,6 +7061,7 @@ definitions:
 
                 var errorCount = issues.filter(function(i) { return i.severity === 'error'; }).length;
                 var warnCount = issues.filter(function(i) { return i.severity === 'warn'; }).length;
+                var infoCount = issues.length - errorCount - warnCount;
                 var fixableCount = issues.filter(function(issue) { return isAutoFixable(issue); }).length;
 
                 var countEl = document.getElementById('issue-count');
@@ -5071,11 +7069,12 @@ definitions:
                 if (errorCount > 0) countEl.classList.add('error');
                 else if (warnCount > 0) countEl.classList.add('warn');
 
+                var summary = '分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告';
+                if (infoCount > 0) summary += ', ' + infoCount + ' 提示';
                 if (issues.length > 0 && fixableCount === 0) {
-                    setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告，' + issues.length + ' 个问题需手动处理');
-                } else {
-                    setMessage('分析完成: ' + errorCount + ' 错误, ' + warnCount + ' 警告');
+                    summary += '，' + issues.length + ' 个问题需手动处理';
                 }
+                setMessage(summary);
             } catch (e) {
                 console.error('Analyze error:', e);
                 document.getElementById('issue-count').textContent = '0';
@@ -5148,7 +7147,6 @@ definitions:
                 var manualGroupKey = getManualActionGroupKey(issue);
                 var relatedManualCount = manualGroupKey ? (manualActionPlan.relatedCountByGroup[manualGroupKey] || 0) : 0;
                 var isPrimaryManualAction = !!manualActionPlan.primaryIndexSet[index];
-
                 if (canAutoFix) {
                     var fixableBadge = '<span class="issue-fixable fixable-yes" title="此问题可以自动修复">可修复</span>';
                 } else if (isManualLocatable(issue) && isPrimaryManualAction) {
@@ -5429,6 +7427,289 @@ definitions:
             return null;
         }
 
+        function findSwaggerResponseSchemaContext(lines, operationContext, fieldName) {
+            if (!operationContext || !fieldName) {
+                return null;
+            }
+
+            var responsesLine = -1;
+            for (var i = operationContext.methodLine; i < operationContext.operationEnd; i++) {
+                if (lines[i].trim() === 'responses:') {
+                    responsesLine = i;
+                    break;
+                }
+            }
+            if (responsesLine < 0) {
+                return null;
+            }
+
+            var responsesIndent = indent(lines[responsesLine]);
+            var successCode = '200';
+            var successResponseLine = -1;
+            for (var i = responsesLine + 1; i < operationContext.operationEnd; i++) {
+                var currentIndent = indent(lines[i]);
+                if (currentIndent <= responsesIndent) {
+                    break;
+                }
+                var trimmed = lines[i].trim();
+                if (trimmed === successCode + ':' || trimmed === "'" + successCode + "':") {
+                    successResponseLine = i;
+                    break;
+                }
+            }
+            if (successResponseLine < 0) {
+                for (var i = responsesLine + 1; i < operationContext.operationEnd; i++) {
+                    var currentIndent = indent(lines[i]);
+                    if (currentIndent <= responsesIndent) {
+                        break;
+                    }
+                    if (lines[i].trim().endsWith(':')) {
+                        successResponseLine = i;
+                        break;
+                    }
+                }
+            }
+            if (successResponseLine < 0) {
+                return null;
+            }
+
+            var responseEnd = findSiblingBlockEndInYaml(lines, successResponseLine, indent(lines[successResponseLine]), operationContext.operationEnd);
+            var schemaLine = -1;
+            for (var i = successResponseLine + 1; i < responseEnd; i++) {
+                if (lines[i].trim() === 'schema:') {
+                    schemaLine = i;
+                    break;
+                }
+            }
+            if (schemaLine < 0) {
+                return null;
+            }
+
+            // Check if schema uses $ref to definitions
+            var schemaEnd = findBlockEndInYaml(lines, schemaLine, responseEnd);
+            var refLine = -1;
+            var refName = '';
+            for (var i = schemaLine + 1; i < schemaEnd; i++) {
+                var trimmed = lines[i].trim();
+                if (trimmed.startsWith('$ref:')) {
+                    var refMatch = trimmed.match(/^\$ref:\s*['"]?#\/definitions\/([^'"]+)['"]?/);
+                    if (refMatch) {
+                        refLine = i;
+                        refName = refMatch[1];
+                    }
+                    break;
+                }
+            }
+
+            if (refLine >= 0 && refName) {
+                return resolveDefinitionFieldContext(lines, refName, fieldName, schemaLine);
+            }
+
+            var propertiesLine = -1;
+            for (var i = schemaLine + 1; i < schemaEnd; i++) {
+                if (lines[i].trim() === 'properties:') {
+                    propertiesLine = i;
+                    break;
+                }
+            }
+            if (propertiesLine < 0) {
+                return null;
+            }
+
+            var propertiesIndent = indent(lines[propertiesLine]);
+            var propertiesEnd = findBlockEndInYaml(lines, propertiesLine, schemaEnd);
+            for (var i = propertiesLine + 1; i < propertiesEnd; i++) {
+                var currentIndent = indent(lines[i]);
+                if (currentIndent <= propertiesIndent) {
+                    continue;
+                }
+                var trimmed = lines[i].trim();
+                var keyMatch = trimmed.match(/^([^:]+):$/);
+                if (keyMatch && keyMatch[1] === fieldName) {
+                    var fieldEnd = findSiblingBlockEndInYaml(lines, i, currentIndent, propertiesEnd);
+                    return {
+                        fieldStart: i,
+                        fieldEnd: fieldEnd,
+                        fieldIndent: currentIndent,
+                        schemaLine: schemaLine,
+                        propertiesLine: propertiesLine
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        function resolveDefinitionFieldContext(lines, definitionName, fieldName, fallbackSchemaLine) {
+            var definitionsLine = -1;
+            for (var i = 0; i < lines.length; i++) {
+                if (lines[i].trim() === 'definitions:') {
+                    definitionsLine = i;
+                    break;
+                }
+            }
+            if (definitionsLine < 0) {
+                return null;
+            }
+
+            var definitionsIndent = indent(lines[definitionsLine]);
+            var definitionsEnd = lines.length;
+            var defLine = -1;
+            // definitions 的子项在 definitions: 之下的第一层缩进
+            var childIndent = -1;
+            for (var i = definitionsLine + 1; i < definitionsEnd; i++) {
+                var currentIndent = indent(lines[i]);
+                if (currentIndent < definitionsIndent) {
+                    break;
+                }
+                if (lines[i].trim() === '' || lines[i].trim().startsWith('#')) {
+                    continue;
+                }
+                if (childIndent < 0) {
+                    childIndent = currentIndent;
+                }
+                if (currentIndent === childIndent) {
+                    var trimmed = lines[i].trim();
+                    if (trimmed === definitionName + ':' || trimmed === "'" + definitionName + "':") {
+                        defLine = i;
+                        break;
+                    }
+                }
+            }
+            if (defLine < 0) {
+                return null;
+            }
+
+            var defEnd = findSiblingBlockEndInYaml(lines, defLine, indent(lines[defLine]), definitionsEnd);
+            var defSchemaLine = -1;
+            for (var i = defLine + 1; i < defEnd; i++) {
+                if (lines[i].trim() === 'type: object') {
+                    continue;
+                }
+                if (lines[i].trim() === 'properties:') {
+                    defSchemaLine = i;
+                    break;
+                }
+            }
+            if (defSchemaLine < 0) {
+                return null;
+            }
+
+            var propertiesIndent = indent(lines[defSchemaLine]);
+            var propertiesEnd = findBlockEndInYaml(lines, defSchemaLine, defEnd);
+            for (var i = defSchemaLine + 1; i < propertiesEnd; i++) {
+                var currentIndent = indent(lines[i]);
+                if (currentIndent <= propertiesIndent) {
+                    continue;
+                }
+                var trimmed = lines[i].trim();
+                var keyMatch = trimmed.match(/^([^:]+):$/);
+                if (keyMatch && keyMatch[1] === fieldName) {
+                    var fieldEnd = findSiblingBlockEndInYaml(lines, i, currentIndent, propertiesEnd);
+                    return {
+                        fieldStart: i,
+                        fieldEnd: fieldEnd,
+                        fieldIndent: currentIndent,
+                        schemaLine: defSchemaLine,
+                        propertiesLine: defSchemaLine,
+                        inDefinition: true,
+                        definitionName: definitionName
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        function findSwaggerRequestBodySchemaContext(lines, operationContext, fieldName) {
+            if (!operationContext || !fieldName) {
+                return null;
+            }
+
+            var requestBodyLine = -1;
+            for (var i = operationContext.methodLine; i < operationContext.operationEnd; i++) {
+                if (lines[i].trim() === 'requestBody:') {
+                    requestBodyLine = i;
+                    break;
+                }
+            }
+            if (requestBodyLine < 0) {
+                return null;
+            }
+
+            var bodyEnd = findBlockEndInYaml(lines, requestBodyLine, operationContext.operationEnd);
+            var contentLine = -1;
+            for (var i = requestBodyLine + 1; i < bodyEnd; i++) {
+                if (lines[i].trim() === 'content:') {
+                    contentLine = i;
+                    break;
+                }
+            }
+            if (contentLine < 0) {
+                return null;
+            }
+
+            var contentEnd = findBlockEndInYaml(lines, contentLine, bodyEnd);
+            var jsonLine = -1;
+            for (var i = contentLine + 1; i < contentEnd; i++) {
+                var trimmed = lines[i].trim();
+                if (trimmed === 'application/json:' || trimmed === "'application/json':") {
+                    jsonLine = i;
+                    break;
+                }
+            }
+            if (jsonLine < 0) {
+                return null;
+            }
+
+            var jsonEnd = findBlockEndInYaml(lines, jsonLine, contentEnd);
+            var schemaLine = -1;
+            for (var i = jsonLine + 1; i < jsonEnd; i++) {
+                if (lines[i].trim() === 'schema:') {
+                    schemaLine = i;
+                    break;
+                }
+            }
+            if (schemaLine < 0) {
+                return null;
+            }
+
+            var schemaEnd = findBlockEndInYaml(lines, schemaLine, jsonEnd);
+            var propertiesLine = -1;
+            for (var i = schemaLine + 1; i < schemaEnd; i++) {
+                if (lines[i].trim() === 'properties:') {
+                    propertiesLine = i;
+                    break;
+                }
+            }
+            if (propertiesLine < 0) {
+                return null;
+            }
+
+            var propertiesIndent = indent(lines[propertiesLine]);
+            var propertiesEnd = findBlockEndInYaml(lines, propertiesLine, schemaEnd);
+            for (var i = propertiesLine + 1; i < propertiesEnd; i++) {
+                var currentIndent = indent(lines[i]);
+                if (currentIndent <= propertiesIndent) {
+                    continue;
+                }
+                var trimmed = lines[i].trim();
+                var keyMatch = trimmed.match(/^([^:]+):$/);
+                if (keyMatch && keyMatch[1] === fieldName) {
+                    var fieldEnd = findSiblingBlockEndInYaml(lines, i, currentIndent, propertiesEnd);
+                    return {
+                        fieldStart: i,
+                        fieldEnd: fieldEnd,
+                        fieldIndent: currentIndent,
+                        schemaLine: schemaLine,
+                        propertiesLine: propertiesLine
+                    };
+                }
+            }
+
+            return null;
+        }
+
         function findRelatedIssues(issue) {
             if (!issue || !issue.locator) {
                 return [];
@@ -5606,6 +7887,51 @@ definitions:
         }
 
         function inferManualFixType(issue) {
+            // First, try to infer from field name
+            var fieldName = issue.locator && issue.locator.fieldName ? String(issue.locator.fieldName).toLowerCase() : '';
+            if (fieldName) {
+                if (fieldName === 'id' || fieldName.endsWith('id') || fieldName.endsWith('_id')) {
+                    return 'long';
+                }
+                if (fieldName === 'name' || fieldName === 'username' || fieldName === 'nickname') {
+                    return 'string';
+                }
+                if (fieldName === 'price' || fieldName === 'amount' || fieldName === 'total' || fieldName === 'fee' || fieldName === 'cost' || fieldName === 'balance' || fieldName === 'salary') {
+                    return 'double';
+                }
+                if (fieldName === 'count' || fieldName === 'quantity' || fieldName === 'age' || fieldName === 'size' || fieldName === 'num') {
+                    return 'integer';
+                }
+                if (fieldName === 'page' || fieldName === 'pagenum' || fieldName === 'pageno' || fieldName === 'pagenumber') {
+                    return 'integer';
+                }
+                if (fieldName === 'pagesize' || fieldName === 'perpage' || fieldName === 'limit') {
+                    return 'integer';
+                }
+                if (fieldName === 'score' || fieldName === 'rating') {
+                    return 'double';
+                }
+                if (fieldName === 'email' || fieldName === 'mail') {
+                    return 'string';
+                }
+                if (fieldName === 'phone' || fieldName === 'mobile' || fieldName === 'tel') {
+                    return 'string';
+                }
+                if (fieldName.indexOf('is') === 0 || fieldName.indexOf('has') === 0 || fieldName.indexOf('can') === 0 || fieldName.indexOf('should') === 0 || fieldName.indexOf('enable') === 0 || fieldName.indexOf('disable') === 0 || fieldName.indexOf('active') === 0 || fieldName.indexOf('visible') === 0 || fieldName.indexOf('deleted') === 0 || fieldName.indexOf('enabled') === 0 || fieldName.indexOf('disabled') === 0 || fieldName.indexOf('hidden') === 0) {
+                    return 'boolean';
+                }
+                if (fieldName === 'url' || fieldName === 'link' || fieldName === 'href' || fieldName === 'uri') {
+                    return 'string';
+                }
+                if (fieldName === 'createdat' || fieldName === 'updatedat' || fieldName === 'deletedat' || fieldName === 'created_at' || fieldName === 'updated_at' || fieldName === 'deleted_at') {
+                    return 'string';
+                }
+                if (fieldName === 'date' || fieldName === 'birthday' || fieldName === 'dob' || fieldName === 'birthdate') {
+                    return 'string';
+                }
+            }
+
+            // Fall back to analyzing issue messages
             var issues = findRelatedIssues(issue);
             for (var i = 0; i < issues.length; i++) {
                 var message = String(issues[i].message || '');
@@ -5631,27 +7957,67 @@ definitions:
         }
 
         function buildManualFixContext(issue) {
-            if (!issue || !issue.locator || issue.locator.kind !== 'swagger-field' || issue.locator.section !== 'request') {
+            if (!issue || !issue.locator || typeof issue.locator !== 'object') {
                 return null;
             }
 
             var lines = yamlEditor.getValue().split('\n');
             var operationContext = findSwaggerOperationContextInYaml(lines, issue.locator);
-            var parameterContext = findSwaggerParameterContextInYaml(lines, operationContext, issue.locator.fieldName);
-            if (!parameterContext) {
+            if (!operationContext) {
                 return null;
             }
 
-            if (parameterContext.typeLine >= 0) {
-                return null;
+            // Handle request parameters (swagger-field + request)
+            if (issue.locator.kind === 'swagger-field' && issue.locator.section === 'request') {
+                var parameterContext = findSwaggerParameterContextInYaml(lines, operationContext, issue.locator.fieldName);
+                if (!parameterContext) {
+                    return null;
+                }
+                // 对于缺少 type 的情况，打开表单让用户选择类型
+                // 对于已有 type 但需要手动处理的情况（如 @NotNull 校验），也打开表单让用户确认
+                return {
+                    issue: issue,
+                    defaults: buildManualFixDefaults(issue),
+                    targetStyle: parameterContext.targetStyle,
+                    relatedIssueCount: findRelatedIssues(issue).length,
+                    fixType: 'parameter',
+                    hasExistingType: parameterContext.typeLine >= 0
+                };
             }
 
-            return {
-                issue: issue,
-                defaults: buildManualFixDefaults(issue),
-                targetStyle: parameterContext.targetStyle,
-                relatedIssueCount: findRelatedIssues(issue).length
-            };
+            // Handle response fields (swagger-field + response)
+            if (issue.locator.kind === 'swagger-field' && issue.locator.section === 'response') {
+                var responseContext = findSwaggerResponseSchemaContext(lines, operationContext, issue.locator.fieldName);
+                if (!responseContext) {
+                    return null;
+                }
+                return {
+                    issue: issue,
+                    defaults: buildManualFixDefaults(issue),
+                    targetStyle: 'schema',
+                    relatedIssueCount: findRelatedIssues(issue).length,
+                    fixType: 'response-schema',
+                    responseContext: responseContext
+                };
+            }
+
+            // Handle requestBody schema fields (OpenAPI 3.0 style / body section)
+            if (issue.locator.kind === 'swagger-field' && issue.locator.section === 'body') {
+                var bodyContext = findSwaggerRequestBodySchemaContext(lines, operationContext, issue.locator.fieldName);
+                if (!bodyContext) {
+                    return null;
+                }
+                return {
+                    issue: issue,
+                    defaults: buildManualFixDefaults(issue),
+                    targetStyle: 'schema',
+                    relatedIssueCount: findRelatedIssues(issue).length,
+                    fixType: 'request-body-schema',
+                    bodyContext: bodyContext
+                };
+            }
+
+            return null;
         }
 
         function updateManualFixFormVisibility() {
@@ -5687,14 +8053,20 @@ definitions:
         function openManualFixModal(issue) {
             var context = buildManualFixContext(issue);
             if (!context) {
+                console.warn('[manual-fix] buildManualFixContext returned null for issue:', issue.message, 'locator:', JSON.stringify(issue.locator));
                 return false;
             }
 
             currentManualFixContext = context;
             document.getElementById('manual-fix-title').textContent = '手动补全 · ' + (issue.locator.apiName || issue.api || '未命名 API') + ' / ' + (issue.locator.fieldName || '字段');
-            var subtitle = context.targetStyle === 'parameter'
-                ? '当前参数缺少显式 type，core 无法安全猜测。补全后会直接写回参数 YAML 并自动重新分析。'
-                : '当前字段缺少 schema/type，core 无法安全猜测。补全后会直接写回 YAML 并自动重新分析。';
+            var subtitle;
+            if (context.hasExistingType) {
+                subtitle = '当前必填参数缺少 @NotNull/@NotBlank 校验。确认后会为字段添加合适的校验规则，写回 YAML 并自动重新分析。';
+            } else if (context.targetStyle === 'parameter') {
+                subtitle = '当前参数缺少显式 type，core 无法安全猜测。补全后会直接写回参数 YAML 并自动重新分析。';
+            } else {
+                subtitle = '当前字段缺少 schema/type，core 无法安全猜测。补全后会直接写回 YAML 并自动重新分析。';
+            }
             if (context.relatedIssueCount > 1) {
                 subtitle += ' 当前字段关联 ' + context.relatedIssueCount + ' 个问题，本次补全会一起处理。';
             }
@@ -5796,7 +8168,15 @@ definitions:
             };
 
             var lines = yamlEditor.getValue().split('\n');
-            var changed = applyManualParameterFix(lines, issue, values);
+            var changed = false;
+            var fixType = currentManualFixContext.fixType || 'parameter';
+
+            if (fixType === 'parameter') {
+                changed = applyManualParameterFix(lines, issue, values);
+            } else if (fixType === 'response-schema' || fixType === 'request-body-schema') {
+                changed = applyManualSchemaFieldFix(lines, issue, values, currentManualFixContext);
+            }
+
             if (!changed) {
                 closeManualFixModal();
                 jumpToYamlLocation(issue);
@@ -5804,7 +8184,7 @@ definitions:
                 return;
             }
 
-            yamlEditor.setValue(lines.join('\n'));
+            setYamlEditorContent(lines.join('\n'), { infoText: '手动补全已写回', syncTableView: workspaceViewMode === 'table' });
             closeManualFixModal();
             setMessage('已应用手动补全，正在重新分析');
             try {
@@ -5817,6 +8197,29 @@ definitions:
             } catch (e) {
                 setMessage('手动补全已写入，但重新分析失败: ' + e.message);
             }
+        }
+
+        function applyManualSchemaFieldFix(lines, issue, values, context) {
+            var schemaContext = context.responseContext || context.bodyContext;
+            if (!schemaContext || schemaContext.fieldStart < 0) {
+                return false;
+            }
+
+            var fieldStart = schemaContext.fieldStart;
+            var fieldEnd = schemaContext.fieldEnd;
+            var fieldIndent = schemaContext.fieldIndent;
+
+            var changed = upsertYamlScalarInLines(lines, fieldStart, fieldEnd, 'type', values.type);
+
+            if (values.type === 'string') {
+                changed = upsertYamlScalarInLines(lines, fieldStart, fieldEnd, 'minLength', values.min || '1') || changed;
+                changed = upsertYamlScalarInLines(lines, fieldStart, fieldEnd, 'maxLength', values.max || '255') || changed;
+            } else if (values.type === 'integer' || values.type === 'long' || values.type === 'double') {
+                changed = upsertYamlScalarInLines(lines, fieldStart, fieldEnd, 'minimum', values.min || '0') || changed;
+                changed = upsertYamlScalarInLines(lines, fieldStart, fieldEnd, 'maximum', values.max || '2147483647') || changed;
+            }
+
+            return changed;
         }
 
         /**
@@ -6370,6 +8773,398 @@ definitions:
                 normalized = '/' + normalized;
             }
             return normalized;
+        }
+
+        function escapeYamlTableScalar(value) {
+            return String(value == null ? '' : value);
+        }
+
+        function splitTableAnnotationText(value) {
+            if (Array.isArray(value)) {
+                return value.filter(function(item) { return !!String(item || '').trim(); });
+            }
+            return String(value || '')
+                .split('\n')
+                .map(function(item) { return item.trim(); })
+                .filter(function(item) { return !!item; });
+        }
+
+        function normalizeTableEditorPath(path) {
+            var normalized = normalizePathForDiff(String(path || '').trim());
+            return normalized || '/new-path';
+        }
+
+        function normalizeTableEditorMethod(method) {
+            var normalized = String(method || 'get').trim().toLowerCase();
+            return ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'].indexOf(normalized) >= 0 ? normalized : 'get';
+        }
+
+        function inferYamlDocumentKind(parsed) {
+            if (parsed && parsed.openapi) {
+                return 'openapi3';
+            }
+            if (parsed && parsed.swagger) {
+                return 'swagger2';
+            }
+            return 'swagger2';
+        }
+
+        function isHttpOperationKey(key) {
+            return ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'].indexOf(String(key || '').toLowerCase()) >= 0;
+        }
+
+        function getTableEditorPathKeys(parsed) {
+            return Object.keys((parsed && parsed.paths) || {}).sort(function(a, b) {
+                return a.localeCompare(b);
+            });
+        }
+
+        function extractSchemaMetaForTableEditor(schema) {
+            schema = schema || {};
+            var type = schema.type || '';
+            var ref = schema.$ref || '';
+            if (type === 'array' && schema.items && schema.items.$ref) {
+                ref = schema.items.$ref;
+            }
+            return {
+                type: type,
+                format: schema.format || '',
+                ref: ref,
+                minimum: schema.minimum === undefined ? '' : String(schema.minimum),
+                maximum: schema.maximum === undefined ? '' : String(schema.maximum),
+                minLength: schema.minLength === undefined ? '' : String(schema.minLength),
+                maxLength: schema.maxLength === undefined ? '' : String(schema.maxLength),
+                pattern: schema.pattern || ''
+            };
+        }
+
+        function createTableParameterRow(param, index) {
+            param = param || {};
+            var schema = param.schema || param;
+            var meta = extractSchemaMetaForTableEditor(schema);
+            return {
+                id: param.id || ('param-' + index),
+                name: escapeYamlTableScalar(param.name || (param.in === 'body' ? 'body' : ('param' + (index + 1)))),
+                in: param.in || 'query',
+                required: !!param.required,
+                description: escapeYamlTableScalar(param.description || ''),
+                type: escapeYamlTableScalar(meta.type || ''),
+                format: escapeYamlTableScalar(meta.format || ''),
+                minimum: escapeYamlTableScalar(meta.minimum),
+                maximum: escapeYamlTableScalar(meta.maximum),
+                minLength: escapeYamlTableScalar(meta.minLength),
+                maxLength: escapeYamlTableScalar(meta.maxLength),
+                pattern: escapeYamlTableScalar(meta.pattern),
+                ref: escapeYamlTableScalar(meta.ref),
+                contentType: escapeYamlTableScalar(param.contentType || 'application/json'),
+                draftSchemaName: escapeYamlTableScalar(param.draftSchemaName || '')
+            };
+        }
+
+        function parseYamlForTableEditor(yamlText) {
+            var source = String(yamlText || '');
+            if (!source.trim()) {
+                return {
+                    kind: 'swagger2',
+                    operations: []
+                };
+            }
+
+            var parsed = jsyaml.load(source) || {};
+            var kind = inferYamlDocumentKind(parsed);
+            var operations = [];
+            var schemaRefs = extractTableEditorSchemaRefs(parsed, kind);
+            var methodOrder = { get: 0, post: 1, put: 2, patch: 3, delete: 4, options: 5, head: 6 };
+
+            getTableEditorPathKeys(parsed).forEach(function(pathKey) {
+                var pathItem = parsed.paths[pathKey] || {};
+                var classAnnotations = Array.isArray(pathItem['x-java-class-annotations']) ? pathItem['x-java-class-annotations'].slice() : [];
+
+                Object.keys(pathItem).forEach(function(rawMethodKey) {
+                    var methodKey = String(rawMethodKey || '').toLowerCase();
+                    if (!isHttpOperationKey(methodKey)) {
+                        return;
+                    }
+
+                    var operation = pathItem[methodKey] || {};
+                    var params = Array.isArray(operation.parameters) ? operation.parameters.map(function(param, index) {
+                        return createTableParameterRow(param, index);
+                    }) : [];
+
+                    if (kind === 'openapi3' && operation.requestBody && operation.requestBody.content) {
+                        var bodyContentTypes = Object.keys(operation.requestBody.content);
+                        var firstContentType = bodyContentTypes[0] || 'application/json';
+                        var firstBodyContent = operation.requestBody.content[firstContentType] || {};
+                        var bodyRow = createTableParameterRow({
+                            id: 'body-0',
+                            name: 'body',
+                            in: 'body',
+                            required: !!operation.requestBody.required,
+                            description: operation.requestBody.description || '',
+                            schema: firstBodyContent.schema || {},
+                            contentType: firstContentType
+                        }, params.length);
+                        params.unshift(bodyRow);
+                    }
+
+                    var normalizedPath = normalizeTableEditorPath(pathKey);
+                    operations.push({
+                        id: methodKey + ' ' + normalizedPath,
+                        sourcePath: pathKey,
+                        sourceMethod: methodKey,
+                        path: normalizedPath,
+                        method: methodKey,
+                        operationId: escapeYamlTableScalar(operation.operationId || ''),
+                        summary: escapeYamlTableScalar(operation.summary || ''),
+                        description: escapeYamlTableScalar(operation.description || ''),
+                        classAnnotations: classAnnotations.slice(),
+                        methodAnnotations: Array.isArray(operation['x-java-method-annotations']) ? operation['x-java-method-annotations'].slice() : [],
+                        parameters: params
+                    });
+                });
+            });
+
+            operations.sort(function(a, b) {
+                if (a.path !== b.path) {
+                    return a.path.localeCompare(b.path);
+                }
+                return (methodOrder[a.method] || 99) - (methodOrder[b.method] || 99);
+            });
+
+            return {
+                kind: kind,
+                operations: operations,
+                schemaRefs: schemaRefs,
+                createdSchemas: {}
+            };
+        }
+
+        function buildTableSchemaFromRow(row) {
+            row = row || {};
+            var schema = {};
+            var type = String(row.type || '').trim();
+            var ref = String(row.ref || '').trim();
+
+            if (ref) {
+                if (type === 'array') {
+                    schema.type = 'array';
+                    schema.items = { $ref: ref };
+                } else {
+                    schema.$ref = ref;
+                }
+            } else if (type) {
+                schema.type = type;
+            }
+            if (row.format) {
+                schema.format = String(row.format).trim();
+            }
+            if (row.minimum !== '' && row.minimum !== null && row.minimum !== undefined) {
+                schema.minimum = Number(row.minimum);
+            }
+            if (row.maximum !== '' && row.maximum !== null && row.maximum !== undefined) {
+                schema.maximum = Number(row.maximum);
+            }
+            if (row.minLength !== '' && row.minLength !== null && row.minLength !== undefined) {
+                schema.minLength = Number(row.minLength);
+            }
+            if (row.maxLength !== '' && row.maxLength !== null && row.maxLength !== undefined) {
+                schema.maxLength = Number(row.maxLength);
+            }
+            if (row.pattern) {
+                schema.pattern = String(row.pattern);
+            }
+            return schema;
+        }
+
+        function buildOperationParameterFromTableRow(row) {
+            row = row || {};
+            var param = {
+                name: String(row.name || '').trim() || 'param',
+                in: row.in || 'query',
+                required: !!row.required
+            };
+            if (row.description) {
+                param.description = String(row.description);
+            }
+            param.schema = buildTableSchemaFromRow(row);
+            return param;
+        }
+
+        function buildOpenApiRequestBodyFromRow(row) {
+            var schema = buildTableSchemaFromRow(row);
+            return {
+                required: !!row.required,
+                description: row.description ? String(row.description) : undefined,
+                content: {
+                    [String(row.contentType || 'application/json')]: {
+                        schema: schema
+                    }
+                }
+            };
+        }
+
+        function ensureTableOperationResponses(operation, existingOperation) {
+            if (existingOperation && existingOperation.responses && Object.keys(existingOperation.responses).length > 0) {
+                return clonePlainObject(existingOperation.responses);
+            }
+            return {
+                '200': {
+                    description: 'OK'
+                }
+            };
+        }
+
+        function clonePlainObject(value) {
+            return value == null ? value : JSON.parse(JSON.stringify(value));
+        }
+
+        function applyTableEditorStateToYaml(baseYaml, tableState) {
+            var parsed = {};
+            var source = String(baseYaml || '').trim();
+            if (source) {
+                parsed = jsyaml.load(source) || {};
+            }
+            if (!parsed || typeof parsed !== 'object') {
+                parsed = {};
+            }
+
+            var kind = tableState && tableState.kind ? tableState.kind : inferYamlDocumentKind(parsed);
+            if (kind === 'openapi3') {
+                parsed.openapi = parsed.openapi || '3.0.1';
+                delete parsed.swagger;
+            } else {
+                parsed.swagger = parsed.swagger || '2.0';
+                delete parsed.openapi;
+            }
+            parsed.info = parsed.info || { title: 'API', version: '1.0' };
+
+            var operations = (tableState && Array.isArray(tableState.operations) ? tableState.operations : []).map(function(operation) {
+                var next = clonePlainObject(operation) || {};
+                next.path = normalizeTableEditorPath(operation.path);
+                next.method = normalizeTableEditorMethod(operation.method);
+                next.id = next.method + ' ' + next.path;
+                return next;
+            });
+            var createdSchemas = clonePlainObject((tableState && tableState.createdSchemas) || {}) || {};
+            var oldPaths = parsed.paths || {};
+            var oldPathByNormalized = {};
+            Object.keys(oldPaths).forEach(function(pathKey) {
+                oldPathByNormalized[normalizeTableEditorPath(pathKey)] = pathKey;
+            });
+
+            var groupedByPath = {};
+            operations.forEach(function(operation) {
+                var pathKey = operation.path;
+                if (!groupedByPath[pathKey]) {
+                    groupedByPath[pathKey] = [];
+                }
+                groupedByPath[pathKey].push(operation);
+            });
+
+            var newPaths = {};
+            Object.keys(groupedByPath).sort(function(a, b) {
+                return a.localeCompare(b);
+            }).forEach(function(pathKey) {
+                var operationGroup = groupedByPath[pathKey] || [];
+                var sourcePath = operationGroup[0] && operationGroup[0].sourcePath ? operationGroup[0].sourcePath : (oldPathByNormalized[pathKey] || pathKey);
+                var existingPathItem = oldPaths[sourcePath] || oldPaths[pathKey] || {};
+                var nextPathItem = {};
+
+                Object.keys(existingPathItem).forEach(function(key) {
+                    if (!isHttpOperationKey(key) && key !== 'x-java-class-annotations') {
+                        nextPathItem[key] = clonePlainObject(existingPathItem[key]);
+                    }
+                });
+
+                var classAnnotations = [];
+                operationGroup.forEach(function(operation) {
+                    var annotations = splitTableAnnotationText(operation.classAnnotations);
+                    if (!classAnnotations.length && annotations.length) {
+                        classAnnotations = annotations;
+                    }
+                });
+                if (classAnnotations.length) {
+                    nextPathItem['x-java-class-annotations'] = classAnnotations;
+                }
+
+                operationGroup.sort(function(a, b) {
+                    return ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'].indexOf(a.method) -
+                        ['get', 'post', 'put', 'patch', 'delete', 'options', 'head'].indexOf(b.method);
+                }).forEach(function(operation) {
+                    var method = normalizeTableEditorMethod(operation.method);
+                    var existingOperation = existingPathItem[operation.sourceMethod || method] || existingPathItem[method] || {};
+                    var nextOperation = clonePlainObject(existingOperation) || {};
+                    var operationId = String(operation.operationId || '').trim();
+                    var summary = String(operation.summary || '').trim();
+                    var description = String(operation.description || '').trim();
+                    var methodAnnotations = splitTableAnnotationText(operation.methodAnnotations);
+                    var parameters = [];
+                    var requestBody = null;
+
+                    if (operationId) nextOperation.operationId = operationId; else delete nextOperation.operationId;
+                    if (summary) nextOperation.summary = summary; else delete nextOperation.summary;
+                    if (description) nextOperation.description = description; else delete nextOperation.description;
+                    if (methodAnnotations.length) nextOperation['x-java-method-annotations'] = methodAnnotations; else delete nextOperation['x-java-method-annotations'];
+
+                    (operation.parameters || []).forEach(function(row) {
+                        if (String(row.in || '').toLowerCase() === 'body' && kind === 'openapi3') {
+                            requestBody = buildOpenApiRequestBodyFromRow(row);
+                            return;
+                        }
+                        parameters.push(buildOperationParameterFromTableRow(row));
+                    });
+
+                    if (parameters.length > 0) {
+                        nextOperation.parameters = parameters;
+                    } else {
+                        delete nextOperation.parameters;
+                    }
+
+                    if (kind === 'openapi3') {
+                        if (requestBody) {
+                            nextOperation.requestBody = requestBody;
+                        } else {
+                            delete nextOperation.requestBody;
+                        }
+                    }
+
+                    nextOperation.responses = ensureTableOperationResponses(operation, existingOperation);
+                    nextPathItem[method] = nextOperation;
+                });
+
+                if (Object.keys(nextPathItem).some(function(key) { return isHttpOperationKey(key); })) {
+                    newPaths[pathKey] = nextPathItem;
+                }
+            });
+
+            parsed.paths = newPaths;
+
+            if (Object.keys(createdSchemas).length > 0) {
+                if (kind === 'openapi3') {
+                    parsed.components = parsed.components || {};
+                    parsed.components.schemas = parsed.components.schemas || {};
+                    Object.keys(createdSchemas).forEach(function(name) {
+                        if (!parsed.components.schemas[name]) {
+                            parsed.components.schemas[name] = createdSchemas[name];
+                        }
+                    });
+                } else {
+                    parsed.definitions = parsed.definitions || {};
+                    Object.keys(createdSchemas).forEach(function(name) {
+                        if (!parsed.definitions[name]) {
+                            parsed.definitions[name] = createdSchemas[name];
+                        }
+                    });
+                }
+            }
+
+            return jsyaml.dump(parsed, {
+                lineWidth: 120,
+                noRefs: true,
+                sortKeys: false,
+                quotingType: '"',
+                forceQuotes: false
+            });
         }
 
         var monacoLoaderPromise = null;
@@ -7325,6 +10120,24 @@ definitions:
             var annotationBundle = normalizeAnnotationBundle(annotations);
             description = description || apiName;
             params = params || [];
+            function normalizeConstraintValue(primary, fallback) {
+                if (primary !== undefined && primary !== null && String(primary) !== '') {
+                    return primary;
+                }
+                if (fallback !== undefined && fallback !== null && String(fallback) !== '') {
+                    return fallback;
+                }
+                return undefined;
+            }
+
+            function mapParamType(paramType) {
+                if (paramType === 'integer') return 'Integer';
+                if (paramType === 'number') return 'Double';
+                if (paramType === 'boolean') return 'Boolean';
+                if (paramType === 'long') return 'Long';
+                if (paramType === 'array') return 'List';
+                return 'String';
+            }
 
             switch (httpMethod.toLowerCase()) {
                 case 'get':
@@ -7356,11 +10169,10 @@ definitions:
             }
 
             // 根据框架选择注解
-            var httpMethodAnnotation = currentFramework === 'spring' ? httpMethod.toUpperCase() : httpMethod.toUpperCase();
-            var pathAnnotation = currentFramework === 'spring' ? '@GetMapping' : '@' + httpMethod.toUpperCase();
+            var httpMethodAnnotation = currentFramework === 'spring'
+                ? ({ get: 'Get', post: 'Post', put: 'Put', delete: 'Delete', patch: 'Patch', options: 'Request', head: 'Request' }[String(httpMethod || 'get').toLowerCase()] || 'Request')
+                : httpMethod.toUpperCase();
             var pathAnnotationValue = currentFramework === 'spring' ? '("' + path + '")' : '("' + path + '")';
-            var classAnnotation = currentFramework === 'spring' ? '@RestController' : '@Path("' + path + '")';
-            var producesAnnotation = currentFramework === 'spring' ? '@GetMapping' : '@Produces';
 
             // 生成完整的方法代码（带语法高亮）
             var code = '';
@@ -7437,22 +10249,22 @@ definitions:
                 pathParams.forEach(function(p) {
                     // 支持 param.type 或 param.schema.type
                     var paramType = p.type || (p.schema && p.schema.type);
-                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
+                    paramType = mapParamType(paramType);
                     var annots = '';
                     // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true) {
                         annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // 数值类型 -> @Min/@Max
-                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
-                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    var minimum = normalizeConstraintValue(p.minimum, p.schema && p.schema.minimum);
+                    var maximum = normalizeConstraintValue(p.maximum, p.schema && p.schema.maximum);
                     if (minimum !== undefined || maximum !== undefined) {
                         if (minimum !== undefined) annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         if (maximum !== undefined) annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
                     }
                     // 字符串类型 -> @Size
-                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
-                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    var minLength = normalizeConstraintValue(p.minLength, p.schema && p.schema.minLength);
+                    var maxLength = normalizeConstraintValue(p.maxLength, p.schema && p.schema.maxLength);
                     if (minLength !== undefined || maxLength !== undefined) {
                         var parts = [];
                         if (minLength !== undefined && minLength > 0) parts.push('min=' + minLength);
@@ -7467,15 +10279,15 @@ definitions:
                 queryParams.forEach(function(p) {
                     // 支持 param.type 或 param.schema.type
                     var paramType = p.type || (p.schema && p.schema.type);
-                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
+                    paramType = mapParamType(paramType);
                     var annots = '';
                     // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true || (p.schema && p.schema.required === true)) {
                         annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // minLength/maxLength -> @Size
-                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
-                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    var minLength = normalizeConstraintValue(p.minLength, p.schema && p.schema.minLength);
+                    var maxLength = normalizeConstraintValue(p.maxLength, p.schema && p.schema.maxLength);
                     if (minLength !== undefined || maxLength !== undefined) {
                         var parts = [];
                         if (minLength !== undefined && minLength > 0) parts.push('min=' + minLength);
@@ -7483,8 +10295,8 @@ definitions:
                         if (parts.length > 0) annots += '<span class="syntax-annotation">@Size</span>(' + parts.join(', ') + ') ';
                     }
                     // minimum/maximum -> @Min/@Max
-                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
-                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    var minimum = normalizeConstraintValue(p.minimum, p.schema && p.schema.minimum);
+                    var maximum = normalizeConstraintValue(p.maximum, p.schema && p.schema.maximum);
                     if (minimum !== undefined || maximum !== undefined) {
                         if (minimum !== undefined) annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         if (maximum !== undefined) annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
@@ -7496,15 +10308,15 @@ definitions:
                 // 处理Header参数
                 headerParams.forEach(function(p) {
                     var paramType = p.type || (p.schema && p.schema.type);
-                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
+                    paramType = mapParamType(paramType);
                     var annots = '';
                     // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true || (p.schema && p.schema.required === true)) {
                         annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // minLength/maxLength -> @Size
-                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
-                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    var minLength = normalizeConstraintValue(p.minLength, p.schema && p.schema.minLength);
+                    var maxLength = normalizeConstraintValue(p.maxLength, p.schema && p.schema.maxLength);
                     if (minLength !== undefined || maxLength !== undefined) {
                         var parts = [];
                         if (minLength !== undefined && minLength > 0) parts.push('min=' + minLength);
@@ -7512,8 +10324,8 @@ definitions:
                         if (parts.length > 0) annots += '<span class="syntax-annotation">@Size</span>(' + parts.join(', ') + ') ';
                     }
                     // minimum/maximum -> @Min/@Max
-                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
-                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    var minimum = normalizeConstraintValue(p.minimum, p.schema && p.schema.minimum);
+                    var maximum = normalizeConstraintValue(p.maximum, p.schema && p.schema.maximum);
                     if (minimum !== undefined || maximum !== undefined) {
                         if (minimum !== undefined) annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         if (maximum !== undefined) annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
@@ -7525,15 +10337,15 @@ definitions:
                 // 处理Cookie参数
                 cookieParams.forEach(function(p) {
                     var paramType = p.type || (p.schema && p.schema.type);
-                    paramType = paramType === 'integer' ? 'Integer' : (paramType === 'number' ? 'Double' : 'String');
+                    paramType = mapParamType(paramType);
                     var annots = '';
                     // required参数 -> String用@NotBlank，其他用@NotNull
                     if (p.required === true || (p.schema && p.schema.required === true)) {
                         annots += '<span class="syntax-annotation">@' + (paramType === 'String' ? 'NotBlank' : 'NotNull') + '</span> ';
                     }
                     // minLength/maxLength -> @Size
-                    var minLength = p.minLength !== undefined ? p.minLength : (p.schema && p.schema.minLength !== undefined ? p.schema.minLength : undefined);
-                    var maxLength = p.maxLength !== undefined ? p.maxLength : (p.schema && p.schema.maxLength !== undefined ? p.schema.maxLength : undefined);
+                    var minLength = normalizeConstraintValue(p.minLength, p.schema && p.schema.minLength);
+                    var maxLength = normalizeConstraintValue(p.maxLength, p.schema && p.schema.maxLength);
                     if (minLength !== undefined || maxLength !== undefined) {
                         var parts = [];
                         if (minLength !== undefined && minLength > 0) parts.push('min=' + minLength);
@@ -7541,8 +10353,8 @@ definitions:
                         if (parts.length > 0) annots += '<span class="syntax-annotation">@Size</span>(' + parts.join(', ') + ') ';
                     }
                     // minimum/maximum -> @Min/@Max
-                    var minimum = p.minimum !== undefined ? p.minimum : (p.schema && p.schema.minimum !== undefined ? p.schema.minimum : undefined);
-                    var maximum = p.maximum !== undefined ? p.maximum : (p.schema && p.schema.maximum !== undefined ? p.schema.maximum : undefined);
+                    var minimum = normalizeConstraintValue(p.minimum, p.schema && p.schema.minimum);
+                    var maximum = normalizeConstraintValue(p.maximum, p.schema && p.schema.maximum);
                     if (minimum !== undefined || maximum !== undefined) {
                         if (minimum !== undefined) annots += '<span class="syntax-annotation">@Min</span>(' + minimum + ') ';
                         if (maximum !== undefined) annots += '<span class="syntax-annotation">@Max</span>(' + maximum + ') ';
@@ -10339,7 +13151,7 @@ definitions:
             if (window.pendingFixedContent) {
                 var beforeIssueCount = (window.currentIssues || []).length;
                 var fixStats = window.currentFixStats || {};
-                yamlEditor.setValue(window.pendingFixedContent);
+                setYamlEditorContent(window.pendingFixedContent, { infoText: '修复已回写', syncTableView: workspaceViewMode === 'table' });
                 closeDiffModal();
                 setMessage('已应用修复，正在重新分析');
                 try {

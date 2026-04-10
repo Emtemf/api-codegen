@@ -399,8 +399,14 @@ public class UiDocumentService {
     private boolean applySwaggerValidationFix(List<String> lines,
                                               UiLocator locator,
                                               ValidationAnalyzer.AnalysisItem item) {
+        // 当缺少类型时，先尝试推断并添加类型行
         if (requiresSwaggerExplicitType(item.getIssue()) && swaggerParameterNeedsManualCompletion(lines, locator)) {
-            return false;
+            String inferredType = inferSwaggerParameterType(locator.fieldName(), item.getFieldType());
+            if (inferredType != null && addSwaggerParameterType(lines, locator, inferredType)) {
+                // 类型添加成功后，继续后续修复
+            } else {
+                return false;
+            }
         }
 
         LineBlock targetBlock = findSwaggerValidationBlock(lines, locator);
@@ -477,6 +483,8 @@ public class UiDocumentService {
                 changed |= upsertSwaggerScalar(lines, targetBlock, "maximum", formatSwaggerNumber(defaultSwaggerMaximum(item)));
                 yield changed;
             }
+            // "必填字段缺少 @NotNull/@NotBlank 校验" 不自动修复
+            // 用户需要在手动修复表单中确认是否添加 @NotNull/@NotBlank
             default -> false;
             };
     }
@@ -525,6 +533,101 @@ public class UiDocumentService {
         }
 
         return parameterContext.typeLine() < 0;
+    }
+
+    /**
+     * 推断 Swagger parameter 的类型
+     * 返回 null 表示无法推断，需要用户手动确认
+     */
+    private String inferSwaggerParameterType(String fieldName, String fieldType) {
+        if (fieldType != null && !fieldType.isBlank()) {
+            return mapJavaTypeToSwaggerType(fieldType);
+        }
+        if (fieldName == null || fieldName.isBlank()) {
+            return "string";
+        }
+        String lower = fieldName.toLowerCase();
+
+        // 模糊字段名，无法确定类型，需要用户手动选择
+        if (lower.matches("^(data|value|input|output|content|field|param|parameter|item|element|object|entity|model|dto|vo|request|response|result|payload|body|text|info|message)$")) {
+            return null; // 无法推断，需要手动处理
+        }
+
+        if (lower.matches("^(id|_id)$") || lower.endsWith("id")) return "integer";
+        if (lower.matches("^(price|amount|total|fee|cost|balance|salary|score|rating)$")) return "number";
+        if (lower.matches("^(count|quantity|num|number|age|size|page|pagenum|pageno|pagenumber|pagesize|perpage|limit)$")) return "integer";
+        if (lower.matches("^(is|has|can|should|enable|disable|active|visible|deleted|enabled|disabled|hidden).*")) return "boolean";
+        if (lower.matches("^(createdat|updatedat|deletedat|created_at|updated_at|deleted_at)$")) return "string";
+        if (lower.matches("^(date|birthday|dob|birthdate)$")) return "string";
+
+        return "string";
+    }
+
+    /**
+     * 将 Java 类型映射到 Swagger 类型
+     */
+    private String mapJavaTypeToSwaggerType(String javaType) {
+        if (javaType == null || javaType.isBlank()) {
+            return "string";
+        }
+        String cleanType = javaType.replace("\"", "").trim();
+        return switch (cleanType) {
+            case "String", "LocalDate", "LocalDateTime" -> "string";
+            case "Integer", "Long" -> "integer";
+            case "Double", "Float" -> "number";
+            case "Boolean" -> "boolean";
+            default -> "string";
+        };
+    }
+
+    /**
+     * 为 Swagger parameter 添加 type 行
+     */
+    private boolean addSwaggerParameterType(List<String> lines, UiLocator locator, String swaggerType) {
+        LineBlock operationBlock = findSwaggerOperationBlock(lines, locator);
+        if (operationBlock == null) {
+            return false;
+        }
+
+        SwaggerParameterContext parameterContext = findSwaggerParameterContext(lines, operationBlock, locator.fieldName());
+        if (parameterContext == null) {
+            return false;
+        }
+
+        // 如果已有 type 行，不重复添加
+        if (parameterContext.typeLine() >= 0) {
+            return false;
+        }
+
+        // 确定插入位置和缩进
+        int insertLine = parameterContext.itemStart() + 1;
+        String typeIndent;
+        if (parameterContext.schemaLine() >= 0) {
+            // 在 schema 块内添加
+            insertLine = parameterContext.schemaLine() + 1;
+            int schemaIndent = indent(lines.get(parameterContext.schemaLine()));
+            typeIndent = indentText(schemaIndent + 2);
+        } else {
+            // 没有 schema 块，需要先创建 schema 块
+            // 找到参数块的最后一行（in/description/required 之后）
+            for (int i = parameterContext.itemStart() + 1; i < parameterContext.itemEnd(); i++) {
+                String trimmed = lines.get(i).trim();
+                if (trimmed.startsWith("in:") || trimmed.startsWith("description:") || trimmed.startsWith("required:")) {
+                    insertLine = i + 1;
+                }
+            }
+            int itemIndent = parameterContext.itemIndent();
+            // schema: 与 name:/in:/required: 同级
+            // 在 "- name:" 行中，属性在 indent + 2 的位置
+            String schemaIndentText = indentText(itemIndent + 2);
+            lines.add(insertLine, schemaIndentText + "schema:");
+            insertLine++;
+            typeIndent = indentText(itemIndent + 4);
+        }
+
+        // 插入 type 行
+        lines.add(insertLine, typeIndent + "type: " + swaggerType);
+        return true;
     }
 
     private String normalizeSwaggerPath(String path) {
@@ -613,6 +716,22 @@ public class UiDocumentService {
             LineBlock bodyParameterRefFieldBlock = findSwaggerSchemaPropertyBlock(lines, bodyParameterRefBlock, locator.fieldName());
             if (bodyParameterRefFieldBlock != null) {
                 return bodyParameterRefFieldBlock;
+            }
+        }
+
+        // Response schema (Swagger 2.0 / OpenAPI 3.0)
+        LineBlock responseSchemaBlock = findSwaggerResponseSchemaBlock(lines, operationBlock);
+        LineBlock responseFieldBlock = findSwaggerSchemaPropertyBlock(lines, responseSchemaBlock, locator.fieldName());
+        if (responseFieldBlock != null) {
+            return responseFieldBlock;
+        }
+
+        String responseRef = findSwaggerSchemaRef(lines, responseSchemaBlock);
+        if (responseRef != null) {
+            LineBlock responseRefBlock = findSwaggerReferencedSchemaBlock(lines, responseRef);
+            LineBlock responseRefFieldBlock = findSwaggerSchemaPropertyBlock(lines, responseRefBlock, locator.fieldName());
+            if (responseRefFieldBlock != null) {
+                return responseRefFieldBlock;
             }
         }
 
@@ -807,6 +926,54 @@ public class UiDocumentService {
         for (int i = requestBodyLine + 1; i < requestBodyEnd; i++) {
             if (lines.get(i).trim().equals("schema:")) {
                 return new LineBlock(i, findBlockEnd(lines, i, requestBodyEnd));
+            }
+        }
+        return null;
+    }
+
+    private LineBlock findSwaggerResponseSchemaBlock(List<String> lines, LineBlock operationBlock) {
+        int responsesLine = -1;
+        for (int i = operationBlock.start(); i < operationBlock.end(); i++) {
+            if (lines.get(i).trim().equals("responses:")) {
+                responsesLine = i;
+                break;
+            }
+        }
+        if (responsesLine < 0) {
+            return null;
+        }
+
+        int responsesEnd = findBlockEnd(lines, responsesLine, operationBlock.end());
+        int successResponseLine = -1;
+
+        // Find 200 response first
+        for (int i = responsesLine + 1; i < responsesEnd; i++) {
+            String trimmed = lines.get(i).trim();
+            if (trimmed.equals("200:") || trimmed.equals("'200':")) {
+                successResponseLine = i;
+                break;
+            }
+        }
+
+        // Fall back to any response code
+        if (successResponseLine < 0) {
+            for (int i = responsesLine + 1; i < responsesEnd; i++) {
+                String trimmed = lines.get(i).trim();
+                if (trimmed.endsWith(":")) {
+                    successResponseLine = i;
+                    break;
+                }
+            }
+        }
+
+        if (successResponseLine < 0) {
+            return null;
+        }
+
+        int responseEnd = findBlockEnd(lines, successResponseLine, responsesEnd);
+        for (int i = successResponseLine + 1; i < responseEnd; i++) {
+            if (lines.get(i).trim().equals("schema:")) {
+                return new LineBlock(i, findBlockEnd(lines, i, responseEnd));
             }
         }
         return null;

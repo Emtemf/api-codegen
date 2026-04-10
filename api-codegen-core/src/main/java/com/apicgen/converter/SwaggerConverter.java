@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * Swagger / OpenAPI 2.0 转换为 ApiDefinition
@@ -16,6 +17,22 @@ public class SwaggerConverter {
 
     private String basePackage = "com.apicgen";
     private final ObjectMapper yamlMapper;
+
+    // Type inference patterns based on field name
+    private static final Pattern ID_PATTERN = Pattern.compile("^(id|Id|ID|_id|_Id|_ID)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern NAME_PATTERN = Pattern.compile("^(name|Name|NAME)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PRICE_PATTERN = Pattern.compile("^(price|Price|amount|Amount|total|Total|fee|Fee|cost|Cost)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern COUNT_PATTERN = Pattern.compile("^(count|Count|quantity|Quantity|num|Num|number|Number|size|Size)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^(email|Email|mail|Mail|e_mail|eMail)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^(phone|Phone|mobile|Mobile|tel|Tel|telephone|Telephone)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern DATE_PATTERN = Pattern.compile("^(date|Date|time|Time|createdAt|updatedAt|deletedAt|created_at|updated_at|deleted_at)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern BOOLEAN_PATTERN = Pattern.compile("^(is|has|can|should|enable|disable|active|visible|deleted|enabled|disabled|visible|hidden)([A-Z].*)?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern URL_PATTERN = Pattern.compile("^(url|Url|URL|link|Link|href|Href|uri|Uri|URI)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PAGE_PATTERN = Pattern.compile("^(page|Page|pageNum|pageNum|pageNo|pageNo|pageNumber|pageNumber)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PAGE_SIZE_PATTERN = Pattern.compile("^(pageSize|pageSize|perPage|perPage|limit|Limit|size|Size)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern AGE_PATTERN = Pattern.compile("^(age|Age)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern SCORE_PATTERN = Pattern.compile("^(score|Score|rating|Rating|level|Level|rank|Rank)$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern CODE_PATTERN = Pattern.compile("^(code|Code|codeNo|codeNo|no|No)$", Pattern.CASE_INSENSITIVE);
 
     public SwaggerConverter() {
         this.yamlMapper = new ObjectMapper(new YAMLFactory());
@@ -195,7 +212,9 @@ public class SwaggerConverter {
                         field.setValidation(validation);
                     }
                 } else {
-                    field.setType("String");
+                    // Infer type from field name when no explicit type/schema provided
+                    String fieldName = param.has("name") ? param.get("name").asText("") : "";
+                    field.setType(inferTypeFromFieldName(fieldName, paramIn));
                 }
                 if (param.has("required")) {
                     field.setRequired(param.get("required").asBoolean(false));
@@ -328,7 +347,7 @@ public class SwaggerConverter {
                 JsonNode prop = properties.get(fieldName);
                 FieldDefinition field = new FieldDefinition();
                 field.setName(fieldName);
-                field.setType(extractTypeFromSchema(prop, root));
+                field.setType(extractTypeFromSchema(prop, root, fieldName));
                 ValidationConfig validation = extractValidationFromSchema(prop);
                 if (hasValidation(validation)) {
                     field.setValidation(validation);
@@ -357,7 +376,7 @@ public class SwaggerConverter {
 
         FieldDefinition field = new FieldDefinition();
         field.setName(defaultName);
-        field.setType(extractTypeFromSchema(schema, root));
+        field.setType(extractTypeFromSchema(schema, root, defaultName));
         ValidationConfig validation = extractValidationFromSchema(schema);
         if (hasValidation(validation)) {
             field.setValidation(validation);
@@ -382,8 +401,12 @@ public class SwaggerConverter {
     }
 
     private String extractTypeFromSchema(JsonNode schema, JsonNode root) {
+        return extractTypeFromSchema(schema, root, null);
+    }
+
+    private String extractTypeFromSchema(JsonNode schema, JsonNode root, String fieldName) {
         if (schema == null) {
-            return "String";
+            return inferTypeFromFieldName(fieldName, null);
         }
 
         // 处理引用
@@ -391,7 +414,7 @@ public class SwaggerConverter {
         if (refValue != null) {
             JsonNode resolvedSchema = resolveRefSchema(refValue, root);
             if (resolvedSchema != null && resolvedSchema.has("type")) {
-                return extractTypeFromSchema(resolvedSchema, root);
+                return extractTypeFromSchema(resolvedSchema, root, fieldName);
             }
             return extractRefName(refValue);
         }
@@ -399,7 +422,7 @@ public class SwaggerConverter {
         // 处理数组
         if (schema.has("type") && "array".equals(schema.get("type").asText())) {
             if (schema.has("items")) {
-                String itemType = extractTypeFromSchema(schema.get("items"), root);
+                String itemType = extractTypeFromSchema(schema.get("items"), root, fieldName);
                 return "List<" + itemType + ">";
             }
             return "List<Object>";
@@ -407,7 +430,7 @@ public class SwaggerConverter {
 
         // 获取类型
         if (!schema.has("type")) {
-            return "String";
+            return inferTypeFromFieldName(fieldName, null);
         }
 
         String type = schema.get("type").asText("String");
@@ -533,6 +556,96 @@ public class SwaggerConverter {
             default:
                 return "String";
         }
+    }
+
+    /**
+     * Infer type from field name when no explicit type is provided.
+     * This helps reduce manual intervention for common naming patterns.
+     */
+    private String inferTypeFromFieldName(String fieldName, String paramIn) {
+        if (fieldName == null || fieldName.isBlank()) {
+            return "String";
+        }
+
+        // ID patterns → Integer or Long (path params usually Long, others Integer)
+        if (ID_PATTERN.matcher(fieldName).matches()) {
+            if ("path".equals(paramIn)) {
+                return "Long";
+            }
+            return "Integer";
+        }
+
+        // Name patterns → String with length validation hint
+        if (NAME_PATTERN.matcher(fieldName).matches()) {
+            return "String";
+        }
+
+        // Price/Amount patterns → Double
+        if (PRICE_PATTERN.matcher(fieldName).matches()) {
+            return "Double";
+        }
+
+        // Count/Quantity patterns → Integer
+        if (COUNT_PATTERN.matcher(fieldName).matches()) {
+            return "Integer";
+        }
+
+        // Age pattern → Integer (0-150 range)
+        if (AGE_PATTERN.matcher(fieldName).matches()) {
+            return "Integer";
+        }
+
+        // Score/Rating patterns → Integer or Double
+        if (SCORE_PATTERN.matcher(fieldName).matches()) {
+            return "Double";
+        }
+
+        // Email patterns → String
+        if (EMAIL_PATTERN.matcher(fieldName).matches()) {
+            return "String";
+        }
+
+        // Phone patterns → String
+        if (PHONE_PATTERN.matcher(fieldName).matches()) {
+            return "String";
+        }
+
+        // Date patterns → LocalDateTime or LocalDate
+        if (DATE_PATTERN.matcher(fieldName).matches()) {
+            String lower = fieldName.toLowerCase();
+            if (lower.contains("created") || lower.contains("updated") || lower.contains("deleted")) {
+                return "LocalDateTime";
+            }
+            return "LocalDate";
+        }
+
+        // Boolean patterns → Boolean
+        if (BOOLEAN_PATTERN.matcher(fieldName).matches()) {
+            return "Boolean";
+        }
+
+        // URL patterns → String
+        if (URL_PATTERN.matcher(fieldName).matches()) {
+            return "String";
+        }
+
+        // Page patterns → Integer
+        if (PAGE_PATTERN.matcher(fieldName).matches()) {
+            return "Integer";
+        }
+
+        // PageSize patterns → Integer
+        if (PAGE_SIZE_PATTERN.matcher(fieldName).matches()) {
+            return "Integer";
+        }
+
+        // Code/No patterns → String
+        if (CODE_PATTERN.matcher(fieldName).matches()) {
+            return "String";
+        }
+
+        // Default to String
+        return "String";
     }
 
     private String extractRefName(String ref) {

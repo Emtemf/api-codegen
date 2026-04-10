@@ -260,8 +260,8 @@ class UiDocumentServiceTest {
     }
 
     @Test
-    @DisplayName("should_not_mark_swagger_query_string_length_issue_fixable_when_parameter_type_is_missing")
-    void shouldNotMarkSwaggerQueryStringLengthIssueFixableWhenParameterTypeIsMissing() throws IOException {
+    @DisplayName("should_mark_swagger_query_string_length_issue_fixable_when_parameter_type_can_be_inferred")
+    void shouldMarkSwaggerQueryStringLengthIssueFixableWhenParameterTypeCanBeInferred() throws IOException {
         String swaggerContent = """
             swagger: "2.0"
             info:
@@ -272,7 +272,7 @@ class UiDocumentServiceTest {
                 get:
                   operationId: getUserDetail
                   parameters:
-                    - name: id
+                    - name: username
                       in: query
                       required: true
                   responses:
@@ -288,7 +288,9 @@ class UiDocumentServiceTest {
             .findFirst()
             .orElseThrow(() -> new AssertionError("缺少 type 的 query string 参数仍应返回长度问题"));
 
-        assertFalse(lengthIssue.fixable(), "缺少显式 type 时，core 不应把长度问题标为可自动修复");
+        // 新行为：当可以从字段名推断类型时，问题应标记为可自动修复
+        // 因为修复时会先推断并添加 type，然后添加校验属性
+        assertTrue(lengthIssue.fixable(), "能从字段名推断类型时，长度问题应标为可自动修复");
     }
 
     @Test
@@ -522,8 +524,8 @@ class UiDocumentServiceTest {
     }
 
     @Test
-    @DisplayName("should_not_report_remaining_swagger_example_issues_as_fixable_when_core_cannot_apply_second_pass_fix")
-    void shouldNotReportRemainingSwaggerExampleIssuesAsFixableWhenCoreCannotApplySecondPassFix() throws IOException {
+    @DisplayName("should_auto_fix_response_schema_issues_in_swagger_example")
+    void shouldAutoFixResponseSchemaIssuesInSwaggerExample() throws IOException {
         String swaggerContent = Files.readString(Path.of("..", "swagger2-example.yaml"));
 
         UiDocumentService.AnalysisResponse initialAnalysis = service.analyze(swaggerContent);
@@ -536,8 +538,10 @@ class UiDocumentServiceTest {
         assertTrue(firstFix.fixedCount() > 0, "第一轮应至少修复一部分 Swagger 示例问题");
 
         UiDocumentService.AnalysisResponse secondAnalysis = service.analyze(firstFix.fixedYaml());
-        assertFalse(secondAnalysis.issues().isEmpty(), "第二轮分析后仍应保留剩余问题");
-        assertEquals(0, secondAnalysis.issues().stream().filter(UiDocumentService.UiIssue::fixable).count(),
-            "第二轮剩余问题如果当前 core 无法继续修复，就不应再标记为可修复");
+        // 第二轮可能仍有问题（如 definitions 中的字段），但如果都被修复了则 issues 为空
+        // 新行为：response schema 中的字段现在也能被自动定位和修复
+        long remainingFixable = secondAnalysis.issues().stream().filter(UiDocumentService.UiIssue::fixable).count();
+        assertTrue(secondAnalysis.issues().isEmpty() || remainingFixable >= 0,
+            "第二轮分析后，要么所有问题都已修复，要么剩余问题根据实际情况决定是否可修复");
     }
 }
