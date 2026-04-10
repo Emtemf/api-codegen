@@ -131,13 +131,14 @@ cd api-codegen-core
 
 ## 单文件输入与自定义注解
 
-用户只维护一份 API YAML。
-如果需要给生成的 Controller 类或方法附加自定义注解，直接写在 Swagger / OpenAPI 文件里即可。
+用户只维护一份 API YAML。如果需要给生成的 Controller 类或方法附加自定义注解，直接写在 Swagger / OpenAPI 文件里即可。
 
 含义：
 
 - `x-java-class-annotations` 写在 path 层，作用到生成的 Controller 类
 - `x-java-method-annotations` 写在具体 HTTP 方法层，作用到对应生成的方法
+
+> **完整示例**：参见 [`docs/annotation-example.md`](docs/annotation-example.md)，包含 YAML 输入、生成命令、生成的 Java 代码对照表。
 
 Swagger 2.0 写法：
 
@@ -198,30 +199,6 @@ mvn com.apicgen:api-codegen-maven-plugin:generate \
 - `./out/src/main/java/rsp/com/example/user/rsp/Response.java`
 
 > 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
-
-### 自定义注解生成效果
-
-上面 Swagger 2.0 示例生成的 Controller 代码（JAX-RS / CXF 风格）：
-
-```java
-@Secured
-@AuditLog(action='USER_QUERY')
-@Path("/users")
-public class CreateController {
-
-    @Permission('user:create')
-    @AuditLog(action='CREATE_USER')
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response create(Request req) {
-        // TODO: 实现业务逻辑
-        return null;
-    }
-}
-```
-
-类注解 `@Secured`、`@AuditLog` 出现在 Controller 类声明前，方法注解 `@Permission`、`@AuditLog` 出现在方法声明前，与 YAML 中定义的位置一一对应。
 
 ## Maven 插件常用参数
 
@@ -338,6 +315,7 @@ public Response getUserById(
 - `swagger2-example.yaml` - Swagger 2.0 示例
 - `openapi3-example.yaml` - OpenAPI 3.0 示例
 - `api-example.yaml` - 简化 API 示例
+- `docs/annotation-example.md` - 自定义注解完整示例（YAML→Java 代码对照）
 - `web-ui/demo-swagger.html` - Swagger 演示入口
 - `web-ui/demo-autofix.html` - 自动修复演示入口
 - `web-ui/demo-path-error.html` - 路径错误演示入口
