@@ -96,9 +96,25 @@ public class SpringCodeGenerator implements CodeGenerator {
         sb.append(getFileHeader(config));
         sb.append("package ").append(getControllerPackage(config)).append(";\n\n");
         sb.append(SPRING_IMPORTS);
-        sb.append("\n@RestController\n");
+        sb.append("\n");
+
+        // 添加类级别自定义注解（来自 x-java-class-annotations）
+        if (api.getClassAnnotations() != null && !api.getClassAnnotations().isEmpty()) {
+            for (String annotation : api.getClassAnnotations()) {
+                sb.append(annotation).append("\n");
+            }
+        }
+
+        sb.append("@RestController\n");
         sb.append("@RequestMapping(\"").append(api.getPath()).append("\")\n");
         sb.append("public class ").append(getControllerClassName(api.getName())).append(" {\n\n");
+
+        // 添加方法级别自定义注解（来自 x-java-method-annotations）
+        if (api.getMethodAnnotations() != null && !api.getMethodAnnotations().isEmpty()) {
+            for (String annotation : api.getMethodAnnotations()) {
+                sb.append("    ").append(annotation).append("\n");
+            }
+        }
 
         sb.append("    @").append(getSpringHttpMethodAnnotation(api.getMethod()));
         sb.append("(\"").append(api.getPath()).append("\")\n");

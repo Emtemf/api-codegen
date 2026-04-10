@@ -116,12 +116,28 @@ public class CxfCodeGenerator implements CodeGenerator {
 
         // 类定义
         sb.append("/**\n * ").append(api.getDescription() != null ? api.getDescription() : api.getName()).append(" */\n");
+
+        // 添加类级别自定义注解（来自 x-java-class-annotations）
+        if (api.getClassAnnotations() != null && !api.getClassAnnotations().isEmpty()) {
+            for (String annotation : api.getClassAnnotations()) {
+                sb.append(annotation).append("\n");
+            }
+        }
+
         sb.append("@Path(\"").append(api.getPath()).append("\")\n");
         sb.append("public class ").append(getControllerClassName(api.getName())).append(" {\n\n");
 
         // 方法
         String httpMethodAnnotation = getHttpMethodAnnotation(api.getMethod());
         sb.append("    /**\n * ").append(api.getDescription() != null ? api.getDescription() : api.getName()).append(" */\n");
+
+        // 添加方法级别自定义注解（来自 x-java-method-annotations）
+        if (api.getMethodAnnotations() != null && !api.getMethodAnnotations().isEmpty()) {
+            for (String annotation : api.getMethodAnnotations()) {
+                sb.append("    ").append(annotation).append("\n");
+            }
+        }
+
         sb.append("    @").append(httpMethodAnnotation).append("\n");
         sb.append("    @Consumes(MediaType.APPLICATION_JSON)\n");
         sb.append("    @Produces(MediaType.APPLICATION_JSON)\n");

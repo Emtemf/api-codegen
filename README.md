@@ -199,6 +199,30 @@ mvn com.apicgen:api-codegen-maven-plugin:generate \
 
 > 代码生成器同时支持 Spring MVC 和 JAX-RS (CXF) 注解，无需额外配置。
 
+### 自定义注解生成效果
+
+上面 Swagger 2.0 示例生成的 Controller 代码（JAX-RS / CXF 风格）：
+
+```java
+@Secured
+@AuditLog(action='USER_QUERY')
+@Path("/users")
+public class CreateController {
+
+    @Permission('user:create')
+    @AuditLog(action='CREATE_USER')
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response create(Request req) {
+        // TODO: 实现业务逻辑
+        return null;
+    }
+}
+```
+
+类注解 `@Secured`、`@AuditLog` 出现在 Controller 类声明前，方法注解 `@Permission`、`@AuditLog` 出现在方法声明前，与 YAML 中定义的位置一一对应。
+
 ## Maven 插件常用参数
 
 下面这些说明基于当前插件实现：
