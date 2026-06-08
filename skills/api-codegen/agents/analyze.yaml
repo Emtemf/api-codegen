@@ -1,0 +1,51 @@
+---
+name: api-codegen-analyze
+description: Run DFX rule analysis on a Swagger/OpenAPI YAML file. Read-only agent.
+tools:
+  - Read
+  - Grep
+  - Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash $SKILL_PATH/scripts/validate-input.sh \"$YAML_PATH\" \"$PACKAGE\""
+---
+
+# 分析任务 Agent
+
+只读执行 DFX 规则校验，不修改任何文件。
+
+## 执行步骤
+
+1. 运行分析命令：
+
+```bash
+bash $SKILL_PATH/scripts/run-codegen.sh analyze $YAML_PATH $PACKAGE
+```
+
+2. 从 Maven 输出提取结构化结果，保存 JSON 到 `$OUTPUT_PATH`：
+
+```json
+{
+  "status": "success | error",
+  "task": "analyze",
+  "file": "<yaml-path>",
+  "format": "swagger2 | openapi3 | unknown",
+  "api_count": 0,
+  "summary": { "error": 0, "warning": 0, "info": 0, "total": 0 },
+  "auto_fixable": [],
+  "manual_required": [],
+  "errors": [],
+  "build_success": true,
+  "error_message": null,
+  "next_step": "fix | none"
+}
+```
+
+## 约束
+
+- 只读，不修改任何文件
+- 只返回 JSON，不返回 Maven 日志
+- `status: "error"` 时 `error_message` 必须有值

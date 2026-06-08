@@ -34,13 +34,18 @@ YAML 文件
 ```
 api-codegen/
 ├── SKILL.md                          # 本文件
-├── agents/                           # Subagent 指令（按需加载）
-│   ├── analyze.md                    # 分析任务 subagent
-│   ├── fix.md                        # 修复任务 subagent
-│   └── generate.md                   # 生成任务 subagent
+├── agents/                           # Subagent 定义（YAML + 详细指令）
+│   ├── analyze.yaml                  # 分析任务（只读，tools: Read/Grep/Bash）
+│   ├── analyze.md                    # 分析任务详细指令
+│   ├── fix.yaml                      # 修复任务（需授权，tools: Read/Grep/Bash/Write）
+│   ├── fix.md                        # 修复任务详细指令
+│   ├── generate.yaml                 # 生成任务（tools: Read/Grep/Bash/Write）
+│   └── generate.md                   # 生成任务详细指令
 ├── scripts/                          # 可执行脚本
 │   ├── check-env.sh                  # 环境检测（一键检查所有依赖）
-│   └── run-codegen.sh                # Maven 插件包装（简化调用）
+│   ├── run-codegen.sh                # Maven 插件包装（简化调用）
+│   ├── validate-input.sh             # 输入校验（文件存在、包名格式）
+│   └── validate-writable.sh          # 修复授权校验（authorized + 可写 + git 状态）
 ├── references/                       # 参考文档（按需加载）
 │   ├── dfx-rules.md                  # DFX 规则速查
 │   └── maven-params.md              # Maven 插件参数
