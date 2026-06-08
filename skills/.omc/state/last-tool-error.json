@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"git add skills/ .gitignore README.md && git status --short\"}",
-  "error": "Exit code 128\nfatal: 路径规格 'skills/' 未匹配任何文件",
-  "timestamp": "2026-06-08T13:30:28.939Z",
-  "retry_count": 3
-}
