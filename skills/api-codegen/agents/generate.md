@@ -26,21 +26,14 @@
 
 ### 输入校验
 
+执行前先运行校验脚本，不通过则中止：
+
 ```bash
-# 文件存在
-test -f "$yaml_path" || { echo '{"status": "error", "error_message": "YAML file not found"}'; exit 1; }
+bash $SKILL_PATH/scripts/validate-input.sh "$yaml_path" "$package" "$output_path"
+# 输出 VALIDATION_OK 或 VALIDATION_ERROR: <reason>
 
-# 框架合法
+# 额外检查框架参数
 echo "$framework" | grep -qE '^(spring|cxf)$' || { echo '{"status": "error", "error_message": "Invalid framework: must be spring or cxf"}'; exit 1; }
-
-# 包名格式
-echo "$package" | grep -qE '^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$' || { echo '{"status": "error", "error_message": "Invalid package name"}'; exit 1; }
-
-# 输出目录（如果指定了）
-if [ -n "$output_dir" ]; then
-  test -d "$output_dir" || { echo '{"status": "error", "error_message": "Output directory does not exist"}'; exit 1; }
-  test -w "$output_dir" || { echo '{"status": "error", "error_message": "Output directory is not writable"}'; exit 1; }
-fi
 ```
 
 ## 执行步骤

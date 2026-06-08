@@ -24,22 +24,11 @@
 
 ### 输入校验
 
+执行前先运行校验脚本（含授权检查），不通过则中止：
+
 ```bash
-# 授权检查
-test "$authorized" = "true" || { echo '{"status": "error", "error_message": "Fix not authorized. User must confirm before auto-fix."}'; exit 1; }
-
-# 文件可写
-test -w "$yaml_path" || { echo '{"error": "YAML file is not writable", "path": "'$yaml_path'"}'; exit 1; }
-
-# Git 状态检查（如果在 git 仓库内）
-git -C "$(dirname "$yaml_path")" rev-parse --is-inside-work-tree 2>/dev/null && {
-  git -C "$(dirname "$yaml_path")" diff --quiet "$yaml_path" 2>/dev/null || {
-    echo '{"status": "warning", "error_message": "YAML file has uncommitted changes. Proceed with caution."}'
-  }
-}
-
-# 包名格式
-echo "$package" | grep -qE '^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$' || { echo '{"error": "Invalid package name"}'; exit 1; }
+bash $SKILL_PATH/scripts/validate-writable.sh "$yaml_path" "$package" "$authorized"
+# 输出 AUTH_OK 或 AUTH_ERROR: <reason>
 ```
 
 ## 执行步骤

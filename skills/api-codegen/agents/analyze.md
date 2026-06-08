@@ -13,17 +13,11 @@
 
 ### 输入校验
 
-执行前先校验，任何一项不通过则中止并返回错误：
+执行前先运行校验脚本，不通过则中止：
 
 ```bash
-# 文件存在
-test -f "$yaml_path" || { echo '{"error": "YAML file not found", "path": "'$yaml_path'"}'; exit 1; }
-
-# 包名格式
-echo "$package" | grep -qE '^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)*$' || { echo '{"error": "Invalid package name"}'; exit 1; }
-
-# 输出目录可写
-test -d "$(dirname "$output_path")" || { echo '{"error": "Output directory does not exist"}'; exit 1; }
+bash $SKILL_PATH/scripts/validate-input.sh "$yaml_path" "$package" "$output_path"
+# 输出 VALIDATION_OK 或 VALIDATION_ERROR: <reason>
 ```
 
 ## 执行步骤

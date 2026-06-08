@@ -4,6 +4,7 @@ description: |
   Swagger/OpenAPI YAML 到 Java API 代码的完整工作流：DFX 规则校验分析、自动修复、Controller/Request/Response 代码生成、修复预览。
   当用户提到 Swagger、OpenAPI、YAML 校验、API 代码生成、Controller 生成、DFX 规则、接口校验、API YAML 修复、生成 Java 接口代码、给接口加注解、x-java-annotations、需要创建 API 定义、想从零开始定义接口时，都应触发此 skill。
   即使用户只说"帮我看看这个 YAML 有没有问题"或"根据这个 YAML 生成代码"或"帮我给某个接口加个注解"或"我想定义一套接口但还没有 YAML 文件"，也应触发。
+allowed-tools: Bash Read Agent
 ---
 
 # API Codegen Skill
@@ -34,13 +35,10 @@ YAML 文件
 ```
 api-codegen/
 ├── SKILL.md                          # 本文件
-├── agents/                           # Subagent 定义（YAML + 详细指令）
-│   ├── analyze.yaml                  # 分析任务（只读，tools: Read/Grep/Bash）
-│   ├── analyze.md                    # 分析任务详细指令
-│   ├── fix.yaml                      # 修复任务（需授权，tools: Read/Grep/Bash/Write）
-│   ├── fix.md                        # 修复任务详细指令
-│   ├── generate.yaml                 # 生成任务（tools: Read/Grep/Bash/Write）
-│   └── generate.md                   # 生成任务详细指令
+├── agents/                           # Subagent 指令（按需加载）
+│   ├── analyze.md                    # 分析任务（只读）
+│   ├── fix.md                        # 修复任务（需授权 + 备份）
+│   └── generate.md                   # 生成任务
 ├── scripts/                          # 可执行脚本
 │   ├── check-env.sh                  # 环境检测（一键检查所有依赖）
 │   ├── run-codegen.sh                # Maven 插件包装（简化调用）
@@ -64,6 +62,7 @@ api-codegen/
 - `assets/templates/`：仅在需要格式化输出时读取，用 subagent 返回的 JSON 数据填充模板
 - `references/`：仅在需要详细规则或参数信息时读取
 - `scripts/`：直接执行，不需要读取内容
+- `examples/`：仅在需要参考示例输出时读取
 
 ## 跨平台适配
 
