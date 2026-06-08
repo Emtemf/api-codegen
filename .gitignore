@@ -82,3 +82,5 @@ CLAUDE.md
 # IntelliJ Plugin (separate Gradle project)
 # ===========================================
 api-codegen-intellij-standalone/
+skills/api-codegen-workspace/
+skills/api-codegen.skill

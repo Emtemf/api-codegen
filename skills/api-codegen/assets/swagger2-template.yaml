@@ -1,0 +1,67 @@
+swagger: "2.0"
+info:
+  title: API Name
+  version: "1.0"
+  description: API description
+basePath: /api/v1
+
+paths:
+  /resources:
+    x-java-class-annotations:
+      - "@Secured"
+    get:
+      summary: Query resources
+      operationId: queryResources
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+          description: Page number
+        - name: pageSize
+          in: query
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Page size
+      responses:
+        "200":
+          description: OK
+    post:
+      summary: Create resource
+      operationId: createResource
+      x-java-method-annotations:
+        - "@Transactional"
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                minLength: 1
+                maxLength: 255
+                description: Resource name
+      responses:
+        "201":
+          description: Created
+
+  /resources/{id}:
+    get:
+      summary: Get resource by ID
+      operationId: getResourceById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          type: integer
+          minimum: 1
+          description: Resource ID
+      responses:
+        "200":
+          description: OK

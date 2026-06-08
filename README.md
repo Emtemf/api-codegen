@@ -19,8 +19,25 @@
 api-codegen/
 ├── api-codegen-core/           # 核心代码生成库
 ├── api-codegen-maven-plugin/  # Maven 插件
-└── web-ui/                    # Web 可视化界面
+├── web-ui/                    # Web 可视化界面
+└── skills/                    # Claude Code Skill
 ```
+
+## Claude Code Skill
+
+项目内置了一个 Claude Code Skill（`skills/api-codegen/`），在 Claude Code 中可以直接使用自然语言驱动完整的 YAML 校验→修复→代码生成工作流。
+
+**触发示例：**
+
+| 用户说 | Skill 动作 |
+|-------|-----------|
+| "帮我看看这个 YAML 有什么问题" | DFX 规则校验分析 |
+| "修复一下校验规则问题" | 自动修复并回写 YAML |
+| "根据这个 YAML 生成代码" | 生成 Controller/Request/Response |
+| "帮我给接口加个 @Transactional 注解" | 在 YAML 中添加自定义注解 |
+| "完整走一遍" | 分析→修复→生成→预览 |
+
+Skill 包含环境检测脚本、subagent 指令、输出模板和 YAML 起步模板，详见 [`skills/api-codegen/SKILL.md`](skills/api-codegen/SKILL.md)。
 
 ## Bridge Contract
 
