@@ -1,3 +1,15 @@
+---
+name: api-codegen-analyze
+description: Run DFX rule analysis on a Swagger/OpenAPI YAML file. Read-only agent.
+tools: Read Grep Bash
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash $SKILL_PATH/scripts/validate-input.sh \"$YAML_PATH\" \"$PACKAGE\" \"$OUTPUT_PATH\""
+---
+
 # 分析任务 Subagent
 
 运行 DFX 规则校验，提取结构化结果。此任务只读不写（不修改任何文件）。

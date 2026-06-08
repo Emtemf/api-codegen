@@ -1,3 +1,19 @@
+---
+name: api-codegen-fix
+description: Auto-fix DFX rule violations in a Swagger/OpenAPI YAML file. Requires user authorization.
+tools: Read Grep Bash Write
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash $SKILL_PATH/scripts/validate-writable.sh \"$YAML_PATH\" \"$PACKAGE\" \"$AUTHORIZED\""
+    - matcher: "Write"
+      hooks:
+        - type: command
+          command: "bash $SKILL_PATH/scripts/validate-writable.sh \"$YAML_PATH\" \"$PACKAGE\" \"$AUTHORIZED\""
+---
+
 # 修复任务 Subagent
 
 运行自动修复，对比修复前后变更。此任务会修改 YAML 文件。

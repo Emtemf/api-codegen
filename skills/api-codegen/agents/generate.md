@@ -1,3 +1,15 @@
+---
+name: api-codegen-generate
+description: Generate Java Controller/Request/Response code from a Swagger/OpenAPI YAML file.
+tools: Read Grep Bash Write
+hooks:
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "bash $SKILL_PATH/scripts/validate-input.sh \"$YAML_PATH\" \"$PACKAGE\" \"$OUTPUT_PATH\""
+---
+
 # 生成任务 Subagent
 
 运行代码生成，收集文件清单和关键代码片段。
