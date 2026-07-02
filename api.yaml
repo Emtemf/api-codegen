@@ -1,0 +1,24 @@
+# Minimal startup example for the standalone Java CLI.
+apis:
+  - name: getUser
+    path: /api/users/detail
+    method: GET
+    description: Get user detail
+    request:
+      className: GetUserReq
+      fields:
+        - name: userId
+          type: Long
+          required: true
+          description: User ID
+          validation:
+            min: 1
+    response:
+      className: GetUserRsp
+      fields:
+        - name: userId
+          type: Long
+          description: User ID
+        - name: username
+          type: String
+          description: Username

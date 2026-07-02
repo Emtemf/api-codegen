@@ -135,15 +135,16 @@ mvn com.apicgen:api-codegen-maven-plugin:generate \
 ### Java 直接运行
 
 ```bash
-# 先构建项目（使用 Maven Wrapper，无需安装 Maven）
-./mvnw clean install -DskipTests
+# 在仓库根目录构建 core，并生成可执行 jar
+./mvnw -pl api-codegen-core -am -DskipTests package
 
-# 或使用本地 Maven
-mvn clean install -DskipTests
+# 直接运行内置启动示例
+java -jar api-codegen-core/target/api-codegen.jar api.yaml -output=target/startup-smoke -force
 
-# 使用 Maven 执行插件运行
-cd api-codegen-core
-../mvnw exec:java -Dexec.mainClass="com.apicgen.Main" -Dexec.args="api.yaml"
+# 或使用 Maven 执行同一个入口（仍从仓库根目录运行，避免 ../ 路径被安全校验拒绝）
+./mvnw -pl api-codegen-core exec:java \
+  -Dexec.mainClass="com.apicgen.Main" \
+  -Dexec.args="api.yaml -output=target/startup-smoke -force"
 ```
 
 ## 单文件输入与自定义注解
@@ -329,9 +330,10 @@ public Response getUserById(
 
 ## 示例文件
 
-- `swagger2-example.yaml` - Swagger 2.0 示例
-- `openapi3-example.yaml` - OpenAPI 3.0 示例
-- `api-example.yaml` - 简化 API 示例
+- `api.yaml` - Java CLI 启动用的最小可生成示例
+- `swagger2-example.yaml` - Swagger 2.0 校验分析演示示例（故意包含规则问题）
+- `openapi3-example.yaml` - OpenAPI 3.0 校验分析演示示例（故意包含规则问题）
+- `api-example.yaml` - DFX 校验分析演示示例（故意包含规则问题，不作为启动生成输入）
 - `docs/annotation-example.md` - 自定义注解完整示例（YAML→Java 代码对照）
 - `web-ui/demo-swagger.html` - Swagger 演示入口
 - `web-ui/demo-autofix.html` - 自动修复演示入口
