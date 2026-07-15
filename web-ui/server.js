@@ -10,7 +10,7 @@ const REQUESTED_PORT = Number(process.env.PORT || DEFAULT_PORT);
 const MAX_PORT_SCAN = 20;
 const WEB_ROOT = __dirname;
 const PROJECT_ROOT = path.resolve(WEB_ROOT, '..');
-const MVNW_PATH = path.resolve(PROJECT_ROOT, 'mvnw');
+const MVNW_PATH = path.resolve(PROJECT_ROOT, process.platform === 'win32' ? 'mvnw.cmd' : 'mvnw');
 const CORE_SRC_ROOT = path.resolve(PROJECT_ROOT, 'api-codegen-core', 'src', 'main');
 const CORE_JAR_PATH = path.resolve(PROJECT_ROOT, 'api-codegen-core', 'target', 'api-codegen.jar');
 const CONTRACT_PATH = path.resolve(PROJECT_ROOT, 'api-codegen-core', 'src', 'main', 'resources', 'ui-bridge-contract.json');
@@ -68,8 +68,12 @@ function createErrorEnvelope(command, code, message) {
 
 function normalizeRequestPath(urlPath) {
   const requestPath = decodeURIComponent(urlPath.split('?')[0]);
+  if (requestPath === '/' || requestPath === '') {
+    return 'index.html';
+  }
+
   const normalized = path.normalize(requestPath).replace(/^(\.\.[/\\])+/, '');
-  return normalized === '/' ? 'index.html' : normalized.replace(/^[/\\]+/, '');
+  return normalized.replace(/^[/\\]+/, '');
 }
 
 function resolveCandidatePaths(urlPath) {
@@ -136,10 +140,15 @@ function ensureCoreBridgeReady() {
     return;
   }
 
-  const result = spawnSync(MVNW_PATH, ['-q', '-pl', 'api-codegen-core', '-am', '-DskipTests', 'package'], {
-    cwd: PROJECT_ROOT,
-    encoding: 'utf8',
-  });
+  const result = process.platform === 'win32'
+    ? spawnSync(process.env.ComSpec || 'cmd.exe', ['/d', '/s', '/c', MVNW_PATH, '-q', '-pl', 'api-codegen-core', '-am', '-DskipTests', 'package'], {
+      cwd: PROJECT_ROOT,
+      encoding: 'utf8',
+    })
+    : spawnSync(MVNW_PATH, ['-q', '-pl', 'api-codegen-core', '-am', '-DskipTests', 'package'], {
+      cwd: PROJECT_ROOT,
+      encoding: 'utf8',
+    });
 
   if (result.status !== 0 || !fs.existsSync(CORE_JAR_PATH)) {
     throw new Error((result.stderr || result.stdout || 'Failed to build api-codegen-core bridge').trim());
@@ -159,7 +168,7 @@ function runCoreBridge(command, payload) {
 
     const child = execFile(
       'java',
-      ['-cp', CORE_JAR_PATH, 'com.apicgen.bridge.UiBridgeMain', command],
+      ['-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8', '-cp', CORE_JAR_PATH, 'com.apicgen.bridge.UiBridgeMain', command],
       {
         cwd: PROJECT_ROOT,
         maxBuffer: 10 * 1024 * 1024,
