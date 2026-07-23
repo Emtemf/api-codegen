@@ -205,6 +205,75 @@ Web UI 底部状态栏会显示 Loop Engine 实时状态：
 | `target/loop-engine-output/` | 输出目录 |
 | `.omc/state/loop-engine/` | 状态目录 |
 
+## 安全机制
+
+Loop Engine 内置多重安全保障，确保自主运行不会破坏代码库：
+
+### 1. 健康检查 + 自愈
+
+每次运行前和每轮迭代中检查环境健康：
+
+- **Git 检查**: 确认 git 可用
+- **Server 检查**: web-ui server 响应 → 不响应自动重启
+- **Core 检查**: core bridge 响应 → 不响应自动重建
+
+### 2. 提交前测试验证
+
+修复后、提交前自动运行测试：
+
+```bash
+./mvnw -q test
+```
+
+测试失败 → **不提交** + **回滚到修复前状态**。
+
+用 `--no-tests` 跳过，或在配置文件设 `run_tests_before_commit: false`。
+
+### 3. 回滚机制
+
+- 修复前保存快照（git commit hash + YAML 内容）
+- 提交前测试失败 → 自动 `git revert`
+- 提交后验证：重新分析，如果 fixable issue 没减少 → 自动回滚
+
+### 4. 日志轮转
+
+日志文件超过 5MB 自动轮转，最多保留 5 份：
+
+```
+loop_engine.log → loop_engine.log.1 → loop_engine.log.2 → ...
+```
+
+### 5. Diff 预览
+
+dry-run 模式输出完整 diff，实时模式输出摘要：
+
+```
+Diff: +128 -142 lines
+```
+
+## 历史指标
+
+每次运行自动记录到 `.omc/state/loop-engine/history.json`：
+
+```bash
+python3 scripts/loop_engine.py --stats
+```
+
+输出：
+```
+总运行次数: 5
+成功运行: 4
+成功率: 80%
+总修复 issue: 135
+总手动 issue: 18
+平均时长: 2.3s
+
+最近 5 次运行:
+  ✅ 2026-07-23 18:01 | 修复 27 | commit 9f364b3
+  ❌ 2026-07-23 17:45 | 修复 0 | commit N/A
+  ...
+```
+
 ## 扩展点
 
 Loop Engine 设计为可扩展：
@@ -214,6 +283,27 @@ Loop Engine 设计为可扩展：
 3. **新的通知渠道**: 扩展 `NotificationSystem` 类
 4. **新的分析后端**: 替换 `call_core_analyze/fix` 函数
 5. **并行处理**: 扩展 `run()` 支持多文件并行
+6. **自定义健康检查**: 扩展 `HealthChecker` 类
+7. **自定义回滚策略**: 扩展 `RollbackManager` 类
+
+## 组件架构
+
+```
+LoopEngine (主循环)
+├── GitHubIntegration      # GitHub API 集成
+├── StatePersistence       # 状态持久化 + 断点续传
+├── NotificationSystem     # Webhook/Slack 通知
+├── WebUIStatusAPI         # Web UI 实时状态同步
+├── MetricsTracker         # 历史指标追踪
+├── TestValidator          # 提交前测试验证
+├── RollbackManager        # 回滚机制（快照 + revert）
+├── HealthChecker          # 健康检查 + 自愈
+├── DiffPreview            # diff 预览 + 摘要
+├── LogRotation            # 日志轮转
+└── Config                 # .loop-engine.yml 配置管理
+
+LoopEngineDaemon            # 守护模式（持续监听 GitHub）
+```
 
 ## Claude Code 集成
 

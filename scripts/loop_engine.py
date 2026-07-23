@@ -445,6 +445,8 @@ class Config:
         for key, value in self.data.items():
             if isinstance(value, bool):
                 lines.append(f"{key}: {str(value).lower()}")
+            elif isinstance(value, int):
+                lines.append(f"{key}: {value}")
             elif isinstance(value, list):
                 lines.append(f"{key}: {', '.join(str(v) for v in value)}")
             else:
@@ -559,6 +561,221 @@ class TestValidator:
         )
         output = stdout + stderr
         return exit_code == 0, output
+
+
+# ============================================================
+# 回滚机制
+# ============================================================
+
+class RollbackManager:
+    """提交后回滚：如果修复引入回归，自动 revert"""
+
+    def __init__(self):
+        self.snapshots = []  # 保存 (commit_hash_before, yaml_before, timestamp)
+
+    def snapshot(self, yaml_content: str):
+        """在修复前保存快照"""
+        exit_code, hash_out, _ = run_command(["git", "rev-parse", "HEAD"])
+        commit_before = hash_out.strip() if exit_code == 0 else ""
+        self.snapshots.append({
+            "commit_before": commit_before,
+            "yaml_before": yaml_content,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+    def revert_last(self, reason: str = "") -> bool:
+        """回滚到最后一次快照"""
+        if not self.snapshots:
+            return False
+
+        snap = self.snapshots[-1]
+        commit_before = snap["commit_before"]
+
+        if commit_before:
+            # git revert 当前提交
+            exit_code, _, stderr = run_command(
+                ["git", "revert", "--no-edit", "HEAD"],
+                timeout=60
+            )
+            if exit_code == 0:
+                run_command(["git", "push", "origin", "HEAD"], timeout=60)
+                return True
+            else:
+                # revert 失败，尝试 reset（仅本地）
+                run_command(["git", "revert", "--abort"])
+                return False
+
+        return False
+
+    def pop_snapshot(self):
+        """修复成功验证后，丢弃快照"""
+        if self.snapshots:
+            self.snapshots.pop()
+
+
+# ============================================================
+# 健康检查 / 自愈
+# ============================================================
+
+class HealthChecker:
+    """环境健康检查和自愈"""
+
+    def __init__(self, log_fn=None):
+        self.log = log_fn or (lambda msg, level="INFO": print(msg))
+
+    def check_core_bridge(self) -> bool:
+        """检查 core bridge 是否响应"""
+        try:
+            response = call_core_analyze("swagger: \"2.0\"\npaths: {}\n")
+            return "error" not in response or "issues" in response
+        except Exception:
+            return False
+
+    def check_server(self) -> bool:
+        """检查 web-ui server 是否响应"""
+        import urllib.request
+        port = int(os.environ.get("PORT", "19090"))
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=3)
+            return True
+        except Exception:
+            return False
+
+    def check_git(self) -> bool:
+        """检查 git 状态"""
+        exit_code, _, _ = run_command(["git", "status"])
+        return exit_code == 0
+
+    def heal_server(self) -> bool:
+        """自愈：重启 server"""
+        self.log("Health check: restarting web-ui server...")
+        # 杀掉旧 server
+        run_command(["pkill", "-f", "node server.js"])
+        time.sleep(1)
+
+        port = int(os.environ.get("PORT", "19090"))
+        subprocess.Popen(
+            ["node", "server.js"],
+            cwd=str(WEB_UI_ROOT),
+            env={**os.environ, "PORT": str(port)},
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        time.sleep(3)
+        return self.check_server()
+
+    def heal_core(self) -> bool:
+        """自愈：重建 core"""
+        self.log("Health check: rebuilding api-codegen-core...")
+        exit_code, _, _ = run_command(
+            ["./mvnw", "-q", "-pl", "api-codegen-core", "-am", "-DskipTests", "package"],
+            timeout=300
+        )
+        return exit_code == 0
+
+    def full_check_with_heal(self) -> bool:
+        """完整健康检查 + 自愈"""
+        checks = [
+            ("git", self.check_git, None),
+            ("server", self.check_server, self.heal_server),
+            ("core", self.check_core_bridge, self.heal_core),
+        ]
+
+        all_ok = True
+        for name, check_fn, heal_fn in checks:
+            if check_fn():
+                continue
+
+            self.log(f"Health check FAILED: {name}", "WARN")
+            if heal_fn:
+                self.log(f"Attempting self-heal: {name}...")
+                if heal_fn():
+                    self.log(f"Self-heal succeeded: {name}")
+                else:
+                    self.log(f"Self-heal FAILED: {name}", "ERROR")
+                    all_ok = False
+            else:
+                all_ok = False
+
+        return all_ok
+
+
+# ============================================================
+# 日志轮转
+# ============================================================
+
+class LogRotation:
+    """日志轮转，防止无限增长"""
+
+    MAX_LOG_SIZE = 5 * 1024 * 1024  # 5MB
+    MAX_LOG_FILES = 5
+
+    @classmethod
+    def rotate(cls, log_path: Path):
+        """如果日志文件过大，轮转"""
+        if not log_path.exists():
+            return
+
+        size = log_path.stat().st_size
+        if size < cls.MAX_LOG_SIZE:
+            return
+
+        # 轮转：log -> log.1 -> log.2 -> ...
+        for i in range(cls.MAX_LOG_FILES - 1, 0, -1):
+            old = log_path.parent / f"{log_path.name}.{i}"
+            new = log_path.parent / f"{log_path.name}.{i + 1}"
+            if old.exists():
+                old.rename(new)
+
+        log_path.rename(log_path.parent / f"{log_path.name}.1")
+
+
+# ============================================================
+# Diff 预览
+# ============================================================
+
+class DiffPreview:
+    """生成可读的 diff 预览"""
+
+    @staticmethod
+    def generate(before: str, after: str, max_lines: int = 50) -> str:
+        """生成 diff 预览"""
+        before_lines = before.splitlines()
+        after_lines = after.splitlines()
+
+        # 简单的行级 diff
+        import difflib
+        diff = list(difflib.unified_diff(
+            before_lines, after_lines,
+            fromfile="before", tofile="after",
+            lineterm=""
+        ))
+
+        if not diff:
+            return "（无变化）"
+
+        # 限制行数
+        if len(diff) > max_lines:
+            diff = diff[:max_lines] + [f"... ({len(diff) - max_lines} more lines)"]
+
+        return "\n".join(diff)
+
+    @staticmethod
+    def summarize(before: str, after: str) -> dict:
+        """生成 diff 摘要"""
+        before_lines = set(before.splitlines())
+        after_lines = set(after.splitlines())
+
+        added = after_lines - before_lines
+        removed = before_lines - after_lines
+
+        return {
+            "lines_added": len(added),
+            "lines_removed": len(removed),
+            "bytes_before": len(before),
+            "bytes_after": len(after),
+            "changed": before != after
+        }
 
 
 def run_command(cmd: list, cwd: str = None, timeout: int = 120) -> tuple:
@@ -713,6 +930,9 @@ class LoopEngine:
         self.webui_api = WebUIStatusAPI()
         self.metrics = MetricsTracker()
         self.test_validator = TestValidator(self.config.get("test_command"))
+        self.rollback = RollbackManager()
+        self.health = HealthChecker(self.log)
+        self.diff_preview = DiffPreview()
 
         # Webhook 通知
         self.notify_webhook = notify_webhook or self.config.get("notify_webhook") or os.environ.get("LOOP_WEBHOOK_URL", "")
@@ -861,6 +1081,14 @@ class LoopEngine:
         self.persistence.save_state(self.state)
         self.webui_api.update_status(self.state)
 
+        # 0. 健康检查 + 自愈
+        if not self.health.full_check_with_heal():
+            self.log("Health check failed, cannot proceed", "ERROR")
+            self.state.status = "failed_health"
+            self.persistence.save_state(self.state)
+            return False
+        self.log("Health check passed")
+
         # 1. 确保环境就绪
         if not self.ensure_core_built():
             self.state.status = "failed"
@@ -947,12 +1175,23 @@ class LoopEngine:
 
         original_yaml = yaml_content
 
+        # 修复前保存回滚快照
+        if not self.dry_run:
+            self.rollback.snapshot(yaml_content)
+
         # 循环分析和修复
         local_iteration = 0
         while local_iteration < self.max_iterations:
             local_iteration += 1
             self.state.iteration += 1
             self.log(f"\n--- Iteration {local_iteration} ---")
+
+            # 每轮迭代前健康检查（轻量）
+            if not self.health.check_core_bridge():
+                self.log("Core bridge unhealthy mid-loop, attempting heal...", "WARN")
+                if not self.health.heal_core():
+                    self.log("Core heal failed, aborting", "ERROR")
+                    break
 
             # 分析
             issues = self.analyze(yaml_content)
@@ -992,6 +1231,16 @@ class LoopEngine:
                     self.log(f"Applied {fixed_count} fixes")
                     self.state.issues_fixed += fixed_count
 
+                    # diff 预览摘要
+                    diff_summary = self.diff_preview.summarize(yaml_content, fixed_yaml)
+                    self.log(f"  Diff: +{diff_summary['lines_added']} -{diff_summary['lines_removed']} lines")
+
+                    # dry-run 模式输出完整 diff
+                    if self.dry_run:
+                        self.log("\n--- Diff Preview ---", "DRY")
+                        print(self.diff_preview.generate(yaml_content, fixed_yaml, max_lines=30))
+                        self.log("--- End Diff ---\n", "DRY")
+
                     if not self.dry_run:
                         output_path = TEMP_OUTPUT / f"fixed_iter{self.state.iteration}.yaml"
                         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1022,8 +1271,11 @@ class LoopEngine:
             self.log("\nRunning tests before commit...")
             tests_passed, test_output = self.test_validator.run_tests()
             if not tests_passed:
-                self.log("Tests FAILED, aborting commit", "ERROR")
+                self.log("Tests FAILED before commit", "ERROR")
                 self.log(test_output[-500:], "ERROR")
+                # 回滚到修复前
+                self.log("Rolling back to pre-fix state...")
+                self.rollback.revert_last("pre-commit test failure")
                 self.state.status = "failed_tests"
                 self.persistence.save_state(self.state)
                 self.webui_api.update_status(self.state)
@@ -1044,10 +1296,27 @@ class LoopEngine:
                 self.log(f"Committed: {self.state.commit_hash[:8]}")
                 if git_push():
                     self.log("Pushed to remote")
+                    # 提交后验证：再跑一次分析，确认 YAML 真的变干净了
+                    post_issues = self.analyze(yaml_content)
+                    post_fixable = [i for i in post_issues if i.fixable]
+                    if post_fixable and len(post_fixable) >= len([i for i in issues if i.fixable]):
+                        self.log("Post-commit check: fixable issues not reduced, rolling back", "WARN")
+                        if self.rollback.revert_last("post-commit regression"):
+                            self.log("Rolled back successfully")
+                        else:
+                            self.log("Rollback failed, manual review needed", "WARN")
+                    else:
+                        self.log(f"Post-commit check: {len(post_fixable)} fixable issues remain (was {len([i for i in issues if i.fixable])})")
+                    # 验证通过，丢弃快照
+                    self.rollback.pop_snapshot()
                 else:
                     self.log("Push failed (may need manual push)", "WARN")
 
-        self.state.issues_manual += len([i for i in issues if not i.fixable]) if 'issues' in dir() else 0
+        # 统计手动 issue（只计一次）
+        if 'issues' in dir() and issues:
+            manual_count = len([i for i in issues if not i.fixable])
+            if self.state.issues_manual < manual_count:
+                self.state.issues_manual = manual_count
         return True
 
     def handle_github_issue_response(self, issue_info: dict, explanations: list, original_yaml: str, fixed_yaml: str):
@@ -1156,10 +1425,14 @@ class LoopEngine:
             self.log(f"  GitHub repo: {self.github.repo or 'N/A'}")
         self.log("=" * 60)
 
-        # 保存日志
+        # 保存日志（带轮转）
         log_path = TEMP_OUTPUT / "loop_engine.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_path.write_text("\n".join(self.log_lines), encoding="utf-8")
+        LogRotation.rotate(log_path)
+        # 追加而非覆盖，保留多次运行历史
+        mode = "a" if log_path.exists() else "w"
+        with open(log_path, mode, encoding="utf-8") as f:
+            f.write("\n".join(self.log_lines) + "\n")
         self.log(f"Log saved to: {log_path}")
         self.log(f"State saved to: {self.persistence.state_dir / 'state.json'}")
 
