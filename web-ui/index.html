@@ -5394,6 +5394,7 @@
             <span class="status-item"><span class="status-tag">API</span><span id="status-api" class="status-value">API: 0</span></span>
             <span class="status-item"><span class="status-tag">字段</span><span id="status-field" class="status-value">字段: 0</span></span>
             <span class="status-item status-primary"><span class="status-tag">状态</span><span id="status-message" class="status-value">就绪</span></span>
+            <span class="status-item" id="loop-engine-status" style="display:none;"><span class="status-tag">🔄 Loop</span><span id="loop-engine-status-value" class="status-value">idle</span></span>
         </footer>
     </div>
 
@@ -13491,11 +13492,47 @@ definitions:
             }
         }
 
+        // ============================================================
+        // Loop Engine 状态轮询
+        // ============================================================
+        function updateLoopEngineStatusDisplay(state) {
+            var wrapper = document.getElementById('loop-engine-status');
+            var valueEl = document.getElementById('loop-engine-status-value');
+            if (!wrapper || !valueEl) return;
+
+            if (!state || state.status === 'idle') {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = '';
+            var statusIcon = state.status === 'running' ? '🔄' :
+                             state.status === 'completed' ? '✅' :
+                             state.status === 'failed' ? '❌' : '⏳';
+            var text = statusIcon + ' ' + state.status;
+            if (state.iteration) text += ' (iter ' + state.iteration + ')';
+            if (state.issues_fixed) text += ' · 修复 ' + state.issues_fixed;
+            valueEl.textContent = text;
+        }
+
+        function pollLoopEngineStatus() {
+            fetch('/api/loop-engine/status')
+                .then(function(r) { return r.json(); })
+                .then(function(state) { updateLoopEngineStatusDisplay(state); })
+                .catch(function() {});
+        }
+
         // Initialize
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
+            document.addEventListener('DOMContentLoaded', function() {
+                init();
+                setInterval(pollLoopEngineStatus, 3000);
+                pollLoopEngineStatus();
+            });
         } else {
             init();
+            setInterval(pollLoopEngineStatus, 3000);
+            pollLoopEngineStatus();
         }
     </script>
 </body>

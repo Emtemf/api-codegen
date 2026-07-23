@@ -54,11 +54,329 @@ class LoopState:
     issues_manual: int = 0
     yaml_changed: bool = False
     commit_hash: str = ""
+    started_at: str = ""
+    completed_at: str = ""
+    status: str = "idle"  # idle, running, completed, failed
+    current_yaml_path: str = ""
+    notifications: list = field(default_factory=list)
 
 
 # ============================================================
-# 工具函数
+# GitHub 集成
 # ============================================================
+
+class GitHubIntegration:
+    """GitHub API 集成"""
+
+    def __init__(self, repo: str = None):
+        self.repo = repo or self._detect_repo()
+        self.token = os.environ.get("GITHUB_TOKEN", "")
+
+    def _detect_repo(self) -> str:
+        """自动检测仓库"""
+        exit_code, stdout, _ = run_command(
+            ["git", "remote", "get-url", "origin"]
+        )
+        if exit_code == 0 and "github.com" in stdout:
+            # 解析 owner/repo
+            match = re.search(r'github\.com[:/](.+?)(?:\.git)?$', stdout)
+            if match:
+                return match.group(1)
+        return ""
+
+    def get_issues(self, state: str = "open") -> list:
+        """获取 GitHub issues"""
+        if not self.repo or not self.token:
+            return []
+
+        import urllib.request
+
+        url = f"https://api.github.com/repos/{self.repo}/issues?state={state}"
+        req = urllib.request.Request(
+            url,
+            headers={
+                "Authorization": f"token {self.token}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except Exception as e:
+            print(f"Failed to fetch issues: {e}")
+            return []
+
+    def extract_yaml_from_issue(self, issue: dict) -> str:
+        """从 issue 内容提取 YAML"""
+        body = issue.get("body", "")
+
+        # 尝试提取 YAML 代码块
+        yaml_match = re.search(r'```yaml\s*\n(.*?)\n```', body, re.DOTALL)
+        if yaml_match:
+            return yaml_match.group(1).strip()
+
+        # 尝试提取 URL
+        url_match = re.search(r'https?://[^\s]+\.yaml', body)
+        if url_match:
+            import urllib.request
+            try:
+                with urllib.request.urlopen(url_match.group(0), timeout=10) as resp:
+                    return resp.read().decode("utf-8")
+            except:
+                pass
+
+        return ""
+
+    def create_issue_comment(self, issue_number: int, comment: str) -> bool:
+        """在 issue 上添加评论"""
+        if not self.repo or not self.token:
+            return False
+
+        import urllib.request
+
+        url = f"https://api.github.com/repos/{self.repo}/issues/{issue_number}/comments"
+        data = json.dumps({"body": comment}).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={
+                "Authorization": f"token {self.token}",
+                "Accept": "application/vnd.github.v3+json",
+                "Content-Type": "application/json"
+            }
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.status == 201
+        except Exception as e:
+            print(f"Failed to create comment: {e}")
+            return False
+
+    def close_issue(self, issue_number: int) -> bool:
+        """关闭 issue"""
+        if not self.repo or not self.token:
+            return False
+
+        import urllib.request
+
+        url = f"https://api.github.com/repos/{self.repo}/issues/{issue_number}"
+        data = json.dumps({"state": "closed"}).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            method="PATCH",
+            headers={
+                "Authorization": f"token {self.token}",
+                "Accept": "application/vnd.github.v3+json",
+                "Content-Type": "application/json"
+            }
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.status == 200
+        except Exception as e:
+            print(f"Failed to close issue: {e}")
+            return False
+
+
+# ============================================================
+# 持久化状态
+# ============================================================
+
+class StatePersistence:
+    """状态持久化管理"""
+
+    def __init__(self, state_dir: Path = None):
+        self.state_dir = state_dir or (PROJECT_ROOT / ".omc" / "state" / "loop-engine")
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+
+    def save_state(self, state: LoopState):
+        """保存状态到文件"""
+        state_file = self.state_dir / "state.json"
+        state_data = {
+            "iteration": state.iteration,
+            "issues_found": state.issues_found,
+            "issues_fixed": state.issues_fixed,
+            "issues_manual": state.issues_manual,
+            "yaml_changed": state.yaml_changed,
+            "commit_hash": state.commit_hash,
+            "started_at": state.started_at,
+            "completed_at": state.completed_at,
+            "status": state.status,
+            "current_yaml_path": state.current_yaml_path,
+            "notifications": state.notifications,
+            "saved_at": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        state_file.write_text(json.dumps(state_data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def load_state(self) -> LoopState:
+        """从文件加载状态"""
+        state_file = self.state_dir / "state.json"
+        if not state_file.exists():
+            return LoopState()
+
+        try:
+            data = json.loads(state_file.read_text(encoding="utf-8"))
+            return LoopState(
+                iteration=data.get("iteration", 0),
+                issues_found=data.get("issues_found", 0),
+                issues_fixed=data.get("issues_fixed", 0),
+                issues_manual=data.get("issues_manual", 0),
+                yaml_changed=data.get("yaml_changed", False),
+                commit_hash=data.get("commit_hash", ""),
+                started_at=data.get("started_at", ""),
+                completed_at=data.get("completed_at", ""),
+                status=data.get("status", "idle"),
+                current_yaml_path=data.get("current_yaml_path", ""),
+                notifications=data.get("notifications", [])
+            )
+        except Exception:
+            return LoopState()
+
+    def clear_state(self):
+        """清除状态"""
+        state_file = self.state_dir / "state.json"
+        if state_file.exists():
+            state_file.unlink()
+
+
+# ============================================================
+# 通知系统
+# ============================================================
+
+class NotificationSystem:
+    """通知系统"""
+
+    def __init__(self):
+        self.notifications = []
+
+    def add_notification(self, message: str, level: str = "info", channel: str = "default"):
+        """添加通知"""
+        notification = {
+            "message": message,
+            "level": level,
+            "channel": channel,
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        self.notifications.append(notification)
+
+    def send_webhook(self, url: str, message: str) -> bool:
+        """发送 webhook 通知"""
+        if not url:
+            return False
+
+        import urllib.request
+
+        data = json.dumps({
+            "text": message,
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ")
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.status == 200
+        except Exception as e:
+            print(f"Webhook failed: {e}")
+            return False
+
+    def send_slack(self, webhook_url: str, message: str) -> bool:
+        """发送 Slack 通知"""
+        if not webhook_url:
+            return False
+
+        import urllib.request
+
+        data = json.dumps({
+            "text": message,
+            "username": "Loop Engine",
+            "icon_emoji": ":robot_face:"
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            webhook_url,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                return resp.status == 200
+        except Exception as e:
+            print(f"Slack notification failed: {e}")
+            return False
+
+    def get_summary(self) -> str:
+        """获取通知摘要"""
+        if not self.notifications:
+            return "No notifications"
+
+        lines = []
+        for n in self.notifications[-5:]:  # 最近 5 条
+            lines.append(f"[{n['timestamp']}] [{n['level'].upper()}] {n['message']}")
+        return "\n".join(lines)
+
+
+# ============================================================
+# Web UI 状态 API
+# ============================================================
+
+class WebUIStatusAPI:
+    """Web UI 状态 API"""
+
+    def __init__(self, port: int = 19090):
+        self.port = port
+        self.base_url = f"http://127.0.0.1:{port}"
+
+    def update_status(self, state: LoopState) -> bool:
+        """更新 Web UI 状态"""
+        import urllib.request
+
+        url = f"{self.base_url}/api/loop-engine/status"
+        data = json.dumps({
+            "iteration": state.iteration,
+            "issues_found": state.issues_found,
+            "issues_fixed": state.issues_fixed,
+            "issues_manual": state.issues_manual,
+            "status": state.status,
+            "commit_hash": state.commit_hash,
+            "started_at": state.started_at,
+            "completed_at": state.completed_at
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={"Content-Type": "application/json"}
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                return resp.status == 200
+        except:
+            # Web UI 可能没有这个端点，静默失败
+            return False
+
+    def get_status(self) -> dict:
+        """获取 Web UI 状态"""
+        import urllib.request
+
+        url = f"{self.base_url}/api/loop-engine/status"
+        req = urllib.request.Request(url)
+
+        try:
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except:
+            return {}
 
 def run_command(cmd: list, cwd: str = None, timeout: int = 120) -> tuple:
     """运行命令并返回 (exit_code, stdout, stderr)"""
@@ -191,12 +509,38 @@ def git_push() -> bool:
 class LoopEngine:
     """自动化 issue 修复循环引擎"""
 
-    def __init__(self, yaml_path: str = None, dry_run: bool = False, max_iterations: int = 5):
+    def __init__(self, yaml_path: str = None, dry_run: bool = False, max_iterations: int = 5,
+                 github_mode: bool = False, resume: bool = False, notify_webhook: str = None):
         self.yaml_path = yaml_path
         self.dry_run = dry_run
         self.max_iterations = max_iterations
-        self.state = LoopState()
+        self.github_mode = github_mode
+        self.resume = resume
         self.log_lines = []
+
+        # 集成组件
+        self.github = GitHubIntegration()
+        self.persistence = StatePersistence()
+        self.notifier = NotificationSystem()
+        self.webui_api = WebUIStatusAPI()
+
+        # Webhook 通知
+        self.notify_webhook = notify_webhook or os.environ.get("LOOP_WEBHOOK_URL", "")
+        self.notify_slack = os.environ.get("LOOP_SLACK_WEBHOOK", "")
+
+        # 加载或初始化状态
+        if self.resume:
+            self.state = self.persistence.load_state()
+            self.log(f"Resumed from iteration {self.state.iteration}", "INFO")
+        else:
+            self.state = LoopState()
+
+    def log(self, message: str, level: str = "INFO"):
+        """记录日志"""
+        timestamp = time.strftime("%H:%M:%S")
+        line = f"[{timestamp}] [{level}] {message}"
+        self.log_lines.append(line)
+        print(line)
 
     def log(self, message: str, level: str = "INFO"):
         """记录日志"""
@@ -313,27 +657,109 @@ class LoopEngine:
         """运行循环引擎"""
         self.log("=" * 60)
         self.log("Loop Engine - 自动化 Issue 修复循环")
+        if self.github_mode:
+            self.log("Mode: GitHub Integration")
+        if self.dry_run:
+            self.log("Mode: DRY RUN")
+        if self.resume:
+            self.log("Mode: RESUME")
         self.log("=" * 60)
+
+        # 初始化状态
+        self.state.status = "running"
+        self.state.started_at = time.strftime("%Y-%m-%d %H:%M:%S")
+        self.persistence.save_state(self.state)
+        self.webui_api.update_status(self.state)
 
         # 1. 确保环境就绪
         if not self.ensure_core_built():
+            self.state.status = "failed"
+            self.persistence.save_state(self.state)
             return False
 
         if not self.ensure_server_running():
+            self.state.status = "failed"
+            self.persistence.save_state(self.state)
             return False
 
         # 2. 读取输入
-        yaml_content = self.read_input()
-        if not yaml_content:
-            self.log("No YAML content found", "ERROR")
-            return False
+        if self.github_mode:
+            yaml_contents = self.read_from_github_issues()
+            if not yaml_contents:
+                self.log("No YAML found in GitHub issues", "WARN")
+                yaml_contents = [(self.read_input(), None)]
+        else:
+            yaml_content = self.read_input()
+            if not yaml_content:
+                self.log("No YAML content found", "ERROR")
+                self.state.status = "failed"
+                self.persistence.save_state(self.state)
+                return False
+            yaml_contents = [(yaml_content, None)]
 
+        # 3. 处理每个 YAML
+        total_processed = 0
+        for yaml_content, issue_info in yaml_contents:
+            if issue_info:
+                self.log(f"\n{'='*40}")
+                self.log(f"Processing GitHub Issue #{issue_info['number']}: {issue_info['title']}")
+                self.log(f"{'='*40}")
+
+            success = self.process_single_yaml(yaml_content, issue_info)
+            if success:
+                total_processed += 1
+
+        # 4. 最终报告
+        self.state.status = "completed"
+        self.state.completed_at = time.strftime("%Y-%m-%d %H:%M:%S")
+        self.persistence.save_state(self.state)
+        self.webui_api.update_status(self.state)
+
+        # 5. 发送通知
+        self.send_final_notifications()
+
+        self.print_report()
+
+        return True
+
+    def read_from_github_issues(self) -> list:
+        """从 GitHub issues 读取 YAML"""
+        self.log("Fetching GitHub issues...")
+        issues = self.github.get_issues(state="open")
+
+        if not issues:
+            self.log("No issues found or GitHub not configured", "WARN")
+            return []
+
+        yaml_list = []
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+
+            yaml_content = self.github.extract_yaml_from_issue(issue)
+            if yaml_content:
+                yaml_list.append((yaml_content, {
+                    "number": issue.get("number"),
+                    "title": issue.get("title"),
+                    "body": issue.get("body", "")
+                }))
+                self.log(f"  Found YAML in issue #{issue.get('number')}")
+
+        self.log(f"Found {len(yaml_list)} issues with YAML content")
+        return yaml_list
+
+    def process_single_yaml(self, yaml_content: str, issue_info: dict = None) -> bool:
+        """处理单个 YAML 文件"""
         self.log(f"Loaded YAML: {len(yaml_content)} bytes")
 
-        # 3. 循环分析和修复
-        while self.state.iteration < self.max_iterations:
+        original_yaml = yaml_content
+
+        # 循环分析和修复
+        local_iteration = 0
+        while local_iteration < self.max_iterations:
+            local_iteration += 1
             self.state.iteration += 1
-            self.log(f"\n--- Iteration {self.state.iteration} ---")
+            self.log(f"\n--- Iteration {local_iteration} ---")
 
             # 分析
             issues = self.analyze(yaml_content)
@@ -348,16 +774,22 @@ class LoopEngine:
             fixable = [i for i in issues if i.fixable]
             manual = [i for i in issues if not i.fixable]
 
-            self.state.issues_fixed += len(fixable)
-            self.state.issues_manual += len(manual)
-
             self.log(f"  Fixable: {len(fixable)}")
             self.log(f"  Manual: {len(manual)}")
 
             # 生成解答
+            explanations = []
             for issue in issues:
                 explanation = self.generate_explanation(issue, issue.fixable)
                 self.log(f"  {issue.key}: {explanation}")
+                explanations.append({
+                    "key": issue.key,
+                    "explanation": explanation,
+                    "fixable": issue.fixable
+                })
+
+            # 更新 Web UI 状态
+            self.webui_api.update_status(self.state)
 
             # 修复
             if fixable:
@@ -365,16 +797,16 @@ class LoopEngine:
 
                 if fixed_count > 0:
                     self.log(f"Applied {fixed_count} fixes")
+                    self.state.issues_fixed += fixed_count
 
                     if not self.dry_run:
-                        # 写入修复后的 YAML
                         output_path = TEMP_OUTPUT / f"fixed_iter{self.state.iteration}.yaml"
                         output_path.parent.mkdir(parents=True, exist_ok=True)
                         output_path.write_text(fixed_yaml, encoding="utf-8")
 
-                        # 更新 YAML 继续下一轮
                         yaml_content = fixed_yaml
                         self.state.yaml_changed = True
+                        self.persistence.save_state(self.state)
                     else:
                         self.log("[DRY RUN] Would write fixed YAML", "DRY")
                         break
@@ -385,37 +817,135 @@ class LoopEngine:
                 self.log("No fixable issues, stopping")
                 break
 
-        # 4. 提交
+            # 持久化状态
+            self.persistence.save_state(self.state)
+
+        # 处理 GitHub issue 回复
+        if issue_info and not self.dry_run:
+            self.handle_github_issue_response(issue_info, explanations, original_yaml, yaml_content)
+
+        # 提交
         if self.state.yaml_changed and not self.dry_run:
             self.log("\nCommitting changes...")
-            commit_msg = f"fix: auto-fix {self.state.issues_fixed} issues (loop engine)"
+            commit_msg = f"fix: auto-fix issues (loop engine, iter {local_iteration})"
+            if issue_info:
+                commit_msg += f"\n\nCloses #{issue_info['number']}"
             self.state.commit_hash = git_commit(commit_msg)
 
             if self.state.commit_hash:
                 self.log(f"Committed: {self.state.commit_hash[:8]}")
-
-                # Push
                 if git_push():
                     self.log("Pushed to remote")
                 else:
                     self.log("Push failed (may need manual push)", "WARN")
 
-        # 5. 输出报告
-        self.print_report()
-
+        self.state.issues_manual += len([i for i in issues if not i.fixable]) if 'issues' in dir() else 0
         return True
+
+    def handle_github_issue_response(self, issue_info: dict, explanations: list, original_yaml: str, fixed_yaml: str):
+        """处理 GitHub issue 的回复"""
+        self.log(f"Commenting on issue #{issue_info['number']}...")
+
+        # 构建评论内容
+        comment_lines = [
+            "## 🤖 Loop Engine 自动处理结果",
+            "",
+            f"**处理时间**: {time.strftime('%Y-%m-%d %H:%M:%S')}",
+            "",
+            "### 处理详情",
+            ""
+        ]
+
+        fixed_count = sum(1 for e in explanations if e["fixable"])
+        manual_count = sum(1 for e in explanations if not e["fixable"])
+
+        comment_lines.append(f"- ✅ 自动修复: {fixed_count} 项")
+        comment_lines.append(f"- ⚠️ 需手动处理: {manual_count} 项")
+        comment_lines.append("")
+
+        if fixed_count > 0:
+            comment_lines.append("### ✅ 已自动修复")
+            comment_lines.append("")
+            for e in explanations:
+                if e["fixable"]:
+                    comment_lines.append(f"- {e['explanation']}")
+            comment_lines.append("")
+
+        if manual_count > 0:
+            comment_lines.append("### ⚠️ 需手动处理")
+            comment_lines.append("")
+            for e in explanations:
+                if not e["fixable"]:
+                    comment_lines.append(f"- {e['explanation']}")
+            comment_lines.append("")
+
+        if self.state.commit_hash:
+            comment_lines.append(f"### 📦 提交")
+            comment_lines.append(f"Commit: `{self.state.commit_hash[:8]}`")
+            comment_lines.append("")
+
+        comment = "\n".join(comment_lines)
+
+        # 发送评论
+        if self.github.create_issue_comment(issue_info["number"], comment):
+            self.log(f"  Commented on issue #{issue_info['number']}")
+
+            # 如果全部修复了，关闭 issue
+            if manual_count == 0 and fixed_count > 0:
+                if self.github.close_issue(issue_info["number"]):
+                    self.log(f"  Closed issue #{issue_info['number']}")
+
+    def send_final_notifications(self):
+        """发送最终通知"""
+        summary = self.notifier.get_summary()
+
+        # 添加总结通知
+        self.notifier.add_notification(
+            f"Loop Engine 完成: 修复 {self.state.issues_fixed} 项, "
+            f"手动 {self.state.issues_manual} 项, commit {self.state.commit_hash[:8] if self.state.commit_hash else 'N/A'}",
+            level="info"
+        )
+
+        # Webhook
+        if self.notify_webhook:
+            message = (
+                f"🔄 Loop Engine 完成\n"
+                f"迭代: {self.state.iteration}\n"
+                f"修复: {self.state.issues_fixed} 项\n"
+                f"手动: {self.state.issues_manual} 项\n"
+                f"Commit: {self.state.commit_hash[:8] if self.state.commit_hash else 'N/A'}"
+            )
+            if self.notifier.send_webhook(self.notify_webhook, message):
+                self.log("Webhook notification sent")
+
+        # Slack
+        if self.notify_slack:
+            message = (
+                f"🔄 *Loop Engine 完成*\n"
+                f"• 迭代: {self.state.iteration}\n"
+                f"• 修复: {self.state.issues_fixed} 项\n"
+                f"• 手动: {self.state.issues_manual} 项\n"
+                f"• Commit: `{self.state.commit_hash[:8] if self.state.commit_hash else 'N/A'}`"
+            )
+            if self.notifier.send_slack(self.notify_slack, message):
+                self.log("Slack notification sent")
 
     def print_report(self):
         """输出最终报告"""
         self.log("\n" + "=" * 60)
         self.log("Loop Engine Report")
         self.log("=" * 60)
+        self.log(f"  Status: {self.state.status}")
+        self.log(f"  Started: {self.state.started_at}")
+        self.log(f"  Completed: {self.state.completed_at}")
         self.log(f"  Iterations: {self.state.iteration}")
         self.log(f"  Issues found: {self.state.issues_found}")
         self.log(f"  Issues fixed: {self.state.issues_fixed}")
         self.log(f"  Issues manual: {self.state.issues_manual}")
         self.log(f"  YAML changed: {self.state.yaml_changed}")
         self.log(f"  Commit: {self.state.commit_hash[:8] if self.state.commit_hash else 'N/A'}")
+        if self.github_mode:
+            self.log(f"  GitHub repo: {self.github.repo or 'N/A'}")
         self.log("=" * 60)
 
         # 保存日志
@@ -423,6 +953,7 @@ class LoopEngine:
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_path.write_text("\n".join(self.log_lines), encoding="utf-8")
         self.log(f"Log saved to: {log_path}")
+        self.log(f"State saved to: {self.persistence.state_dir / 'state.json'}")
 
 
 # ============================================================
@@ -444,18 +975,58 @@ def main():
         help="干跑模式，不实际修改文件"
     )
     parser.add_argument(
+        "--github",
+        action="store_true",
+        help="从 GitHub issues 读取 YAML"
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="从上次状态恢复"
+    )
+    parser.add_argument(
         "--max-iterations",
         type=int,
         default=5,
         help="最大迭代次数 (默认: 5)"
     )
+    parser.add_argument(
+        "--notify-webhook",
+        type=str,
+        help="Webhook 通知 URL"
+    )
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="显示当前状态"
+    )
 
     args = parser.parse_args()
+
+    # 显示状态模式
+    if args.status:
+        persistence = StatePersistence()
+        state = persistence.load_state()
+        print("=" * 40)
+        print("Loop Engine Status")
+        print("=" * 40)
+        print(f"  Status: {state.status}")
+        print(f"  Iteration: {state.iteration}")
+        print(f"  Issues fixed: {state.issues_fixed}")
+        print(f"  Issues manual: {state.issues_manual}")
+        print(f"  Commit: {state.commit_hash[:8] if state.commit_hash else 'N/A'}")
+        print(f"  Started: {state.started_at}")
+        print(f"  Completed: {state.completed_at}")
+        print("=" * 40)
+        sys.exit(0)
 
     engine = LoopEngine(
         yaml_path=args.yaml,
         dry_run=args.dry_run,
-        max_iterations=args.max_iterations
+        max_iterations=args.max_iterations,
+        github_mode=args.github,
+        resume=args.resume,
+        notify_webhook=args.notify_webhook
     )
 
     success = engine.run()

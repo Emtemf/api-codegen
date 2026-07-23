@@ -226,6 +226,19 @@ function tryServeFile(res, candidates, index) {
   });
 }
 
+const LOOP_STATE_FILE = path.resolve(PROJECT_ROOT, '.omc', 'state', 'loop-engine', 'state.json');
+
+function readLoopEngineState() {
+  try {
+    if (fs.existsSync(LOOP_STATE_FILE)) {
+      return JSON.parse(fs.readFileSync(LOOP_STATE_FILE, 'utf8'));
+    }
+  } catch (error) {
+    // ignore read errors
+  }
+  return { status: 'idle', iteration: 0, issuesFixed: 0, issuesManual: 0 };
+}
+
 const server = http.createServer(async (req, res) => {
   const requestUrl = req.url || '/';
 
@@ -241,6 +254,27 @@ const server = http.createServer(async (req, res) => {
       const code = error && error.code ? error.code : 'CORE_BRIDGE_REQUEST_FAILED';
       const message = (error && error.message) ? error.message : 'Core bridge request failed';
       sendJson(res, 500, createErrorEnvelope(command, code, message));
+    }
+    return;
+  }
+
+  // Loop Engine status endpoints
+  if (requestUrl === '/api/loop-engine/status' && req.method === 'GET') {
+    sendJson(res, 200, readLoopEngineState());
+    return;
+  }
+
+  if (requestUrl === '/api/loop-engine/status' && req.method === 'POST') {
+    try {
+      const payload = await readJsonBody(req);
+      const stateDir = path.dirname(LOOP_STATE_FILE);
+      if (!fs.existsSync(stateDir)) {
+        fs.mkdirSync(stateDir, { recursive: true });
+      }
+      fs.writeFileSync(LOOP_STATE_FILE, JSON.stringify(payload, null, 2), 'utf8');
+      sendJson(res, 200, { ok: true });
+    } catch (error) {
+      sendJson(res, 500, { ok: false, error: error.message });
     }
     return;
   }
