@@ -19,6 +19,8 @@ export class AppPage {
   readonly loadExampleButton: Locator;
   readonly yamlViewButton: Locator;
   readonly tableViewButton: Locator;
+  readonly tableErrorState: Locator;
+  readonly workflowSummary: Locator;
 
   // Editors - CodeMirror creates a wrapper div
   readonly yamlEditor: Locator;
@@ -42,6 +44,8 @@ export class AppPage {
     this.loadExampleButton = page.getByRole('button', { name: /^(示例|加载示例)$/ });
     this.yamlViewButton = page.locator('#workspace-view-yaml-btn');
     this.tableViewButton = page.locator('#workspace-view-table-btn');
+    this.tableErrorState = page.locator('.table-editor-empty-error');
+    this.workflowSummary = page.locator('.analysis-workflow-card');
 
     // Use CodeMirror class - it's the visible editor wrapper
     this.yamlEditor = page.locator('.api-panel .CodeMirror');
@@ -88,6 +92,30 @@ export class AppPage {
         codeMirror.setValue(value);
       }
     }, content);
+  }
+
+  /**
+   * Switch to table view
+   */
+  async switchToTableView() {
+    await this.tableViewButton.click();
+  }
+
+  /**
+   * Get table parse error text
+   */
+  async getTableParseErrorText(): Promise<string> {
+    await this.tableErrorState.first().waitFor({ state: 'visible', timeout: 5000 });
+    const texts = await this.tableErrorState.allTextContents();
+    return texts.join('\n');
+  }
+
+  /**
+   * Get workflow summary text
+   */
+  async getWorkflowSummaryText(): Promise<string> {
+    await this.workflowSummary.waitFor({ state: 'visible', timeout: 5000 });
+    return (await this.workflowSummary.textContent()) || '';
   }
 
   /**

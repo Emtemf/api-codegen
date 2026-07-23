@@ -90,6 +90,59 @@ function loadIsManualLocatableFromIndex() {
 
 const isManualLocatable = loadIsManualLocatableFromIndex();
 
+function loadBuildIssueSelectionStateFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const getIssueKeySource = extractFunctionSource(indexHtml, 'getIssueKey');
+    const isManualLocatableSource = extractFunctionSource(indexHtml, 'isManualLocatable');
+    const getManualActionGroupKeySource = extractFunctionSource(indexHtml, 'getManualActionGroupKey');
+    const buildIssueSelectionStateSource = extractFunctionSource(indexHtml, 'buildIssueSelectionState');
+
+    return eval(`(() => {
+        ${getIssueKeySource}
+        ${isManualLocatableSource}
+        ${getManualActionGroupKeySource}
+        ${buildIssueSelectionStateSource}
+        return buildIssueSelectionState;
+    })()`);
+}
+
+const buildIssueSelectionState = loadBuildIssueSelectionStateFromIndex();
+
+function loadSummarizeYamlStatusFromIndex() {
+    const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    const normalizePathForDiffSource = extractFunctionSource(indexHtml, 'normalizePathForDiff');
+    const escapeYamlTableScalarSource = extractFunctionSource(indexHtml, 'escapeYamlTableScalar');
+    const parseYamlForTableEditorSource = extractFunctionSource(indexHtml, 'parseYamlForTableEditor');
+    const inferYamlDocumentKindSource = extractFunctionSource(indexHtml, 'inferYamlDocumentKind');
+    const isHttpOperationKeySource = extractFunctionSource(indexHtml, 'isHttpOperationKey');
+    const getTableEditorPathKeysSource = extractFunctionSource(indexHtml, 'getTableEditorPathKeys');
+    const extractTableEditorSchemaRefsSource = extractFunctionSource(indexHtml, 'extractTableEditorSchemaRefs');
+    const extractSchemaMetaForTableEditorSource = extractFunctionSource(indexHtml, 'extractSchemaMetaForTableEditor');
+    const createTableParameterRowSource = extractFunctionSource(indexHtml, 'createTableParameterRow');
+    const normalizeTableEditorPathSource = extractFunctionSource(indexHtml, 'normalizeTableEditorPath');
+    const normalizeTableEditorMethodSource = extractFunctionSource(indexHtml, 'normalizeTableEditorMethod');
+    const summarizeYamlStatusSource = extractFunctionSource(indexHtml, 'summarizeYamlStatus');
+
+    return eval(`(() => {
+        const jsyaml = require('js-yaml');
+        ${normalizePathForDiffSource}
+        ${escapeYamlTableScalarSource}
+        ${inferYamlDocumentKindSource}
+        ${isHttpOperationKeySource}
+        ${getTableEditorPathKeysSource}
+        ${extractTableEditorSchemaRefsSource}
+        ${extractSchemaMetaForTableEditorSource}
+        ${createTableParameterRowSource}
+        ${normalizeTableEditorPathSource}
+        ${normalizeTableEditorMethodSource}
+        ${parseYamlForTableEditorSource}
+        ${summarizeYamlStatusSource}
+        return summarizeYamlStatus;
+    })()`);
+}
+
+const summarizeYamlStatus = loadSummarizeYamlStatusFromIndex();
+
 function loadComputePreviewDiffFromIndex() {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     const computePreviewDiffSource = extractFunctionSource(indexHtml, 'computePreviewDiff');
@@ -278,7 +331,11 @@ function loadTableEditorMarkupFunctionsFromIndex() {
     const buildTableParameterModelingHintSource = extractFunctionSource(indexHtml, 'buildTableParameterModelingHint');
     const buildTableParameterAddMenuSource = extractFunctionSource(indexHtml, 'buildTableParameterAddMenu');
     const resolveTableEditorControllerClassAnnotationsSource = extractFunctionSource(indexHtml, 'resolveTableEditorControllerClassAnnotations');
+    const buildTableEditorPreviewMetaSource = extractFunctionSource(indexHtml, 'buildTableEditorPreviewMeta');
     const buildTableEditorJavaPreviewSource = extractFunctionSource(indexHtml, 'buildTableEditorJavaPreview');
+    const buildTableEditorParseErrorStateSource = extractFunctionSource(indexHtml, 'buildTableEditorParseErrorState');
+    const buildTableEditorStatsMarkupSource = extractFunctionSource(indexHtml, 'buildTableEditorStatsMarkup');
+    const buildIssueWorkflowSummarySource = extractFunctionSource(indexHtml, 'buildIssueWorkflowSummary');
     const buildTableEditorApiTableSource = extractFunctionSource(indexHtml, 'buildTableEditorApiTable');
     const buildTableEditorParameterJumpNavSource = extractFunctionSource(indexHtml, 'buildTableEditorParameterJumpNav');
     const buildTableEditorParameterTableSource = extractFunctionSource(indexHtml, 'buildTableEditorParameterTable');
@@ -342,7 +399,11 @@ function loadTableEditorMarkupFunctionsFromIndex() {
         ${buildTableParameterModelingHintSource}
         ${buildTableParameterAddMenuSource}
         ${resolveTableEditorControllerClassAnnotationsSource}
+        ${buildTableEditorPreviewMetaSource}
         ${buildTableEditorJavaPreviewSource}
+        ${buildTableEditorParseErrorStateSource}
+        ${buildTableEditorStatsMarkupSource}
+        ${buildIssueWorkflowSummarySource}
         ${buildTableEditorApiTableSource}
         ${buildTableEditorParameterJumpNavSource}
         ${buildTableEditorParameterTableSource}
@@ -358,7 +419,11 @@ function loadTableEditorMarkupFunctionsFromIndex() {
                 tableEditorFocusedParamKey = value;
             },
             buildTableEditorApiTable,
-            buildTableEditorDetail
+            buildTableEditorDetail,
+            buildTableEditorParseErrorState,
+            buildTableEditorStatsMarkup,
+            buildIssueWorkflowSummary,
+            buildTableEditorPreviewMeta
         };
     })()`);
 }
@@ -2226,6 +2291,162 @@ test('tableEditor', '新增参数入口应提供 query/path/header/body 可选�
             html.includes('新增 header 参数') &&
             html.includes('新增 body 参数'),
         message: html
+    };
+});
+
+test('tableEditor', '表格解析失败态应留在表格视图并给出明确下一步', function() {
+    const html = tableEditorMarkup.buildTableEditorParseErrorState('duplicated mapping key at line 8');
+
+    return {
+        pass: html.includes('当前 YAML 暂时不能切到表格视图') &&
+            html.includes('duplicated mapping key at line 8') &&
+            html.includes('继续在 YAML 里修正') &&
+            html.includes('修正后再切回表格'),
+        message: html
+    };
+});
+
+test('tableEditor', '表格失败态统计不应回退成 Swagger 2 和 0 计数', function() {
+    const html = tableEditorMarkup.buildTableEditorStatsMarkup('OpenAPI 3', 4, 9, 'parse failed');
+
+    return {
+        pass: html.includes('格式: 待修正 YAML') &&
+            html.includes('API: -') &&
+            html.includes('参数: -') &&
+            html.includes('状态: 解析失败') &&
+            !html.includes('Swagger 2') &&
+            !html.includes('API: 0') &&
+            !html.includes('参数: 0'),
+        message: html
+    };
+});
+
+test('workflowSummary', '分析区摘要应优先给出推荐动作顺序', function() {
+    const html = tableEditorMarkup.buildIssueWorkflowSummary(3, 2, 5);
+
+    return {
+        pass: html.includes('推荐下一步') &&
+            html.includes('先自动修复 3 项') &&
+            html.includes('再处理 2 项手动问题') &&
+            html.includes('共 5 个问题'),
+        message: html
+    };
+});
+
+test('statusSummary', '合法 YAML 应返回 API 和字段统计', function() {
+    const yaml = `swagger: "2.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          description: OK
+definitions:
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string`;
+
+    const summary = summarizeYamlStatus(yaml);
+
+    return {
+        pass: summary.valid === true && summary.apiCount === 1 && summary.fieldCount === 2,
+        message: JSON.stringify(summary)
+    };
+});
+
+test('statusSummary', '非法 YAML 应回退为不可用统计', function() {
+    const summary = summarizeYamlStatus('swagger: "2.0"\npaths:\n  /users:\n    get:\n      operationId: [broken');
+
+    return {
+        pass: summary.valid === false && summary.apiCount === '-' && summary.fieldCount === '-',
+        message: JSON.stringify(summary)
+    };
+});
+
+test('issueSelection', '重新分析后应按 issue.key 保留勾选状态', function() {
+    const previousIssues = [
+        { key: 'fix-path', message: '路径问题' },
+        { key: 'manual-type', message: '类型问题' }
+    ];
+    const previousSelectedState = { 0: false, 1: true };
+    const nextIssues = [
+        { key: 'manual-type', message: '类型问题' },
+        { key: 'fix-path', message: '路径问题' },
+        { key: 'new-issue', message: '新问题' }
+    ];
+
+    const nextState = buildIssueSelectionState(previousIssues, previousSelectedState, nextIssues);
+
+    return {
+        pass: nextState[0] === true && nextState[1] === false && nextState[2] === true,
+        message: JSON.stringify(nextState)
+    };
+});
+
+test('issueSelection', '手动问题组新增同组问题时应继承组勾选状态', function() {
+    const previousIssues = [
+        {
+            key: 'manual-email',
+            fixable: false,
+            locator: { kind: 'swagger-field', apiName: 'search', path: '/search', method: 'GET', section: 'request', className: 'Request', fieldName: 'email' }
+        }
+    ];
+    const previousSelectedState = { 0: false };
+    const nextIssues = [
+        {
+            key: 'manual-email',
+            fixable: false,
+            locator: { kind: 'swagger-field', apiName: 'search', path: '/search', method: 'GET', section: 'request', className: 'Request', fieldName: 'email' }
+        },
+        {
+            key: 'manual-email-pattern',
+            fixable: false,
+            locator: { kind: 'swagger-field', apiName: 'search', path: '/search', method: 'GET', section: 'request', className: 'Request', fieldName: 'email' }
+        }
+    ];
+
+    const nextState = buildIssueSelectionState(previousIssues, previousSelectedState, nextIssues);
+
+    return {
+        pass: nextState[0] === false && nextState[1] === false,
+        message: JSON.stringify(nextState)
+    };
+});
+
+test('tableEditor', '预览元信息应统一收敛类级与方法级注解', function() {
+    tableEditorMarkup.setTableEditorState({
+        operations: [{
+            id: 'get /users',
+            classAnnotations: ['@TenantScoped'],
+            methodAnnotations: ['@AuditLog("query-users")']
+        }]
+    });
+    const operation = {
+        id: 'get /users',
+        path: '/users',
+        method: 'get',
+        operationId: 'getUsers',
+        summary: '查询用户',
+        description: '查询用户',
+        classAnnotations: ['@TenantScoped'],
+        methodAnnotations: ['@AuditLog("query-users")'],
+        annotations: ['@Permission("user.read")'],
+        parameters: []
+    };
+
+    const meta = tableEditorMarkup.buildTableEditorPreviewMeta(operation);
+
+    return {
+        pass: meta.controllerClassName === 'ApicgenApi' &&
+            Array.isArray(meta.controllerAnnotations) && meta.controllerAnnotations.includes('@TenantScoped') &&
+            Array.isArray(meta.methodAnnotations) && meta.methodAnnotations.includes('@AuditLog("query-users")') && meta.methodAnnotations.includes('@Permission("user.read")') &&
+            meta.methodApiName === 'getUsers',
+        message: JSON.stringify(meta)
     };
 });
 

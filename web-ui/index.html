@@ -853,6 +853,61 @@
             color: #0f172a;
             margin-bottom: 6px;
         }
+        .table-editor-empty-error {
+            border-style: solid;
+            border-color: rgba(248, 113, 113, 0.34);
+            background: linear-gradient(180deg, rgba(254, 242, 242, 0.92) 0%, rgba(255, 255, 255, 0.96) 100%);
+        }
+        .analysis-workflow-card {
+            margin-bottom: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(191, 219, 254, 0.7);
+            background: linear-gradient(180deg, rgba(239, 246, 255, 0.92) 0%, rgba(255, 255, 255, 0.98) 100%);
+            box-shadow: 0 12px 30px rgba(148, 163, 184, 0.12);
+        }
+        .analysis-workflow-kicker {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #1d4ed8;
+        }
+        .analysis-workflow-title {
+            margin-top: 6px;
+            font-size: 15px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .analysis-workflow-steps {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .analysis-workflow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .analysis-workflow-index {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: #1d4ed8;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .analysis-workflow-copy {
+            color: #334155;
+            font-size: 12px;
+            line-height: 1.6;
+        }
         .table-editor-param-table {
             width: 100%;
             border-collapse: separate;
@@ -5520,10 +5575,12 @@
         var yamlEditor;
         var workspaceViewMode = 'yaml';
         var tableEditorState = null;
+        var tableEditorParseError = '';
         var tableEditorSelectedOperationId = '';
         var tableEditorFocusedParamKey = '';
         var tableEditorParameterMenuOperationId = '';
         var isSyncingTableToYaml = false;
+        var yamlStatusRefreshTimer = null;
 
         // Default YAML content (使用Swagger 2.0格式，包含实体对象示例)
         var defaultYaml = `swagger: "2.0"
@@ -5963,11 +6020,13 @@ definitions:
             originalYaml = currentYaml;  // 保存为原始版本
 
             // Events
-            yamlEditor.on('cursorActivity', updateStatus);
+            yamlEditor.on('cursorActivity', updateCursorStatus);
             yamlEditor.on('change', function() {
-                updateStatus();
+                updateCursorStatus();
+                scheduleYamlStatusRefresh();
                 if (!isSyncingTableToYaml) {
                     tableEditorState = null;
+                    tableEditorParseError = '';
                     tableEditorSelectedOperationId = '';
                 }
                 document.getElementById('yaml-info').textContent = isSyncingTableToYaml ? '表格已同步' : '已修改';
@@ -5979,22 +6038,43 @@ definitions:
                 updateAutoFixButton(0, 0, 0);
             });
 
-            updateStatus();
+            refreshYamlStatusNow();
             updateAutoFixButton(0, 0, 0);
             bindDiffModalInteractions();
             setWorkspaceViewMode('yaml');
         }
 
-        function updateStatus() {
+        function updateCursorStatus() {
             var cursor = yamlEditor.getDoc().getCursor();
             document.getElementById('status-position').textContent = '行: ' + (cursor.line + 1) + ', 列: ' + (cursor.ch + 1);
+        }
 
+        function applyYamlStatusSummary(summary) {
+            document.getElementById('status-api').textContent = 'API: ' + summary.apiCount;
+            document.getElementById('status-field').textContent = '字段: ' + summary.fieldCount;
+        }
+
+        function refreshYamlStatusNow() {
+            updateCursorStatus();
+            applyYamlStatusSummary(summarizeYamlStatus(yamlEditor.getValue()));
+        }
+
+        function scheduleYamlStatusRefresh() {
+            if (yamlStatusRefreshTimer) {
+                clearTimeout(yamlStatusRefreshTimer);
+            }
+            yamlStatusRefreshTimer = setTimeout(function() {
+                yamlStatusRefreshTimer = null;
+                applyYamlStatusSummary(summarizeYamlStatus(yamlEditor.getValue()));
+            }, 180);
+        }
+
+        function summarizeYamlStatus(content) {
             try {
-                var content = yamlEditor.getValue();
                 var parsed = jsyaml.load(content);
-
                 var apiCount = 0;
                 var fieldCount = 0;
+
                 if (parsed && parsed.paths) {
                     apiCount = parseYamlForTableEditor(content).operations.length;
                     var definitions = parsed.definitions || (parsed.components && parsed.components.schemas) || {};
@@ -6010,12 +6090,22 @@ definitions:
                     });
                 }
 
-                document.getElementById('status-api').textContent = 'API: ' + apiCount;
-                document.getElementById('status-field').textContent = '字段: ' + fieldCount;
+                return {
+                    valid: true,
+                    apiCount: apiCount,
+                    fieldCount: fieldCount
+                };
             } catch (e) {
-                document.getElementById('status-api').textContent = 'API: -';
-                document.getElementById('status-field').textContent = '字段: -';
+                return {
+                    valid: false,
+                    apiCount: '-',
+                    fieldCount: '-'
+                };
             }
+        }
+
+        function updateStatus() {
+            refreshYamlStatusNow();
         }
 
         function setYamlEditorContent(content, options) {
@@ -6054,6 +6144,7 @@ definitions:
         function syncTableViewFromYaml(keepSelection) {
             try {
                 var nextState = parseYamlForTableEditor(yamlEditor.getValue());
+                tableEditorParseError = '';
                 tableEditorState = nextState;
                 if (!keepSelection || !findTableOperationById(tableEditorSelectedOperationId)) {
                     tableEditorSelectedOperationId = nextState.operations[0] ? nextState.operations[0].id : '';
@@ -6061,13 +6152,24 @@ definitions:
                 renderTableEditor();
                 setMessage('已切换到表格编辑，可直接回写 YAML');
             } catch (e) {
-                workspaceViewMode = 'yaml';
-                document.getElementById('workspace-view-yaml-btn').classList.add('active');
-                document.getElementById('workspace-view-table-btn').classList.remove('active');
-                document.getElementById('workspace-view-yaml').classList.add('active');
-                document.getElementById('workspace-view-table').classList.remove('active');
-                setMessage('当前 YAML 无法解析为表格: ' + e.message);
+                tableEditorParseError = e && e.message ? e.message : '当前 YAML 无法解析为表格';
+                tableEditorState = null;
+                tableEditorSelectedOperationId = '';
+                renderTableEditor();
+                setMessage('当前 YAML 无法解析为表格: ' + tableEditorParseError);
             }
+        }
+
+        function buildTableEditorStatsMarkup(formatLabel, apiCount, paramCount, errorMessage) {
+            if (errorMessage) {
+                return '<span class="table-editor-stat">格式: 待修正 YAML</span>' +
+                    '<span class="table-editor-stat">API: -</span>' +
+                    '<span class="table-editor-stat">参数: -</span>' +
+                    '<span class="table-editor-stat">状态: 解析失败</span>';
+            }
+            return '<span class="table-editor-stat">格式: ' + escapeHtml(formatLabel) + '</span>' +
+                '<span class="table-editor-stat">API: ' + apiCount + '</span>' +
+                '<span class="table-editor-stat">参数: ' + paramCount + '</span>';
         }
 
         function renderTableEditor() {
@@ -6076,16 +6178,21 @@ definitions:
             var detailEl = document.getElementById('table-editor-parameter-panel');
             var state = tableEditorState || { operations: [] };
             var selectedOperation = findTableOperationById(tableEditorSelectedOperationId);
-            var paramCount = state.operations.reduce(function(total, operation) {
+            var operations = Array.isArray(state.operations) ? state.operations : [];
+            var paramCount = operations.reduce(function(total, operation) {
                 return total + (operation.parameters ? operation.parameters.length : 0);
             }, 0);
+            var formatLabel = state.kind === 'openapi3' ? 'OpenAPI 3' : 'Swagger 2';
 
-            statsEl.innerHTML =
-                '<span class="table-editor-stat">格式: ' + escapeHtml(state.kind === 'openapi3' ? 'OpenAPI 3' : 'Swagger 2') + '</span>' +
-                '<span class="table-editor-stat">API: ' + state.operations.length + '</span>' +
-                '<span class="table-editor-stat">参数: ' + paramCount + '</span>';
+            statsEl.innerHTML = buildTableEditorStatsMarkup(formatLabel, operations.length, paramCount, tableEditorParseError);
 
-            if (!state.operations.length) {
+            if (tableEditorParseError) {
+                apiListEl.innerHTML = buildTableEditorParseErrorState(tableEditorParseError);
+                detailEl.innerHTML = buildTableEditorParseErrorState(tableEditorParseError);
+                return;
+            }
+
+            if (!operations.length) {
                 apiListEl.innerHTML = '<div class="table-editor-empty"><strong>还没有 API 行</strong><span>可以先点击右上角“新增 API”，或者切回 YAML 粘贴现有 Swagger / OpenAPI。</span></div>';
                 detailEl.innerHTML = '<div class="table-editor-empty"><strong>没有可编辑项</strong><span>先新增一个 API，右侧才会出现参数和扩展字段。</span></div>';
                 return;
@@ -6245,7 +6352,7 @@ definitions:
             return (operation && operation.classAnnotations) ? operation.classAnnotations : [];
         }
 
-        function buildTableEditorJavaPreview(operation) {
+        function buildTableEditorPreviewMeta(operation) {
             var controllerClassName = 'ApicgenApi';
             var controllerAnnotations = resolveTableEditorControllerClassAnnotations(operation);
             var methodAnnotations = (operation.methodAnnotations || []).concat(operation.annotations || []);
@@ -6254,26 +6361,42 @@ definitions:
                 legacyAnnotations: operation.annotations || []
             };
             var methodApiName = operation.operationId || operation.summary || operation.path || 'currentApi';
-            var methodCode = generateJavaControllerMethodCode(
-                operation.path || '/',
-                operation.method || 'get',
-                methodApiName,
-                methodAnnotationBundle,
-                operation.description || operation.summary || methodApiName,
-                operation.parameters || []
-            );
+            return {
+                controllerClassName: controllerClassName,
+                controllerAnnotations: controllerAnnotations,
+                methodAnnotations: methodAnnotations,
+                methodAnnotationBundle: methodAnnotationBundle,
+                methodApiName: methodApiName,
+                methodDescription: operation.description || operation.summary || methodApiName,
+                methodPath: operation.path || '/',
+                methodType: operation.method || 'get',
+                methodParameters: operation.parameters || [],
+                methodCount: tableEditorState && Array.isArray(tableEditorState.operations) ? tableEditorState.operations.length : 1
+            };
+        }
+
+        function buildTableEditorJavaPreview(operation) {
+            var previewMeta = buildTableEditorPreviewMeta(operation);
             var classCode = generateJavaControllerClassStructureCode(
-                controllerClassName,
-                controllerAnnotations,
-                tableEditorState && Array.isArray(tableEditorState.operations) ? tableEditorState.operations.length : 1
+                previewMeta.controllerClassName,
+                previewMeta.controllerAnnotations,
+                previewMeta.methodCount
             );
-            var classAnnotationHtml = controllerAnnotations.length
-                ? '<div class="table-editor-annotation-chips">' + controllerAnnotations.map(function(annotation) {
+            var methodCode = generateJavaControllerMethodCode(
+                previewMeta.methodPath,
+                previewMeta.methodType,
+                previewMeta.methodApiName,
+                previewMeta.methodAnnotationBundle,
+                previewMeta.methodDescription,
+                previewMeta.methodParameters
+            );
+            var classAnnotationHtml = previewMeta.controllerAnnotations.length
+                ? '<div class="table-editor-annotation-chips">' + previewMeta.controllerAnnotations.map(function(annotation) {
                     return '<span class="table-editor-annotation-chip">' + escapeHtml(annotation) + '</span>';
                 }).join('') + '</div>'
                 : '<div class="table-editor-annotation-empty">当前没有额外类级注解，默认只会保留框架自带的 Controller 注解。</div>';
-            var methodAnnotationHtml = methodAnnotations.length
-                ? '<div class="table-editor-annotation-chips">' + methodAnnotations.map(function(annotation) {
+            var methodAnnotationHtml = previewMeta.methodAnnotations.length
+                ? '<div class="table-editor-annotation-chips">' + previewMeta.methodAnnotations.map(function(annotation) {
                     return '<span class="table-editor-annotation-chip">' + escapeHtml(annotation) + '</span>';
                 }).join('') + '</div>'
                 : '<div class="table-editor-annotation-empty">当前方法还没有自定义方法注解，下面的代码只会展示 HTTP 映射和参数约束。</div>';
@@ -6305,7 +6428,7 @@ definitions:
                                 '<div class="table-editor-code-title">统一 Controller 类</div>' +
                                 '<div class="table-editor-code-copy">这里先确认类级注解会挂在什么位置，以及当前 YAML 最终会落到哪个统一 Controller。</div>' +
                             '</div>' +
-                            '<span class="table-editor-code-chip">' + escapeHtml(controllerClassName) + '.java</span>' +
+                            '<span class="table-editor-code-chip">' + escapeHtml(previewMeta.controllerClassName) + '.java</span>' +
                         '</div>' +
                         '<div class="table-editor-code-frame">' +
                             '<pre class="diff-java-code">' + classCode + '</pre>' +
@@ -6317,7 +6440,7 @@ definitions:
                                 '<div class="table-editor-code-title">当前方法预览</div>' +
                                 '<div class="table-editor-code-copy">当前接口在统一 Controller 里的方法形态。改动参数、描述或方法注解后，这里会同步变化。</div>' +
                             '</div>' +
-                            '<span class="table-editor-code-chip">' + escapeHtml((operation.method || 'get').toUpperCase()) + ' ' + escapeHtml(operation.path || '/') + '</span>' +
+                            '<span class="table-editor-code-chip">' + escapeHtml(String(previewMeta.methodType || 'get').toUpperCase()) + ' ' + escapeHtml(previewMeta.methodPath || '/') + '</span>' +
                         '</div>' +
                         '<div class="table-editor-code-frame">' +
                             '<pre class="diff-java-code">' + methodCode + '</pre>' +
@@ -6325,6 +6448,35 @@ definitions:
                     '</section>' +
                 '</div>' +
             '</div>';
+        }
+
+        function buildTableEditorParseErrorState(errorMessage) {
+            var safeMessage = escapeHtml(String(errorMessage || '当前 YAML 还不能稳定映射成结构化表格。'));
+            return '<div class="table-editor-empty table-editor-empty-error">' +
+                '<strong>当前 YAML 暂时不能切到表格视图</strong>' +
+                '<span>原因：' + safeMessage + '</span>' +
+                '<span>请继续在 YAML 里修正结构问题，修正后再切回表格继续编辑。</span>' +
+            '</div>';
+        }
+
+        function buildIssueWorkflowSummary(totalFixable, totalManualEntries, totalIssues) {
+            var fixable = Math.max(0, totalFixable || 0);
+            var manual = Math.max(0, totalManualEntries || 0);
+            var total = Math.max(0, totalIssues || 0);
+            var autoCopy = fixable > 0
+                ? ('先自动修复 ' + fixable + ' 项，优先清掉能安全回写的规则问题。')
+                : '当前没有可自动修复项，直接进入手动处理。';
+            var manualCopy = manual > 0
+                ? ('再处理 ' + manual + ' 项手动问题，补全必要语义后重新分析。')
+                : '本轮不需要额外手动处理。';
+            return '<section class="analysis-workflow-card">' +
+                '<div class="analysis-workflow-kicker">推荐下一步</div>' +
+                '<div class="analysis-workflow-title">共 ' + total + ' 个问题，按这个顺序处理更稳</div>' +
+                '<div class="analysis-workflow-steps">' +
+                    '<div class="analysis-workflow-step"><span class="analysis-workflow-index">1</span><div class="analysis-workflow-copy">' + escapeHtml(autoCopy) + '</div></div>' +
+                    '<div class="analysis-workflow-step"><span class="analysis-workflow-index">2</span><div class="analysis-workflow-copy">' + escapeHtml(manualCopy) + '</div></div>' +
+                '</div>' +
+            '</section>';
         }
 
         function buildTableEditorParameterJumpNav(operation) {
@@ -7093,6 +7245,27 @@ definitions:
             return 'issue-' + fallbackIndex;
         }
 
+        function buildIssueSelectionState(previousIssues, previousSelectedState, nextIssues) {
+            var previousMap = {};
+            (previousIssues || []).forEach(function(issue, index) {
+                var groupKey = getManualActionGroupKey(issue);
+                var selectionKey = groupKey || getIssueKey(issue, index);
+                previousMap[selectionKey] = previousSelectedState && Object.prototype.hasOwnProperty.call(previousSelectedState, index)
+                    ? previousSelectedState[index]
+                    : true;
+            });
+
+            var nextSelectedState = {};
+            (nextIssues || []).forEach(function(issue, index) {
+                var groupKey = getManualActionGroupKey(issue);
+                var selectionKey = groupKey || getIssueKey(issue, index);
+                nextSelectedState[index] = Object.prototype.hasOwnProperty.call(previousMap, selectionKey)
+                    ? previousMap[selectionKey]
+                    : true;
+            });
+            return nextSelectedState;
+        }
+
         function findIssueByKey(issueKey) {
             var issues = window.currentIssues || [];
             for (var i = 0; i < issues.length; i++) {
@@ -7114,11 +7287,8 @@ definitions:
                 return;
             }
 
-            // Reset selection - default to selected for all issues
-            selectedIssues = {};
-            issues.forEach(function(issue, i) {
-                selectedIssues[i] = true;
-            });
+            // Preserve selection by stable issue key; new issues default to selected
+            selectedIssues = buildIssueSelectionState(window.currentIssues || [], selectedIssues, issues);
 
             var manualActionPlan = buildManualActionPlan(issues);
             var totalFixable = issues.filter(function(issue) { return isAutoFixable(issue); }).length;
@@ -7128,7 +7298,8 @@ definitions:
             var autoIssueBlocks = [];
             var manualIssueBlocks = [];
 
-            var html = '<div class="issue-select-all">' +
+            var html = buildIssueWorkflowSummary(totalFixable, totalManualEntries, issues.length) +
+                '<div class="issue-select-all">' +
                 '<div class="issue-select-all-meta">' +
                 '<label><input type="checkbox" id="select-all-issues" checked onchange="toggleAllIssues(this.checked)"> 全选</label>' +
                 '<span id="selected-issue-summary" class="selected-issue-summary">' + formatSelectedIssueSummary(totalFixable, totalFixable, totalManualEntries, totalManualEntries) + '</span>' +

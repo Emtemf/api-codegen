@@ -9,6 +9,57 @@ async function analyzeAndWaitForIssues(appPage: AppPage) {
 
 test.describe('API Codegen Web UI - 校验规则测试', () => {
 
+  test('表格视图解析失败时应保留错误态并提示回 YAML 修正', async ({ page }) => {
+    const appPage = new AppPage(page);
+    await appPage.goto();
+    await appPage.waitForLoad();
+
+    await appPage.setYamlContent(`swagger: "2.0"
+paths:
+  /users:
+    get:
+      operationId: getUsers
+  /users:
+    post:
+      operationId: createUser`);
+
+    await appPage.switchToTableView();
+    const errorText = await appPage.getTableParseErrorText();
+
+    expect(errorText).toContain('当前 YAML 暂时不能切到表格视图');
+    expect(errorText).toContain('修正后再切回表格');
+  });
+
+  test('分析结果应展示推荐下一步摘要', async ({ page }) => {
+    const appPage = new AppPage(page);
+    await appPage.goto();
+    await appPage.waitForLoad();
+
+    const yamlWithMixedIssues = `swagger: "2.0"
+info:
+  title: Test API
+  version: "1.0"
+paths:
+  //users:
+    get:
+      operationId: getUsers
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success`;
+
+    await appPage.setYamlContent(yamlWithMixedIssues);
+    await analyzeAndWaitForIssues(appPage);
+    const summaryText = await appPage.getWorkflowSummaryText();
+
+    expect(summaryText).toContain('推荐下一步');
+    expect(summaryText).toContain('先自动修复');
+  });
+
   test.describe('ERROR 级别校验', () => {
 
     test('DFX-001: 路径包含 // 应检测为错误', async ({ page }) => {
