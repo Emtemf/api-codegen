@@ -378,6 +378,189 @@ class WebUIStatusAPI:
         except:
             return {}
 
+
+# ============================================================
+# 配置文件
+# ============================================================
+
+CONFIG_PATH = PROJECT_ROOT / ".loop-engine.yml"
+CONFIG_DEFAULTS = {
+    "max_iterations": 5,
+    "dry_run": False,
+    "github_mode": False,
+    "run_tests_before_commit": True,
+    "test_command": ["./mvnw", "-q", "test"],
+    "watch_interval": 60,
+    "notify_webhook": "",
+    "notify_slack": "",
+    "default_yaml": "api-example.yaml",
+    "auto_close_issues": True,
+    "commit_message_template": "fix: auto-fix {count} issues (loop engine)",
+}
+
+
+class Config:
+    """配置文件管理"""
+
+    def __init__(self, path: Path = None):
+        self.path = path or CONFIG_PATH
+        self.data = dict(CONFIG_DEFAULTS)
+        self.load()
+
+    def load(self):
+        """加载配置文件"""
+        if not self.path.exists():
+            return
+
+        try:
+            content = self.path.read_text(encoding="utf-8")
+            # 简单的 YAML 解析（避免依赖 PyYAML）
+            for line in content.splitlines():
+                line = line.split("#")[0].strip()
+                if not line or ":" not in line:
+                    continue
+                key, _, value = line.partition(":")
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+
+                if key in self.data:
+                    current = self.data[key]
+                    if isinstance(current, bool):
+                        self.data[key] = value.lower() in ("true", "1", "yes")
+                    elif isinstance(current, int):
+                        self.data[key] = int(value)
+                    elif isinstance(current, list):
+                        self.data[key] = [v.strip() for v in value.split(",")]
+                    else:
+                        self.data[key] = value
+        except Exception as e:
+            print(f"Failed to load config: {e}")
+
+    def get(self, key, default=None):
+        return self.data.get(key, default if default is not None else CONFIG_DEFAULTS.get(key))
+
+    def save(self):
+        """保存配置到文件"""
+        lines = ["# Loop Engine 配置", ""]
+        for key, value in self.data.items():
+            if isinstance(value, bool):
+                lines.append(f"{key}: {str(value).lower()}")
+            elif isinstance(value, list):
+                lines.append(f"{key}: {', '.join(str(v) for v in value)}")
+            else:
+                lines.append(f'{key}: "{value}"')
+        self.path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+# ============================================================
+# 历史指标
+# ============================================================
+
+class MetricsTracker:
+    """历史指标追踪"""
+
+    def __init__(self, metrics_dir: Path = None):
+        self.metrics_dir = metrics_dir or (PROJECT_ROOT / ".omc" / "state" / "loop-engine")
+        self.metrics_dir.mkdir(parents=True, exist_ok=True)
+        self.history_file = self.metrics_dir / "history.json"
+
+    def record_run(self, state: LoopState):
+        """记录一次运行"""
+        history = self.load_history()
+
+        entry = {
+            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "iteration": state.iteration,
+            "issues_found": state.issues_found,
+            "issues_fixed": state.issues_fixed,
+            "issues_manual": state.issues_manual,
+            "yaml_changed": state.yaml_changed,
+            "commit_hash": state.commit_hash,
+            "status": state.status,
+            "duration_seconds": self._calc_duration(state)
+        }
+
+        history.append(entry)
+
+        # 只保留最近 100 条
+        if len(history) > 100:
+            history = history[-100:]
+
+        self.history_file.write_text(
+            json.dumps(history, indent=2, ensure_ascii=False),
+            encoding="utf-8"
+        )
+
+    def _calc_duration(self, state: LoopState) -> float:
+        """计算运行时长"""
+        try:
+            fmt = "%Y-%m-%d %H:%M:%S"
+            start = time.mktime(time.strptime(state.started_at, fmt))
+            end = time.mktime(time.strptime(state.completed_at or state.started_at, fmt))
+            return round(end - start, 1)
+        except Exception:
+            return 0.0
+
+    def load_history(self) -> list:
+        """加载历史记录"""
+        if not self.history_file.exists():
+            return []
+        try:
+            return json.loads(self.history_file.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+
+    def get_stats(self) -> dict:
+        """获取统计信息"""
+        history = self.load_history()
+        if not history:
+            return {"total_runs": 0}
+
+        total_runs = len(history)
+        successful = sum(1 for h in history if h.get("status") == "completed")
+        total_fixed = sum(h.get("issues_fixed", 0) for h in history)
+        total_manual = sum(h.get("issues_manual", 0) for h in history)
+        avg_duration = sum(h.get("duration_seconds", 0) for h in history) / total_runs
+
+        return {
+            "total_runs": total_runs,
+            "successful_runs": successful,
+            "success_rate": f"{(successful / total_runs * 100):.0f}%",
+            "total_issues_fixed": total_fixed,
+            "total_issues_manual": total_manual,
+            "avg_duration_seconds": round(avg_duration, 1),
+            "last_run": history[-1].get("timestamp", "N/A"),
+            "recent_runs": history[-5:]
+        }
+
+
+# ============================================================
+# 提交前测试验证
+# ============================================================
+
+class TestValidator:
+    """提交前测试验证"""
+
+    def __init__(self, command: list = None):
+        self.command = command or ["./mvnw", "-q", "test"]
+
+    def run_tests(self) -> tuple:
+        """运行测试，返回 (passed, output)"""
+        exit_code, stdout, stderr = run_command(self.command, timeout=600)
+        output = stdout + stderr
+        return exit_code == 0, output
+
+    def run_web_ui_tests(self) -> tuple:
+        """运行 Web UI 测试"""
+        exit_code, stdout, stderr = run_command(
+            ["npm", "run", "test:ci"],
+            cwd=str(WEB_UI_ROOT),
+            timeout=300
+        )
+        output = stdout + stderr
+        return exit_code == 0, output
+
+
 def run_command(cmd: list, cwd: str = None, timeout: int = 120) -> tuple:
     """运行命令并返回 (exit_code, stdout, stderr)"""
     try:
@@ -510,23 +693,30 @@ class LoopEngine:
     """自动化 issue 修复循环引擎"""
 
     def __init__(self, yaml_path: str = None, dry_run: bool = False, max_iterations: int = 5,
-                 github_mode: bool = False, resume: bool = False, notify_webhook: str = None):
-        self.yaml_path = yaml_path
-        self.dry_run = dry_run
-        self.max_iterations = max_iterations
-        self.github_mode = github_mode
+                 github_mode: bool = False, resume: bool = False, notify_webhook: str = None,
+                 config: Config = None, run_tests: bool = None):
+        self.config = config or Config()
+        self.yaml_path = yaml_path or self.config.get("default_yaml")
+        self.dry_run = dry_run if dry_run else self.config.get("dry_run", False)
+        self.max_iterations = max_iterations or self.config.get("max_iterations", 5)
+        self.github_mode = github_mode if github_mode else self.config.get("github_mode", False)
         self.resume = resume
         self.log_lines = []
+
+        # 是否提交前跑测试
+        self.run_tests_enabled = run_tests if run_tests is not None else self.config.get("run_tests_before_commit", True)
 
         # 集成组件
         self.github = GitHubIntegration()
         self.persistence = StatePersistence()
         self.notifier = NotificationSystem()
         self.webui_api = WebUIStatusAPI()
+        self.metrics = MetricsTracker()
+        self.test_validator = TestValidator(self.config.get("test_command"))
 
         # Webhook 通知
-        self.notify_webhook = notify_webhook or os.environ.get("LOOP_WEBHOOK_URL", "")
-        self.notify_slack = os.environ.get("LOOP_SLACK_WEBHOOK", "")
+        self.notify_webhook = notify_webhook or self.config.get("notify_webhook") or os.environ.get("LOOP_WEBHOOK_URL", "")
+        self.notify_slack = self.config.get("notify_slack") or os.environ.get("LOOP_SLACK_WEBHOOK", "")
 
         # 加载或初始化状态
         if self.resume:
@@ -718,6 +908,9 @@ class LoopEngine:
         # 5. 发送通知
         self.send_final_notifications()
 
+        # 6. 记录指标
+        self.metrics.record_run(self.state)
+
         self.print_report()
 
         return True
@@ -824,10 +1017,25 @@ class LoopEngine:
         if issue_info and not self.dry_run:
             self.handle_github_issue_response(issue_info, explanations, original_yaml, yaml_content)
 
+        # 提交前测试验证
+        if self.state.yaml_changed and not self.dry_run and self.run_tests_enabled:
+            self.log("\nRunning tests before commit...")
+            tests_passed, test_output = self.test_validator.run_tests()
+            if not tests_passed:
+                self.log("Tests FAILED, aborting commit", "ERROR")
+                self.log(test_output[-500:], "ERROR")
+                self.state.status = "failed_tests"
+                self.persistence.save_state(self.state)
+                self.webui_api.update_status(self.state)
+                return False
+            self.log("Tests passed, proceeding to commit")
+
         # 提交
         if self.state.yaml_changed and not self.dry_run:
             self.log("\nCommitting changes...")
-            commit_msg = f"fix: auto-fix issues (loop engine, iter {local_iteration})"
+            commit_msg = self.config.get("commit_message_template").format(
+                count=self.state.issues_fixed
+            ) + f" (iter {local_iteration})"
             if issue_info:
                 commit_msg += f"\n\nCloses #{issue_info['number']}"
             self.state.commit_hash = git_commit(commit_msg)
@@ -957,8 +1165,138 @@ class LoopEngine:
 
 
 # ============================================================
+# Watch 守护模式
+# ============================================================
+
+class LoopEngineDaemon:
+    """守护进程：持续监听并处理新 issue"""
+
+    def __init__(self, config: Config = None):
+        self.config = config or Config()
+        self.interval = self.config.get("watch_interval", 60)
+        self.running = True
+        self.github = GitHubIntegration()
+        self.processed_issues = set()
+
+    def stop(self):
+        self.running = False
+
+    def run(self):
+        """持续运行"""
+        print("=" * 60)
+        print(f"Loop Engine Daemon - 监听间隔 {self.interval}s")
+        print(f"GitHub repo: {self.github.repo or 'N/A'}")
+        print("按 Ctrl+C 停止")
+        print("=" * 60)
+
+        # 加载已处理的 issue
+        processed_file = PROJECT_ROOT / ".omc" / "state" / "loop-engine" / "processed_issues.json"
+        if processed_file.exists():
+            try:
+                self.processed_issues = set(json.loads(processed_file.read_text(encoding="utf-8")))
+            except Exception:
+                pass
+
+        while self.running:
+            try:
+                self._tick()
+            except KeyboardInterrupt:
+                print("\nDaemon stopped")
+                break
+            except Exception as e:
+                print(f"[{time.strftime('%H:%M:%S')}] Tick error: {e}")
+
+            # 等待下一个间隔（每秒检查是否要停止）
+            for _ in range(self.interval):
+                if not self.running:
+                    break
+                time.sleep(1)
+
+    def _tick(self):
+        """单次检查"""
+        timestamp = time.strftime("%H:%M:%S")
+        print(f"\n[{timestamp}] Checking for new issues...")
+
+        issues = self.github.get_issues(state="open")
+        if not issues:
+            print(f"[{timestamp}] No issues or GitHub not configured")
+            return
+
+        new_issues = []
+        for issue in issues:
+            if "pull_request" in issue:
+                continue
+            number = issue.get("number")
+            if number and number not in self.processed_issues:
+                yaml = self.github.extract_yaml_from_issue(issue)
+                if yaml:
+                    new_issues.append(issue)
+
+        if not new_issues:
+            print(f"[{timestamp}] No new issues with YAML")
+            return
+
+        print(f"[{timestamp}] Found {len(new_issues)} new issue(s)")
+
+        for issue in new_issues:
+            print(f"[{timestamp}] Processing issue #{issue.get('number')}")
+            engine = LoopEngine(
+                github_mode=False,
+                config=self.config
+            )
+            # 直接处理单个 issue
+            yaml_content = self.github.extract_yaml_from_issue(issue)
+            engine.process_single_yaml(yaml_content, {
+                "number": issue.get("number"),
+                "title": issue.get("title"),
+                "body": issue.get("body", "")
+            })
+
+            self.processed_issues.add(issue.get("number"))
+
+        # 持久化已处理列表
+        processed_file = PROJECT_ROOT / ".omc" / "state" / "loop-engine" / "processed_issues.json"
+        processed_file.parent.mkdir(parents=True, exist_ok=True)
+        processed_file.write_text(
+            json.dumps(list(self.processed_issues)),
+            encoding="utf-8"
+        )
+        print(f"[{timestamp}] Done, waiting {self.interval}s...")
+
+
+# ============================================================
 # CLI 入口
 # ============================================================
+
+def print_stats():
+    """打印统计信息"""
+    metrics = MetricsTracker()
+    stats = metrics.get_stats()
+
+    print("=" * 50)
+    print("Loop Engine 统计")
+    print("=" * 50)
+    if stats.get("total_runs", 0) == 0:
+        print("  暂无运行记录")
+        print("=" * 50)
+        return
+
+    print(f"  总运行次数: {stats['total_runs']}")
+    print(f"  成功运行: {stats['successful_runs']}")
+    print(f"  成功率: {stats['success_rate']}")
+    print(f"  总修复 issue: {stats['total_issues_fixed']}")
+    print(f"  总手动 issue: {stats['total_issues_manual']}")
+    print(f"  平均时长: {stats['avg_duration_seconds']}s")
+    print(f"  最近运行: {stats['last_run']}")
+    print()
+    print("最近 5 次运行:")
+    for run in stats.get("recent_runs", []):
+        status_icon = "✅" if run.get("status") == "completed" else "❌"
+        print(f"  {status_icon} {run.get('timestamp', '')} | "
+              f"修复 {run.get('issues_fixed', 0)} | "
+              f"commit {run.get('commit_hash', 'N/A')[:8] if run.get('commit_hash') else 'N/A'}")
+    print("=" * 50)
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -1000,8 +1338,45 @@ def main():
         action="store_true",
         help="显示当前状态"
     )
+    parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="显示历史统计"
+    )
+    parser.add_argument(
+        "--watch",
+        action="store_true",
+        help="守护模式：持续监听 GitHub issues 并自动处理"
+    )
+    parser.add_argument(
+        "--watch-interval",
+        type=int,
+        help="守护模式检查间隔（秒）"
+    )
+    parser.add_argument(
+        "--no-tests",
+        action="store_true",
+        help="跳过提交前测试验证"
+    )
+    parser.add_argument(
+        "--init-config",
+        action="store_true",
+        help="生成默认配置文件 .loop-engine.yml"
+    )
 
     args = parser.parse_args()
+
+    # 初始化配置文件
+    if args.init_config:
+        config = Config()
+        config.save()
+        print(f"✅ 配置文件已生成: {CONFIG_PATH}")
+        sys.exit(0)
+
+    # 显示统计
+    if args.stats:
+        print_stats()
+        sys.exit(0)
 
     # 显示状态模式
     if args.status:
@@ -1020,13 +1395,28 @@ def main():
         print("=" * 40)
         sys.exit(0)
 
+    # 守护模式
+    if args.watch:
+        config = Config()
+        if args.watch_interval:
+            config.data["watch_interval"] = args.watch_interval
+        daemon = LoopEngineDaemon(config)
+        try:
+            daemon.run()
+        except KeyboardInterrupt:
+            print("\nDaemon stopped")
+        sys.exit(0)
+
+    config = Config()
     engine = LoopEngine(
         yaml_path=args.yaml,
         dry_run=args.dry_run,
         max_iterations=args.max_iterations,
         github_mode=args.github,
         resume=args.resume,
-        notify_webhook=args.notify_webhook
+        notify_webhook=args.notify_webhook,
+        config=config,
+        run_tests=not args.no_tests if args.no_tests else None
     )
 
     success = engine.run()

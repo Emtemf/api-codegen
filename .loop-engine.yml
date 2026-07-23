@@ -1,0 +1,13 @@
+# Loop Engine 配置
+
+max_iterations: "5"
+dry_run: false
+github_mode: false
+run_tests_before_commit: true
+test_command: ./mvnw, -q, test
+watch_interval: "60"
+notify_webhook: ""
+notify_slack: ""
+default_yaml: "api-example.yaml"
+auto_close_issues: true
+commit_message_template: "fix: auto-fix {count} issues (loop engine)"
